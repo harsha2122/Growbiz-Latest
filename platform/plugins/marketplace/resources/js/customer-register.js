@@ -95,12 +95,12 @@ $(() => {
 
                 const formData = new FormData(form.get(0))
 
-                if (certificateDropzone && certificateDropzone.getQueuedFiles().length > 0) {
-                    formData.append('certificate_file', certificateDropzone.getQueuedFiles()[0])
+                if (certificateDropzone && certificateDropzone.getAcceptedFiles().length > 0) {
+                    formData.append('certificate_file', certificateDropzone.getAcceptedFiles()[0])
                 }
 
-                if (governmentIdDropzone && governmentIdDropzone.getQueuedFiles().length > 0) {
-                    formData.append('government_id_file', governmentIdDropzone.getQueuedFiles()[0])
+                if (governmentIdDropzone && governmentIdDropzone.getAcceptedFiles().length > 0) {
+                    formData.append('government_id_file', governmentIdDropzone.getAcceptedFiles()[0])
                 }
 
                 $.ajax({
