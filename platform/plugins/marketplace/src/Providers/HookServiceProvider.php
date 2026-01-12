@@ -169,7 +169,7 @@ class HookServiceProvider extends ServiceProvider
 
             if (MarketplaceHelper::isVendorRegistrationEnabled()) {
                 add_filter('ecommerce_customer_registration_form_validation_rules', function (array $rules): array {
-                    return $rules + [
+                    $vendorRules = [
                         'shop_name' => [
                             'nullable',
                             'required_if:is_vendor,1',
@@ -187,22 +187,55 @@ class HookServiceProvider extends ServiceProvider
                             'min:2',
                         ],
                     ];
+
+                    if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true)) {
+                        $vendorRules['certificate_file'] = [
+                            'nullable',
+                            'required_if:is_vendor,1',
+                            'file',
+                            'mimes:pdf,jpg,jpeg,png,webp',
+                            'max:2048',
+                        ];
+                        $vendorRules['government_id_file'] = [
+                            'nullable',
+                            'required_if:is_vendor,1',
+                            'file',
+                            'mimes:pdf,jpg,jpeg,png,webp',
+                            'max:2048',
+                        ];
+                    }
+
+                    return $rules + $vendorRules;
                 }, 45, 2);
 
                 add_filter('ecommerce_customer_registration_form_validation_attributes', function (array $attributes): array {
-                    return $attributes + [
+                    $vendorAttributes = [
                         'shop_name' => __('Shop Name'),
                         'shop_phone' => __('Shop Phone'),
                         'shop_url' => __('Shop URL'),
                     ];
+
+                    if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true)) {
+                        $vendorAttributes['certificate_file'] = __('Certificate of Incorporation');
+                        $vendorAttributes['government_id_file'] = __('Government ID');
+                    }
+
+                    return $attributes + $vendorAttributes;
                 }, 45);
 
                 add_filter('ecommerce_customer_registration_form_validation_messages', function (array $attributes): array {
-                    return $attributes + [
+                    $vendorMessages = [
                         'shop_name.required_if' => __('Shop Name is required.'),
                         'shop_phone.required_if' => __('Shop Phone is required.'),
                         'shop_url.required_if' => __('Shop URL is required.'),
                     ];
+
+                    if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true)) {
+                        $vendorMessages['certificate_file.required_if'] = __('Certificate of Incorporation is required.');
+                        $vendorMessages['government_id_file.required_if'] = __('Government ID is required.');
+                    }
+
+                    return $attributes + $vendorMessages;
                 }, 45);
 
                 add_action('customer_register_validation', function ($request): void {
@@ -296,7 +329,15 @@ class HookServiceProvider extends ServiceProvider
                     ->container('footer')
                     ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js', ['jquery']);
 
+                Theme::asset()
+                    ->add('dropzone', 'vendor/core/core/base/libraries/dropzone/dropzone.css');
+
+                Theme::asset()
+                    ->container('footer')
+                    ->add('dropzone', 'vendor/core/core/base/libraries/dropzone/dropzone.js');
+
                 $form
+                    ->formClass('js-base-form')
                     ->addAfter(
                         'password_confirmation',
                         'is_vendor',
@@ -349,8 +390,35 @@ class HookServiceProvider extends ServiceProvider
                         TextFieldOption::make()
                             ->label(__('Phone Number'))
                             ->placeholder(__('Ex: 0943243332'))
-                    )
-                    ->addAfter('shop_phone', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
+                    );
+
+                if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true)) {
+                    $form
+                        ->addAfter(
+                            'shop_phone',
+                            'certificate_of_incorporation',
+                            'html',
+                            HtmlFieldOption::make()
+                                ->label(__('Certificate of Incorporation'))
+                                ->required()
+                                ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'certificate_file'])
+                                ->content('<div id="certificate-dropzone" class="dropzone" data-placeholder="' . __('Drop Certificate of Incorporation here or click to upload') . '"></div>'),
+                        )
+                        ->addAfter(
+                            'certificate_of_incorporation',
+                            'government_id',
+                            'html',
+                            HtmlFieldOption::make()
+                                ->label(__('Government ID'))
+                                ->required()
+                                ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'government_id_file'])
+                                ->attributes(['data-placeholder' => ''])
+                                ->content('<div id="government-id-dropzone" class="dropzone" data-placeholder="' . __('Drop Government ID here or click to upload') . '"></div>'),
+                        )
+                        ->addAfter('government_id', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
+                } else {
+                    $form->addAfter('shop_phone', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
+                }
             });
         }
 

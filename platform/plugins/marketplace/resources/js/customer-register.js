@@ -49,7 +49,7 @@ $(() => {
         })
     })
 
-    if ($('.become-vendor-form').length) {
+    if ($('#certificate-dropzone').length && $('#government-id-dropzone').length) {
         const certificateDropzone = new Dropzone('#certificate-dropzone', {
             url: '#',
             autoProcessQueue: false,
@@ -76,56 +76,61 @@ $(() => {
             },
         })
 
-        $('form.become-vendor-form').on('submit', function(e) {
-            e.preventDefault()
+        const vendorForms = $('form.become-vendor-form, form.js-base-form')
 
+        vendorForms.on('submit', function(e) {
             const form = $(e.currentTarget)
-            const formData = new FormData(form.get(0))
 
-            if (certificateDropzone.getQueuedFiles().length > 0) {
-                formData.append('certificate_file', certificateDropzone.getQueuedFiles()[0])
-            }
+            if (form.find('input[name="is_vendor"]').val() == 1 || form.hasClass('become-vendor-form')) {
+                e.preventDefault()
 
-            if (governmentIdDropzone.getQueuedFiles().length > 0) {
-                formData.append('government_id_file', governmentIdDropzone.getQueuedFiles()[0])
-            }
+                const formData = new FormData(form.get(0))
 
-            $.ajax({
-                url: form.prop('action'),
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function({ data }) {
-                    if (data?.redirect_url) {
-                        window.location.href = data.redirect_url
-                    }
-                },
-                error: function(response) {
-                    const { errors } = response.responseJSON
+                if (certificateDropzone.getQueuedFiles().length > 0) {
+                    formData.append('certificate_file', certificateDropzone.getQueuedFiles()[0])
+                }
 
-                    form.find('input').removeClass('is-invalid').removeClass('is-valid')
-                    form.find('.invalid-feedback').remove()
+                if (governmentIdDropzone.getQueuedFiles().length > 0) {
+                    formData.append('government_id_file', governmentIdDropzone.getQueuedFiles()[0])
+                }
 
-                    if (errors) {
-                        Object.keys(errors).forEach((key) => {
-                            const input = form.find(`input[name="${key}"]`)
-                            const error = errors[key]
+                $.ajax({
+                    url: form.prop('action'),
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function({ data }) {
+                        if (data?.redirect_url) {
+                            window.location.href = data.redirect_url
+                        }
+                    },
+                    error: function(response) {
+                        const { errors } = response.responseJSON
 
-                            if (['certificate_file', 'government_id_file'].includes(key)) {
-                                const wrapper = form.find(`[data-field-name="${key}"]`)
-                                wrapper.find('.invalid-feedback').remove()
-                                wrapper.append(`<div class="invalid-feedback" style="display: block">${error}</div>`)
-                            } else {
-                                input.addClass('is-invalid').removeClass('is-valid')
-                                if (!input.is(':checkbox')) {
-                                    input.parent().append(`<div class="invalid-feedback">${error}</div>`)
+                        form.find('input').removeClass('is-invalid').removeClass('is-valid')
+                        form.find('.invalid-feedback').remove()
+
+                        if (errors) {
+                            Object.keys(errors).forEach((key) => {
+                                const input = form.find(`input[name="${key}"]`)
+                                const error = errors[key]
+
+                                if (['certificate_file', 'government_id_file'].includes(key)) {
+                                    const wrapper = form.find(`[data-field-name="${key}"]`)
+                                    wrapper.find('.invalid-feedback').remove()
+                                    wrapper.append(`<div class="invalid-feedback" style="display: block">${error}</div>`)
+                                } else {
+                                    input.addClass('is-invalid').removeClass('is-valid')
+                                    if (!input.is(':checkbox')) {
+                                        input.parent().append(`<div class="invalid-feedback">${error}</div>`)
+                                    }
                                 }
-                            }
-                        })
-                    }
-                },
-            })
+                            })
+                        }
+                    },
+                })
+            }
         })
     }
 })
