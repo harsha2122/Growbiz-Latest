@@ -1,9 +1,44 @@
 $(() => {
+    let certificateDropzone = null
+    let governmentIdDropzone = null
+
+    function initializeDropzones() {
+        if ($('#certificate-dropzone').length && $('#government-id-dropzone').length && !certificateDropzone) {
+            certificateDropzone = new Dropzone('#certificate-dropzone', {
+                url: '#',
+                autoProcessQueue: false,
+                paramName: 'certificate_file',
+                maxFiles: 1,
+                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
+                addRemoveLinks: true,
+                dictDefaultMessage: $('#certificate-dropzone').data('placeholder'),
+                maxfilesexceeded: function(file) {
+                    this.removeFile(file)
+                },
+            })
+
+            governmentIdDropzone = new Dropzone('#government-id-dropzone', {
+                url: '#',
+                autoProcessQueue: false,
+                paramName: 'government_id_file',
+                maxFiles: 1,
+                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
+                addRemoveLinks: true,
+                dictDefaultMessage: $('#government-id-dropzone').data('placeholder'),
+                maxfilesexceeded: function(file) {
+                    this.removeFile(file)
+                },
+            })
+        }
+    }
+
     $(document).on('click', 'input[name=is_vendor]', (e) => {
         const currentTarget = $(e.currentTarget)
 
         if (currentTarget.val() == 1) {
-            $('[data-bb-toggle="vendor-info"]').slideDown()
+            $('[data-bb-toggle="vendor-info"]').slideDown(() => {
+                initializeDropzones()
+            })
         } else {
             $('[data-bb-toggle="vendor-info"]').slideUp()
             currentTarget.closest('form').find('button[type=submit]').prop('disabled', false)
@@ -49,48 +84,22 @@ $(() => {
         })
     })
 
-    if ($('#certificate-dropzone').length && $('#government-id-dropzone').length) {
-        const certificateDropzone = new Dropzone('#certificate-dropzone', {
-            url: '#',
-            autoProcessQueue: false,
-            paramName: 'certificate_file',
-            maxFiles: 1,
-            acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
-            addRemoveLinks: true,
-            dictDefaultMessage: $('#certificate-dropzone').data('placeholder'),
-            maxfilesexceeded: function(file) {
-                this.removeFile(file)
-            },
-        })
+    const vendorForms = $('form.become-vendor-form, form.js-base-form')
 
-        const governmentIdDropzone = new Dropzone('#government-id-dropzone', {
-            url: '#',
-            autoProcessQueue: false,
-            paramName: 'government_id_file',
-            maxFiles: 1,
-            acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
-            addRemoveLinks: true,
-            dictDefaultMessage: $('#government-id-dropzone').data('placeholder'),
-            maxfilesexceeded: function(file) {
-                this.removeFile(file)
-            },
-        })
+    vendorForms.on('submit', function(e) {
+        const form = $(e.currentTarget)
 
-        const vendorForms = $('form.become-vendor-form, form.js-base-form')
-
-        vendorForms.on('submit', function(e) {
-            const form = $(e.currentTarget)
-
-            if (form.find('input[name="is_vendor"]').val() == 1 || form.hasClass('become-vendor-form')) {
+        if (form.find('input[name="is_vendor"]').val() == 1 || form.hasClass('become-vendor-form')) {
+            if (certificateDropzone || governmentIdDropzone) {
                 e.preventDefault()
 
                 const formData = new FormData(form.get(0))
 
-                if (certificateDropzone.getQueuedFiles().length > 0) {
+                if (certificateDropzone && certificateDropzone.getQueuedFiles().length > 0) {
                     formData.append('certificate_file', certificateDropzone.getQueuedFiles()[0])
                 }
 
-                if (governmentIdDropzone.getQueuedFiles().length > 0) {
+                if (governmentIdDropzone && governmentIdDropzone.getQueuedFiles().length > 0) {
                     formData.append('government_id_file', governmentIdDropzone.getQueuedFiles()[0])
                 }
 
@@ -131,6 +140,10 @@ $(() => {
                     },
                 })
             }
-        })
+        }
+    })
+
+    if ($('.become-vendor-form').length) {
+        initializeDropzones()
     }
 })
