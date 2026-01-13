@@ -1,13 +1,31 @@
 console.log('=== Marketplace Customer Register JS Loaded ===')
 
-$(() => {
-    console.log('=== Document Ready - Initializing Vendor Registration ===')
+// Wait for both DOM and all scripts to load
+window.addEventListener('load', function() {
+    console.log('=== Window Loaded - Checking Dependencies ===')
+    console.log('jQuery available?', typeof jQuery !== 'undefined' || typeof $ !== 'undefined')
+    console.log('Dropzone available?', typeof Dropzone !== 'undefined')
+
+    // Use jQuery or $ depending on what's available
+    const jQ = typeof jQuery !== 'undefined' ? jQuery : (typeof $ !== 'undefined' ? $ : null)
+
+    if (!jQ) {
+        console.error('ERROR: jQuery not found! Vendor registration will not work.')
+        return
+    }
+
+    if (typeof Dropzone === 'undefined') {
+        console.error('ERROR: Dropzone not found! Document uploads will not work.')
+        return
+    }
+
+    console.log('=== Initializing Vendor Registration ===')
 
     let certificateDropzone = null
     let governmentIdDropzone = null
 
     function initializeDropzones() {
-        if ($('#certificate-dropzone').length && !certificateDropzone) {
+        if (jQ('#certificate-dropzone').length && !certificateDropzone) {
             console.log('Initializing certificate dropzone')
             certificateDropzone = new Dropzone('#certificate-dropzone', {
                 url: '#',
@@ -16,14 +34,14 @@ $(() => {
                 maxFiles: 1,
                 acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: $('#certificate-dropzone').data('placeholder'),
+                dictDefaultMessage: jQ('#certificate-dropzone').data('placeholder'),
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
                 },
             })
         }
 
-        if ($('#government-id-dropzone').length && !governmentIdDropzone) {
+        if (jQ('#government-id-dropzone').length && !governmentIdDropzone) {
             console.log('Initializing government ID dropzone')
             governmentIdDropzone = new Dropzone('#government-id-dropzone', {
                 url: '#',
@@ -32,7 +50,7 @@ $(() => {
                 maxFiles: 1,
                 acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: $('#government-id-dropzone').data('placeholder'),
+                dictDefaultMessage: jQ('#government-id-dropzone').data('placeholder'),
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
                 },
@@ -40,23 +58,26 @@ $(() => {
         }
     }
 
-    $(document).on('click', 'input[name=is_vendor]', (e) => {
-        const currentTarget = $(e.currentTarget)
+    jQ(document).on('click', 'input[name=is_vendor]', (e) => {
+        const currentTarget = jQ(e.currentTarget)
+        console.log('Vendor radio clicked, value:', currentTarget.val())
 
         if (currentTarget.val() == 1) {
-            $('[data-bb-toggle="vendor-info"]').slideDown(() => {
+            console.log('Showing vendor form')
+            jQ('[data-bb-toggle="vendor-info"]').slideDown(() => {
                 setTimeout(() => {
                     initializeDropzones()
                 }, 100)
             })
         } else {
-            $('[data-bb-toggle="vendor-info"]').slideUp()
+            console.log('Hiding vendor form')
+            jQ('[data-bb-toggle="vendor-info"]').slideUp()
             currentTarget.closest('form').find('button[type=submit]').prop('disabled', false)
         }
     })
 
-    $('form.js-base-form input[name="shop_url"]').on('change', (e) => {
-        const currentTarget = $(e.currentTarget)
+    jQ('form.js-base-form input[name="shop_url"]').on('change', (e) => {
+        const currentTarget = jQ(e.currentTarget)
         const form = currentTarget.closest('form')
         const url = currentTarget.val()
 
@@ -66,7 +87,7 @@ $(() => {
 
         const slug = form.find('[data-slug-value]')
 
-        $.ajax({
+        jQ.ajax({
             url: currentTarget.data('url'),
             type: 'POST',
             data: { url },
@@ -77,10 +98,10 @@ $(() => {
             success: ({ error, message, data }) => {
                 if (error) {
                     currentTarget.addClass('is-invalid').removeClass('is-valid')
-                    $('.shop-url-status').removeClass('text-success').addClass('text-danger').text(message)
+                    jQ('.shop-url-status').removeClass('text-success').addClass('text-danger').text(message)
                 } else {
                     currentTarget.removeClass('is-invalid').addClass('is-valid')
-                    $('.shop-url-status').removeClass('text-danger').addClass('text-success').text(message)
+                    jQ('.shop-url-status').removeClass('text-danger').addClass('text-success').text(message)
                     form.find('button[type=submit]').prop('disabled', false)
                 }
 
@@ -96,7 +117,7 @@ $(() => {
 
     // Use capture phase to intercept form submission BEFORE validation
     document.addEventListener('submit', function(e) {
-        const form = $(e.target)
+        const form = jQ(e.target)
 
         if (!form.hasClass('become-vendor-form') && !form.hasClass('js-base-form')) {
             return
@@ -146,7 +167,7 @@ $(() => {
 
         console.log('Submitting to:', form.prop('action'))
 
-        $.ajax({
+        jQ.ajax({
             url: form.prop('action'),
             type: 'POST',
             data: formData,
@@ -187,7 +208,9 @@ $(() => {
         })
     }
 
-    if ($('.become-vendor-form').length) {
+    if (jQ('.become-vendor-form').length) {
         initializeDropzones()
     }
+
+    console.log('=== Vendor Registration Initialization Complete ===')
 })
