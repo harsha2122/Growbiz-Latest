@@ -341,6 +341,11 @@ class HookServiceProvider extends ServiceProvider
                     return $html . '<script>if(typeof Dropzone!=="undefined"){Dropzone.autoDiscover=false;}</script>';
                 }, 99);
 
+                Theme::asset()
+                    ->container('footer')
+                    ->usePath(true)
+                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js']);
+
                 $form
                     ->formClass('js-base-form')
                     ->addAfter(
@@ -471,75 +476,6 @@ class HookServiceProvider extends ServiceProvider
     radios.forEach(function(radio) {
         radio.addEventListener("change", toggleVendorForm);
     });
-
-    var formElement = document.querySelector("form.js-base-form");
-    var originalSubmit = null;
-
-    if (formElement && HTMLFormElement.prototype.submit) {
-        originalSubmit = HTMLFormElement.prototype.submit;
-
-        formElement.addEventListener("submit", function(e) {
-            var isVendor = document.querySelector("input[name=is_vendor]:checked");
-            if (isVendor && isVendor.value == "1") {
-                if (!window.certificateDropzone || !window.certificateDropzone.files.length) {
-                    e.preventDefault();
-                    alert("Certificate of Incorporation is required");
-                    return false;
-                }
-                if (!window.governmentIdDropzone || !window.governmentIdDropzone.files.length) {
-                    e.preventDefault();
-                    alert("Government ID is required");
-                    return false;
-                }
-
-                e.preventDefault();
-                e.stopImmediatePropagation();
-
-                var submitBtn = formElement.querySelector("button[type=submit]");
-                if (submitBtn) submitBtn.disabled = true;
-
-                var formData = new FormData(formElement);
-                formData.set("certificate_file", window.certificateDropzone.files[0]);
-                formData.set("government_id_file", window.governmentIdDropzone.files[0]);
-
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", formElement.action, true);
-                xhr.setRequestHeader("Accept", "application/json");
-
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (submitBtn) submitBtn.disabled = false;
-
-                        if (xhr.status === 200 || xhr.status === 302) {
-                            try {
-                                var resp = JSON.parse(xhr.responseText);
-                                if (resp.error === false && resp.data && resp.data.next_page) {
-                                    window.location.href = resp.data.next_page;
-                                } else if (resp.message) {
-                                    alert(resp.message);
-                                    if (!resp.error) window.location.reload();
-                                } else {
-                                    window.location.reload();
-                                }
-                            } catch(ex) {
-                                window.location.reload();
-                            }
-                        } else {
-                            alert("Registration failed. Please try again.");
-                        }
-                    }
-                };
-
-                xhr.onerror = function() {
-                    if (submitBtn) submitBtn.disabled = false;
-                    alert("Registration failed. Please check your connection.");
-                };
-
-                xhr.send(formData);
-                return false;
-            }
-        }, true);
-    }
 
     toggleVendorForm();
 })();
