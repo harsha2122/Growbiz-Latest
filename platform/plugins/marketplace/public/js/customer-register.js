@@ -201,6 +201,8 @@ window.addEventListener('load', function() {
                 console.log('SUCCESS Response:', response)
                 if (response?.data?.next_page) {
                     window.location.href = response.data.next_page
+                } else if (response?.data?.next_url) {
+                    window.location.href = response.data.next_url
                 } else if (response?.data?.redirect_url) {
                     window.location.href = response.data.redirect_url
                 } else if (response?.redirect_url) {
@@ -208,7 +210,7 @@ window.addEventListener('load', function() {
                 } else if (response?.data?.url) {
                     window.location.href = response.data.url
                 } else {
-                    window.location.href = '/customer/dashboard'
+                    window.location.href = '/'
                 }
             },
             error: function(xhr) {
