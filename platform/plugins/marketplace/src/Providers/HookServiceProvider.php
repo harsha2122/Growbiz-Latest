@@ -325,16 +325,11 @@ class HookServiceProvider extends ServiceProvider
 
         if (is_plugin_active('marketplace') && MarketplaceHelper::isVendorRegistrationEnabled() && MarketplaceHelper::getSetting('show_vendor_registration_form_at_registration_page', true)) {
             RegisterForm::extend(function (RegisterForm $form): void {
-                Theme::asset()
-                    ->container('footer')
-                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js', ['jquery']);
-
-                Theme::asset()
-                    ->add('dropzone', 'vendor/core/core/base/libraries/dropzone/dropzone.css');
-
-                Theme::asset()
-                    ->container('footer')
-                    ->add('dropzone', 'vendor/core/core/base/libraries/dropzone/dropzone.js');
+                Assets::addStylesDirectly(['vendor/core/base/libraries/dropzone/dropzone.css'])
+                    ->addScriptsDirectly([
+                        'vendor/core/base/libraries/dropzone/dropzone.js',
+                        'vendor/core/plugins/marketplace/js/customer-register.js',
+                    ]);
 
                 $form
                     ->formClass('js-base-form')
