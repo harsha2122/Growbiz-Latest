@@ -1,5 +1,10 @@
 console.log('=== Marketplace Customer Register JS Loaded ===')
 
+// Disable Dropzone auto-discovery to prevent "No URL provided" error
+if (typeof Dropzone !== 'undefined') {
+    Dropzone.autoDiscover = false
+}
+
 // Wait for both DOM and all scripts to load
 window.addEventListener('load', function() {
     console.log('=== Window Loaded - Checking Dependencies ===')
