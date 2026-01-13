@@ -336,7 +336,8 @@ class HookServiceProvider extends ServiceProvider
                     ->container('footer')
                     ->usePath(false)
                     ->add('dropzone-js', 'https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js', ['jquery'])
-                    ->add('marketplace-register', asset('vendor/core/plugins/marketplace/js/customer-register.js') . '?' . $timestamp, ['jquery', 'dropzone-js']);
+                    ->usePath(true)
+                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js']);
 
                 $form
                     ->formClass('js-base-form')
@@ -417,7 +418,7 @@ class HookServiceProvider extends ServiceProvider
                                 ->attributes(['data-placeholder' => ''])
                                 ->content('<div id="government-id-dropzone" class="dropzone" data-placeholder="' . __('Drop Government ID here or click to upload') . '"></div>'),
                         )
-                        ->addAfter('government_id', 'test_script', 'html', HtmlFieldOption::make()->content('<script>console.log("TEST: jQuery loaded?", typeof jQuery !== "undefined"); console.log("TEST: Dropzone loaded?", typeof Dropzone !== "undefined"); console.log("TEST: Certificate dropzone exists?", document.getElementById("certificate-dropzone") !== null); console.log("TEST: Government dropzone exists?", document.getElementById("government-id-dropzone") !== null);</script>'))
+                        ->addAfter('government_id', 'test_script', 'html', HtmlFieldOption::make()->content('<script>window.addEventListener("load", function() { console.log("TEST AFTER LOAD: jQuery loaded?", typeof jQuery !== "undefined"); console.log("TEST AFTER LOAD: Dropzone loaded?", typeof Dropzone !== "undefined"); console.log("TEST AFTER LOAD: Certificate dropzone exists?", document.getElementById("certificate-dropzone") !== null); console.log("TEST AFTER LOAD: Government dropzone exists?", document.getElementById("government-id-dropzone") !== null); });</script>'))
                         ->addAfter('test_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
                 } else {
                     $form->addAfter('shop_phone', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
