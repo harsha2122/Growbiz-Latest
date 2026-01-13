@@ -3,7 +3,7 @@ $(() => {
     let governmentIdDropzone = null
 
     function initializeDropzones() {
-        if ($('#certificate-dropzone').length && $('#government-id-dropzone').length && !certificateDropzone) {
+        if ($('#certificate-dropzone').length && !certificateDropzone) {
             certificateDropzone = new Dropzone('#certificate-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
@@ -16,7 +16,9 @@ $(() => {
                     this.removeFile(file)
                 },
             })
+        }
 
+        if ($('#government-id-dropzone').length && !governmentIdDropzone) {
             governmentIdDropzone = new Dropzone('#government-id-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
@@ -37,7 +39,9 @@ $(() => {
 
         if (currentTarget.val() == 1) {
             $('[data-bb-toggle="vendor-info"]').slideDown(() => {
-                initializeDropzones()
+                setTimeout(() => {
+                    initializeDropzones()
+                }, 100)
             })
         } else {
             $('[data-bb-toggle="vendor-info"]').slideUp()
@@ -90,8 +94,10 @@ $(() => {
         const form = $(e.currentTarget)
 
         if (form.find('input[name="is_vendor"]').val() == 1 || form.hasClass('become-vendor-form')) {
-            if (certificateDropzone || governmentIdDropzone) {
+            if ($('#certificate-dropzone').length || $('#government-id-dropzone').length) {
                 e.preventDefault()
+
+                initializeDropzones()
 
                 const formData = new FormData(form.get(0))
 
