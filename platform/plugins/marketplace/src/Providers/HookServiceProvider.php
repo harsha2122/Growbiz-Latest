@@ -335,7 +335,14 @@ class HookServiceProvider extends ServiceProvider
                 Theme::asset()
                     ->container('footer')
                     ->usePath(false)
-                    ->add('dropzone-js', 'https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js', ['jquery'])
+                    ->add('dropzone-js', 'https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js', ['jquery']);
+
+                add_filter(THEME_FRONT_FOOTER, function ($html) {
+                    return $html . '<script>if(typeof Dropzone!=="undefined"){Dropzone.autoDiscover=false;}</script>';
+                }, 99);
+
+                Theme::asset()
+                    ->container('footer')
                     ->usePath(true)
                     ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js']);
 
@@ -418,10 +425,48 @@ class HookServiceProvider extends ServiceProvider
                                 ->attributes(['data-placeholder' => ''])
                                 ->content('<div id="government-id-dropzone" class="dropzone" data-placeholder="' . __('Drop Government ID here or click to upload') . '"></div>'),
                         )
-                        ->addAfter('government_id', 'test_script', 'html', HtmlFieldOption::make()->content('<script>window.addEventListener("load", function() { console.log("TEST AFTER LOAD: jQuery loaded?", typeof jQuery !== "undefined"); console.log("TEST AFTER LOAD: Dropzone loaded?", typeof Dropzone !== "undefined"); console.log("TEST AFTER LOAD: Certificate dropzone exists?", document.getElementById("certificate-dropzone") !== null); console.log("TEST AFTER LOAD: Government dropzone exists?", document.getElementById("government-id-dropzone") !== null); });</script>'))
-                        ->addAfter('test_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
+                        ->addAfter('government_id', 'vendor_toggle_script', 'html', HtmlFieldOption::make()->content('<script>
+(function(){
+    var radios = document.querySelectorAll("input[name=is_vendor]");
+    var vendorDiv = document.querySelector("[data-bb-toggle=\"vendor-info\"]");
+
+    function toggleVendorForm() {
+        var checked = document.querySelector("input[name=is_vendor]:checked");
+        if (vendorDiv && checked) {
+            vendorDiv.style.display = checked.value == "1" ? "block" : "none";
+        }
+    }
+
+    radios.forEach(function(radio) {
+        radio.addEventListener("change", toggleVendorForm);
+    });
+
+    toggleVendorForm();
+})();
+</script>'))
+                        ->addAfter('vendor_toggle_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
                 } else {
-                    $form->addAfter('shop_phone', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
+                    $form
+                        ->addAfter('shop_phone', 'vendor_toggle_script', 'html', HtmlFieldOption::make()->content('<script>
+(function(){
+    var radios = document.querySelectorAll("input[name=is_vendor]");
+    var vendorDiv = document.querySelector("[data-bb-toggle=\"vendor-info\"]");
+
+    function toggleVendorForm() {
+        var checked = document.querySelector("input[name=is_vendor]:checked");
+        if (vendorDiv && checked) {
+            vendorDiv.style.display = checked.value == "1" ? "block" : "none";
+        }
+    }
+
+    radios.forEach(function(radio) {
+        radio.addEventListener("change", toggleVendorForm);
+    });
+
+    toggleVendorForm();
+})();
+</script>'))
+                        ->addAfter('vendor_toggle_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
                 }
             });
         }
