@@ -325,10 +325,11 @@ class HookServiceProvider extends ServiceProvider
 
         if (is_plugin_active('marketplace') && MarketplaceHelper::isVendorRegistrationEnabled() && MarketplaceHelper::getSetting('show_vendor_registration_form_at_registration_page', true)) {
             RegisterForm::extend(function (RegisterForm $form): void {
-                Assets::addStylesDirectly(['vendor/core/base/libraries/dropzone/dropzone.css'])
+                $timestamp = time();
+                Assets::addStylesDirectly(['vendor/core/base/libraries/dropzone/dropzone.css?' . $timestamp])
                     ->addScriptsDirectly([
-                        'vendor/core/base/libraries/dropzone/dropzone.js',
-                        'vendor/core/plugins/marketplace/js/customer-register.js',
+                        'vendor/core/base/libraries/dropzone/dropzone.js?' . $timestamp,
+                        'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp,
                     ]);
 
                 $form
@@ -410,7 +411,8 @@ class HookServiceProvider extends ServiceProvider
                                 ->attributes(['data-placeholder' => ''])
                                 ->content('<div id="government-id-dropzone" class="dropzone" data-placeholder="' . __('Drop Government ID here or click to upload') . '"></div>'),
                         )
-                        ->addAfter('government_id', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
+                        ->addAfter('government_id', 'test_script', 'html', HtmlFieldOption::make()->content('<script>console.log("TEST: jQuery loaded?", typeof jQuery !== "undefined"); console.log("TEST: Dropzone loaded?", typeof Dropzone !== "undefined"); console.log("TEST: Certificate dropzone exists?", document.getElementById("certificate-dropzone") !== null); console.log("TEST: Government dropzone exists?", document.getElementById("government-id-dropzone") !== null);</script>'))
+                        ->addAfter('test_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
                 } else {
                     $form->addAfter('shop_phone', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
                 }
