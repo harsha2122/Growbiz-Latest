@@ -477,6 +477,46 @@ class HookServiceProvider extends ServiceProvider
         radio.addEventListener("change", toggleVendorForm);
     });
 
+    var form = document.querySelector("form.js-base-form");
+    if (form) {
+        form.addEventListener("submit", function(e) {
+            var isVendor = document.querySelector("input[name=is_vendor]:checked");
+            if (isVendor && isVendor.value == "1") {
+                if (!window.certificateDropzone || !window.certificateDropzone.files.length) {
+                    alert("Certificate of Incorporation is required");
+                    e.preventDefault();
+                    return false;
+                }
+                if (!window.governmentIdDropzone || !window.governmentIdDropzone.files.length) {
+                    alert("Government ID is required");
+                    e.preventDefault();
+                    return false;
+                }
+
+                e.preventDefault();
+                var formData = new FormData(form);
+                formData.append("certificate_file", window.certificateDropzone.files[0]);
+                formData.append("government_id_file", window.governmentIdDropzone.files[0]);
+
+                fetch(form.action, {
+                    method: "POST",
+                    body: formData
+                }).then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.error) {
+                        alert(data.message);
+                    } else if (data.data && data.data.next_page) {
+                        window.location.href = data.data.next_page;
+                    } else {
+                        window.location.reload();
+                    }
+                }).catch(function(err) {
+                    alert("Registration failed. Please try again.");
+                });
+            }
+        }, true);
+    }
+
     toggleVendorForm();
 })();
 </script>'))
