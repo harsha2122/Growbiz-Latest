@@ -26,13 +26,14 @@ window.addEventListener('load', function() {
 
     console.log('=== Initializing Vendor Registration ===')
 
-    let certificateDropzone = null
-    let governmentIdDropzone = null
-
     function initializeDropzones() {
-        if (jQ('#certificate-dropzone').length && !certificateDropzone) {
+        if (typeof window.initVendorDropzones === 'function') {
+            window.initVendorDropzones()
+        }
+
+        if (!window.certificateDropzone && jQ('#certificate-dropzone').length) {
             console.log('Initializing certificate dropzone')
-            certificateDropzone = new Dropzone('#certificate-dropzone', {
+            window.certificateDropzone = new Dropzone('#certificate-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
                 paramName: 'certificate_file',
@@ -46,9 +47,9 @@ window.addEventListener('load', function() {
             })
         }
 
-        if (jQ('#government-id-dropzone').length && !governmentIdDropzone) {
+        if (!window.governmentIdDropzone && jQ('#government-id-dropzone').length) {
             console.log('Initializing government ID dropzone')
-            governmentIdDropzone = new Dropzone('#government-id-dropzone', {
+            window.governmentIdDropzone = new Dropzone('#government-id-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
                 paramName: 'government_id_file',
@@ -165,16 +166,16 @@ window.addEventListener('load', function() {
         formData.delete('certificate_file')
         formData.delete('government_id_file')
 
-        if (certificateDropzone && certificateDropzone.files.length > 0) {
-            formData.append('certificate_file', certificateDropzone.files[0])
-            console.log('Certificate file added:', certificateDropzone.files[0].name)
+        if (window.certificateDropzone && window.certificateDropzone.files.length > 0) {
+            formData.append('certificate_file', window.certificateDropzone.files[0])
+            console.log('Certificate file added:', window.certificateDropzone.files[0].name)
         } else {
             console.log('WARNING: No certificate file')
         }
 
-        if (governmentIdDropzone && governmentIdDropzone.files.length > 0) {
-            formData.append('government_id_file', governmentIdDropzone.files[0])
-            console.log('Government ID file added:', governmentIdDropzone.files[0].name)
+        if (window.governmentIdDropzone && window.governmentIdDropzone.files.length > 0) {
+            formData.append('government_id_file', window.governmentIdDropzone.files[0])
+            console.log('Government ID file added:', window.governmentIdDropzone.files[0].name)
         } else {
             console.log('WARNING: No government ID file')
         }

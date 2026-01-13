@@ -429,14 +429,15 @@ class HookServiceProvider extends ServiceProvider
 (function(){
     var radios = document.querySelectorAll("input[name=is_vendor]");
     var vendorDiv = document.querySelector("[data-bb-toggle=\"vendor-info\"]");
-    var certDropzone = null;
-    var govDropzone = null;
 
-    function initDropzones() {
+    window.certificateDropzone = null;
+    window.governmentIdDropzone = null;
+
+    window.initVendorDropzones = function() {
         if (typeof Dropzone === "undefined") return;
 
-        if (!certDropzone && document.getElementById("certificate-dropzone")) {
-            certDropzone = new Dropzone("#certificate-dropzone", {
+        if (!window.certificateDropzone && document.getElementById("certificate-dropzone")) {
+            window.certificateDropzone = new Dropzone("#certificate-dropzone", {
                 url: "#",
                 autoProcessQueue: false,
                 paramName: "certificate_file",
@@ -447,8 +448,8 @@ class HookServiceProvider extends ServiceProvider
             });
         }
 
-        if (!govDropzone && document.getElementById("government-id-dropzone")) {
-            govDropzone = new Dropzone("#government-id-dropzone", {
+        if (!window.governmentIdDropzone && document.getElementById("government-id-dropzone")) {
+            window.governmentIdDropzone = new Dropzone("#government-id-dropzone", {
                 url: "#",
                 autoProcessQueue: false,
                 paramName: "government_id_file",
@@ -458,14 +459,14 @@ class HookServiceProvider extends ServiceProvider
                 dictDefaultMessage: "Drop Government ID here or click to upload"
             });
         }
-    }
+    };
 
     function toggleVendorForm() {
         var checked = document.querySelector("input[name=is_vendor]:checked");
         if (vendorDiv && checked) {
             if (checked.value == "1") {
                 vendorDiv.style.display = "block";
-                setTimeout(initDropzones, 100);
+                setTimeout(window.initVendorDropzones, 100);
             } else {
                 vendorDiv.style.display = "none";
             }
