@@ -43,16 +43,6 @@ window.addEventListener('load', function() {
                 dictDefaultMessage: jQ('#certificate-dropzone').data('placeholder'),
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
-                },
-                init: function() {
-                    this.on('addedfile', function(file) {
-                        const input = document.getElementById('certificate_file_input')
-                        if (input) {
-                            const dataTransfer = new DataTransfer()
-                            dataTransfer.items.add(file)
-                            input.files = dataTransfer.files
-                        }
-                    })
                 }
             })
         }
@@ -69,16 +59,6 @@ window.addEventListener('load', function() {
                 dictDefaultMessage: jQ('#government-id-dropzone').data('placeholder'),
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
-                },
-                init: function() {
-                    this.on('addedfile', function(file) {
-                        const input = document.getElementById('government_id_file_input')
-                        if (input) {
-                            const dataTransfer = new DataTransfer()
-                            dataTransfer.items.add(file)
-                            input.files = dataTransfer.files
-                        }
-                    })
                 }
             })
         }
@@ -185,22 +165,30 @@ window.addEventListener('load', function() {
 
         formData.delete('certificate_file')
         formData.delete('government_id_file')
+        formData.delete('certificate_file_input')
+        formData.delete('government_id_file_input')
 
         if (window.certificateDropzone && window.certificateDropzone.files.length > 0) {
-            formData.append('certificate_file', window.certificateDropzone.files[0])
-            console.log('Certificate file added:', window.certificateDropzone.files[0].name)
+            const file = window.certificateDropzone.files[0]
+            formData.append('certificate_file', file, file.name)
+            console.log('Certificate file added:', file.name, 'Type:', file.type, 'Size:', file.size)
         } else {
-            console.log('WARNING: No certificate file')
+            console.log('ERROR: No certificate file uploaded')
         }
 
         if (window.governmentIdDropzone && window.governmentIdDropzone.files.length > 0) {
-            formData.append('government_id_file', window.governmentIdDropzone.files[0])
-            console.log('Government ID file added:', window.governmentIdDropzone.files[0].name)
+            const file = window.governmentIdDropzone.files[0]
+            formData.append('government_id_file', file, file.name)
+            console.log('Government ID file added:', file.name, 'Type:', file.type, 'Size:', file.size)
         } else {
-            console.log('WARNING: No government ID file')
+            console.log('ERROR: No government ID file uploaded')
         }
 
         console.log('Submitting to:', form.prop('action'))
+        console.log('FormData entries:')
+        for (let pair of formData.entries()) {
+            console.log(pair[0], ':', pair[1])
+        }
 
         jQ.ajax({
             url: form.prop('action'),
@@ -208,8 +196,9 @@ window.addEventListener('load', function() {
             data: formData,
             processData: false,
             contentType: false,
+            cache: false,
             success: function(response) {
-                console.log('SUCCESS:', response)
+                console.log('SUCCESS Response:', response)
                 if (response?.data?.next_page) {
                     window.location.href = response.data.next_page
                 } else if (response?.data?.redirect_url) {
@@ -223,7 +212,9 @@ window.addEventListener('load', function() {
                 }
             },
             error: function(xhr) {
-                console.log('ERROR:', xhr.status, xhr.responseJSON)
+                console.log('ERROR Response Status:', xhr.status)
+                console.log('ERROR Response JSON:', xhr.responseJSON)
+                console.log('ERROR Response Text:', xhr.responseText)
 
                 const errors = xhr.responseJSON?.errors || {}
 
