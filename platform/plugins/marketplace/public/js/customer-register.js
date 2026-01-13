@@ -1,5 +1,10 @@
 console.log('=== Marketplace Customer Register JS Loaded ===')
 
+// Disable Dropzone auto-discovery to prevent "No URL provided" error
+if (typeof Dropzone !== 'undefined') {
+    Dropzone.autoDiscover = false
+}
+
 $(() => {
     console.log('=== Document Ready - Initializing Vendor Registration ===')
 
@@ -187,7 +192,17 @@ $(() => {
         })
     }
 
+    // Initialize dropzones for standalone vendor form
     if ($('.become-vendor-form').length) {
         initializeDropzones()
+    }
+
+    // Check initial state of vendor radio button on page load
+    const checkedVendorRadio = $('input[name=is_vendor]:checked')
+    if (checkedVendorRadio.length && checkedVendorRadio.val() == 1) {
+        $('[data-bb-toggle="vendor-info"]').show()
+        setTimeout(() => {
+            initializeDropzones()
+        }, 100)
     }
 })
