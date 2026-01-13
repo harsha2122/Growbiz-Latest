@@ -1,9 +1,14 @@
+console.log('=== Marketplace Customer Register JS Loaded ===')
+
 $(() => {
+    console.log('=== Document Ready - Initializing Vendor Registration ===')
+
     let certificateDropzone = null
     let governmentIdDropzone = null
 
     function initializeDropzones() {
         if ($('#certificate-dropzone').length && !certificateDropzone) {
+            console.log('Initializing certificate dropzone')
             certificateDropzone = new Dropzone('#certificate-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
@@ -19,6 +24,7 @@ $(() => {
         }
 
         if ($('#government-id-dropzone').length && !governmentIdDropzone) {
+            console.log('Initializing government ID dropzone')
             governmentIdDropzone = new Dropzone('#government-id-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
@@ -88,13 +94,23 @@ $(() => {
         })
     })
 
-    // Prevent all form submissions first, then handle manually
-    $(document).on('submit', 'form.become-vendor-form, form.js-base-form', function(e) {
-        const form = $(this)
+    // Use capture phase to intercept form submission BEFORE validation
+    document.addEventListener('submit', function(e) {
+        const form = $(e.target)
+
+        if (!form.hasClass('become-vendor-form') && !form.hasClass('js-base-form')) {
+            return
+        }
+
         const isVendorInput = form.find('input[name="is_vendor"]:checked').val()
         const isVendor = isVendorInput == 1 || form.hasClass('become-vendor-form')
 
+        console.log('CAPTURE PHASE - Form submit detected')
+        console.log('Form classes:', form.attr('class'))
+        console.log('isVendor:', isVendor)
+
         if (isVendor) {
+            console.log('PREVENTING DEFAULT - Vendor registration')
             e.preventDefault()
             e.stopPropagation()
             e.stopImmediatePropagation()
@@ -102,7 +118,7 @@ $(() => {
             handleVendorRegistration(form)
             return false
         }
-    })
+    }, true) // true = use capture phase
 
     function handleVendorRegistration(form) {
         console.log('=== Vendor Registration Started ===')
@@ -118,14 +134,14 @@ $(() => {
             formData.append('certificate_file', certificateDropzone.files[0])
             console.log('Certificate file added:', certificateDropzone.files[0].name)
         } else {
-            console.log('No certificate file')
+            console.log('WARNING: No certificate file')
         }
 
         if (governmentIdDropzone && governmentIdDropzone.files.length > 0) {
             formData.append('government_id_file', governmentIdDropzone.files[0])
             console.log('Government ID file added:', governmentIdDropzone.files[0].name)
         } else {
-            console.log('No government ID file')
+            console.log('WARNING: No government ID file')
         }
 
         console.log('Submitting to:', form.prop('action'))
@@ -137,7 +153,7 @@ $(() => {
             processData: false,
             contentType: false,
             success: function(response) {
-                console.log('Success:', response)
+                console.log('SUCCESS:', response)
                 if (response?.data?.redirect_url) {
                     window.location.href = response.data.redirect_url
                 } else if (response?.redirect_url) {
@@ -145,7 +161,7 @@ $(() => {
                 }
             },
             error: function(xhr) {
-                console.log('Error:', xhr.status, xhr.responseJSON)
+                console.log('ERROR:', xhr.status, xhr.responseJSON)
 
                 const errors = xhr.responseJSON?.errors || {}
 
