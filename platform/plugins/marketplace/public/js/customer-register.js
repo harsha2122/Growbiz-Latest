@@ -210,10 +210,16 @@ window.addEventListener('load', function() {
             contentType: false,
             success: function(response) {
                 console.log('SUCCESS:', response)
-                if (response?.data?.redirect_url) {
+                if (response?.data?.next_page) {
+                    window.location.href = response.data.next_page
+                } else if (response?.data?.redirect_url) {
                     window.location.href = response.data.redirect_url
                 } else if (response?.redirect_url) {
                     window.location.href = response.redirect_url
+                } else if (response?.data?.url) {
+                    window.location.href = response.data.url
+                } else {
+                    window.location.href = '/customer/dashboard'
                 }
             },
             error: function(xhr) {
