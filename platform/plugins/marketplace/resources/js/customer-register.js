@@ -58,9 +58,18 @@ window.addEventListener('load', function() {
         }
     }
 
-    jQ(document).on('click', 'input[name=is_vendor]', (e) => {
+    // Check initial state on page load
+    const checkedVendorRadio = jQ('input[name=is_vendor]:checked')
+    if (checkedVendorRadio.length && checkedVendorRadio.val() == 1) {
+        console.log('Page loaded with vendor selected, showing form')
+        jQ('[data-bb-toggle="vendor-info"]').show()
+        initializeDropzones()
+    }
+
+    // Handle radio button changes
+    jQ(document).on('change', 'input[name=is_vendor]', (e) => {
         const currentTarget = jQ(e.currentTarget)
-        console.log('Vendor radio clicked, value:', currentTarget.val())
+        console.log('Vendor radio changed, value:', currentTarget.val())
 
         if (currentTarget.val() == 1) {
             console.log('Showing vendor form')
