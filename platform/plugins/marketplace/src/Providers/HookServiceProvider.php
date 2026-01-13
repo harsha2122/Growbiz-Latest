@@ -412,7 +412,7 @@ class HookServiceProvider extends ServiceProvider
                                 ->label(__('Certificate of Incorporation'))
                                 ->required()
                                 ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'certificate_file'])
-                                ->content('<div id="certificate-dropzone" class="dropzone" data-placeholder="' . __('Drop Certificate of Incorporation here or click to upload') . '"></div>'),
+                                ->content('<div id="certificate-dropzone" class="dropzone" data-placeholder="' . __('Drop Certificate of Incorporation here or click to upload') . '"></div><input type="file" name="certificate_file" id="certificate_file_input" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.webp">'),
                         )
                         ->addAfter(
                             'certificate_of_incorporation',
@@ -423,7 +423,7 @@ class HookServiceProvider extends ServiceProvider
                                 ->required()
                                 ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'government_id_file'])
                                 ->attributes(['data-placeholder' => ''])
-                                ->content('<div id="government-id-dropzone" class="dropzone" data-placeholder="' . __('Drop Government ID here or click to upload') . '"></div>'),
+                                ->content('<div id="government-id-dropzone" class="dropzone" data-placeholder="' . __('Drop Government ID here or click to upload') . '"></div><input type="file" name="government_id_file" id="government_id_file_input" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.webp">'),
                         )
                         ->addAfter('government_id', 'vendor_toggle_script', 'html', HtmlFieldOption::make()->content('<script>
 (function(){
@@ -444,7 +444,15 @@ class HookServiceProvider extends ServiceProvider
                 maxFiles: 1,
                 acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
                 addRemoveLinks: true,
-                dictDefaultMessage: "Drop Certificate of Incorporation here or click to upload"
+                dictDefaultMessage: "Drop Certificate of Incorporation here or click to upload",
+                init: function() {
+                    this.on("addedfile", function(file) {
+                        var input = document.getElementById("certificate_file_input");
+                        var dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        input.files = dataTransfer.files;
+                    });
+                }
             });
         }
 
@@ -456,7 +464,15 @@ class HookServiceProvider extends ServiceProvider
                 maxFiles: 1,
                 acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
                 addRemoveLinks: true,
-                dictDefaultMessage: "Drop Government ID here or click to upload"
+                dictDefaultMessage: "Drop Government ID here or click to upload",
+                init: function() {
+                    this.on("addedfile", function(file) {
+                        var input = document.getElementById("government_id_file_input");
+                        var dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        input.files = dataTransfer.files;
+                    });
+                }
             });
         }
     };

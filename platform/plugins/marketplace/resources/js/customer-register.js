@@ -44,6 +44,16 @@ window.addEventListener('load', function() {
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
                 },
+                init: function() {
+                    this.on('addedfile', function(file) {
+                        const input = document.getElementById('certificate_file_input')
+                        if (input) {
+                            const dataTransfer = new DataTransfer()
+                            dataTransfer.items.add(file)
+                            input.files = dataTransfer.files
+                        }
+                    })
+                }
             })
         }
 
@@ -60,6 +70,16 @@ window.addEventListener('load', function() {
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
                 },
+                init: function() {
+                    this.on('addedfile', function(file) {
+                        const input = document.getElementById('government_id_file_input')
+                        if (input) {
+                            const dataTransfer = new DataTransfer()
+                            dataTransfer.items.add(file)
+                            input.files = dataTransfer.files
+                        }
+                    })
+                }
             })
         }
     }
