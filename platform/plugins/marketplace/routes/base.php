@@ -136,6 +136,12 @@ AdminHelper::registerRoutes(function (): void {
                     'permission' => 'marketplace.vendors.index',
                 ])->wherePrimaryKey();
 
+                Route::get('download-document/{id}/{type}', [
+                    'as' => 'download-document',
+                    'uses' => 'VendorController@downloadDocument',
+                    'permission' => 'marketplace.vendors.index',
+                ])->wherePrimaryKey();
+
                 Route::group(['permission' => 'marketplace.vendors.control'], function (): void {
                     Route::post('block/{id}', [VendorBlockedController::class, 'store'])->name('block');
                     Route::post('unblock/{id}', [VendorBlockedController::class, 'destroy'])->name('unblock');

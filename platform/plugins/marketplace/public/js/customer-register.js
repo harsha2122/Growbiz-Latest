@@ -31,32 +31,64 @@ window.addEventListener('load', function() {
             window.initVendorDropzones()
         }
 
-        if (!window.certificateDropzone && jQ('#certificate-dropzone').length) {
-            console.log('Initializing certificate dropzone')
-            window.certificateDropzone = new Dropzone('#certificate-dropzone', {
+        if (!window.panCardDropzone && jQ('#pan-card-dropzone').length) {
+            console.log('Initializing PAN card dropzone')
+            window.panCardDropzone = new Dropzone('#pan-card-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
-                paramName: 'certificate_file',
+                paramName: 'pan_card_file',
                 maxFiles: 1,
                 acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: jQ('#certificate-dropzone').data('placeholder'),
+                dictDefaultMessage: jQ('#pan-card-dropzone').data('placeholder'),
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
                 }
             })
         }
 
-        if (!window.governmentIdDropzone && jQ('#government-id-dropzone').length) {
-            console.log('Initializing government ID dropzone')
-            window.governmentIdDropzone = new Dropzone('#government-id-dropzone', {
+        if (!window.aadharCardDropzone && jQ('#aadhar-card-dropzone').length) {
+            console.log('Initializing Aadhar card dropzone')
+            window.aadharCardDropzone = new Dropzone('#aadhar-card-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
-                paramName: 'government_id_file',
+                paramName: 'aadhar_card_file',
                 maxFiles: 1,
                 acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: jQ('#government-id-dropzone').data('placeholder'),
+                dictDefaultMessage: jQ('#aadhar-card-dropzone').data('placeholder'),
+                maxfilesexceeded: function(file) {
+                    this.removeFile(file)
+                }
+            })
+        }
+
+        if (!window.gstCertificateDropzone && jQ('#gst-certificate-dropzone').length) {
+            console.log('Initializing GST certificate dropzone')
+            window.gstCertificateDropzone = new Dropzone('#gst-certificate-dropzone', {
+                url: '#',
+                autoProcessQueue: false,
+                paramName: 'gst_certificate_file',
+                maxFiles: 1,
+                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
+                addRemoveLinks: true,
+                dictDefaultMessage: jQ('#gst-certificate-dropzone').data('placeholder'),
+                maxfilesexceeded: function(file) {
+                    this.removeFile(file)
+                }
+            })
+        }
+
+        if (!window.udyamAadharDropzone && jQ('#udyam-aadhar-dropzone').length) {
+            console.log('Initializing Udyam Aadhar dropzone')
+            window.udyamAadharDropzone = new Dropzone('#udyam-aadhar-dropzone', {
+                url: '#',
+                autoProcessQueue: false,
+                paramName: 'udyam_aadhar_file',
+                maxFiles: 1,
+                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
+                addRemoveLinks: true,
+                dictDefaultMessage: jQ('#udyam-aadhar-dropzone').data('placeholder'),
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
                 }
@@ -163,25 +195,41 @@ window.addEventListener('load', function() {
 
         const formData = new FormData(form.get(0))
 
-        formData.delete('certificate_file')
-        formData.delete('government_id_file')
-        formData.delete('certificate_file_input')
-        formData.delete('government_id_file_input')
+        formData.delete('pan_card_file')
+        formData.delete('aadhar_card_file')
+        formData.delete('gst_certificate_file')
+        formData.delete('udyam_aadhar_file')
 
-        if (window.certificateDropzone && window.certificateDropzone.files.length > 0) {
-            const file = window.certificateDropzone.files[0]
-            formData.append('certificate_file', file, file.name)
-            console.log('Certificate file added:', file.name, 'Type:', file.type, 'Size:', file.size)
+        if (window.panCardDropzone && window.panCardDropzone.files.length > 0) {
+            const file = window.panCardDropzone.files[0]
+            formData.append('pan_card_file', file, file.name)
+            console.log('PAN Card file added:', file.name, 'Type:', file.type, 'Size:', file.size)
         } else {
-            console.log('ERROR: No certificate file uploaded')
+            console.log('ERROR: No PAN card file uploaded')
         }
 
-        if (window.governmentIdDropzone && window.governmentIdDropzone.files.length > 0) {
-            const file = window.governmentIdDropzone.files[0]
-            formData.append('government_id_file', file, file.name)
-            console.log('Government ID file added:', file.name, 'Type:', file.type, 'Size:', file.size)
+        if (window.aadharCardDropzone && window.aadharCardDropzone.files.length > 0) {
+            const file = window.aadharCardDropzone.files[0]
+            formData.append('aadhar_card_file', file, file.name)
+            console.log('Aadhar Card file added:', file.name, 'Type:', file.type, 'Size:', file.size)
         } else {
-            console.log('ERROR: No government ID file uploaded')
+            console.log('ERROR: No Aadhar card file uploaded')
+        }
+
+        if (window.gstCertificateDropzone && window.gstCertificateDropzone.files.length > 0) {
+            const file = window.gstCertificateDropzone.files[0]
+            formData.append('gst_certificate_file', file, file.name)
+            console.log('GST Certificate file added:', file.name, 'Type:', file.type, 'Size:', file.size)
+        } else {
+            console.log('ERROR: No GST certificate file uploaded')
+        }
+
+        if (window.udyamAadharDropzone && window.udyamAadharDropzone.files.length > 0) {
+            const file = window.udyamAadharDropzone.files[0]
+            formData.append('udyam_aadhar_file', file, file.name)
+            console.log('Udyam Aadhar file added:', file.name, 'Type:', file.type, 'Size:', file.size)
+        } else {
+            console.log('ERROR: No Udyam Aadhar file uploaded')
         }
 
         console.log('Submitting to:', form.prop('action'))
@@ -226,7 +274,7 @@ window.addEventListener('load', function() {
                 Object.keys(errors).forEach((key) => {
                     const error = Array.isArray(errors[key]) ? errors[key][0] : errors[key]
 
-                    if (['certificate_file', 'government_id_file'].includes(key)) {
+                    if (['pan_card_file', 'aadhar_card_file', 'gst_certificate_file', 'udyam_aadhar_file'].includes(key)) {
                         const wrapper = form.find(`[data-field-name="${key}"]`)
                         wrapper.find('.invalid-feedback').remove()
                         wrapper.append(`<div class="invalid-feedback" style="display: block">${error}</div>`)

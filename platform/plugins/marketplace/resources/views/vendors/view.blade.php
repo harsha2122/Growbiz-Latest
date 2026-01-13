@@ -168,26 +168,44 @@
                             </div>
                         @endif
 
-                        @if($store->certificate_file || $store->government_id_file)
+                        @if($store->pan_card_file || $store->aadhar_card_file || $store->gst_certificate_file || $store->udyam_aadhar_file)
                             <div class="hr my-2"></div>
                             <div class="p-3">
                                 <strong>{{ trans('plugins/marketplace::marketplace.documents') }}</strong>
                                 <div class="mt-2">
-                                    @if($store->certificate_file && Storage::disk('local')->exists($store->certificate_file))
-                                        <a href="{{ route('marketplace.vendors.download-certificate', $vendor->id) }}"
+                                    @if($store->pan_card_file && Storage::disk('local')->exists($store->pan_card_file))
+                                        <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'pan_card']) }}"
                                            class="btn btn-sm btn-outline-primary w-100 mb-2"
                                            target="_blank">
-                                            <x-core::icon name="ti ti-file-certificate" />
-                                            {{ trans('plugins/marketplace::marketplace.view_certificate') }}
+                                            <x-core::icon name="ti ti-file-text" />
+                                            View PAN Card
                                         </a>
                                     @endif
 
-                                    @if($store->government_id_file && Storage::disk('local')->exists($store->government_id_file))
-                                        <a href="{{ route('marketplace.vendors.download-government-id', $vendor->id) }}"
-                                           class="btn btn-sm btn-outline-primary w-100"
+                                    @if($store->aadhar_card_file && Storage::disk('local')->exists($store->aadhar_card_file))
+                                        <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'aadhar_card']) }}"
+                                           class="btn btn-sm btn-outline-primary w-100 mb-2"
                                            target="_blank">
                                             <x-core::icon name="ti ti-id" />
-                                            {{ trans('plugins/marketplace::marketplace.view_government_id') }}
+                                            View Aadhar Card
+                                        </a>
+                                    @endif
+
+                                    @if($store->gst_certificate_file && Storage::disk('local')->exists($store->gst_certificate_file))
+                                        <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'gst_certificate']) }}"
+                                           class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                           target="_blank">
+                                            <x-core::icon name="ti ti-file-certificate" />
+                                            View GST Certificate
+                                        </a>
+                                    @endif
+
+                                    @if($store->udyam_aadhar_file && Storage::disk('local')->exists($store->udyam_aadhar_file))
+                                        <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'udyam_aadhar']) }}"
+                                           class="btn btn-sm btn-outline-primary w-100"
+                                           target="_blank">
+                                            <x-core::icon name="ti ti-file-check" />
+                                            View Udyam Aadhar
                                         </a>
                                     @endif
                                 </div>

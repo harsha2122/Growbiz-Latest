@@ -90,4 +90,21 @@ class VendorController extends BaseController
 
         return response()->file($storage->path($vendor->store->government_id_file));
     }
+
+    public function downloadDocument(int|string $id, string $type)
+    {
+        $vendor = Vendor::query()->findOrFail($id);
+
+        $storage = Storage::disk('local');
+
+        $fileField = $type . '_file';
+
+        if (! isset($vendor->store->$fileField) || ! $storage->exists($vendor->store->$fileField)) {
+            return BaseHttpResponse::make()
+                ->setError()
+                ->setMessage(__('File not found!'));
+        }
+
+        return response()->file($storage->path($vendor->store->$fileField));
+    }
 }
