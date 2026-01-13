@@ -89,45 +89,57 @@ $(() => {
     })
 
     const vendorForms = $('form.become-vendor-form, form.js-base-form')
+    console.log('Vendor forms found:', vendorForms.length)
 
     vendorForms.on('submit', function(e) {
         const form = $(e.currentTarget)
         const isVendor = form.find('input[name="is_vendor"]').val() == 1 || form.hasClass('become-vendor-form')
 
-        if (isVendor && ($('#certificate-dropzone').length || $('#government-id-dropzone').length)) {
-            e.preventDefault()
+        console.log('Form submit triggered')
+        console.log('isVendor:', isVendor)
+        console.log('Certificate dropzone exists:', $('#certificate-dropzone').length > 0)
+        console.log('Government dropzone exists:', $('#government-id-dropzone').length > 0)
 
-            initializeDropzones()
+        if (!isVendor) {
+            console.log('Not a vendor, allowing normal form submission')
+            return true
+        }
 
-            const formData = new FormData(form.get(0))
+        // Always prevent default for vendor registration
+        e.preventDefault()
+        console.log('Form submission prevented')
 
-            // Remove default file inputs if they exist
-            formData.delete('certificate_file')
-            formData.delete('government_id_file')
+        initializeDropzones()
 
-            if (certificateDropzone && certificateDropzone.files.length > 0) {
-                // Get the raw File object from Dropzone
-                formData.append('certificate_file', certificateDropzone.files[0])
-                console.log('Certificate file added:', certificateDropzone.files[0])
-            } else {
-                console.log('No certificate file found')
-            }
+        const formData = new FormData(form.get(0))
 
-            if (governmentIdDropzone && governmentIdDropzone.files.length > 0) {
-                // Get the raw File object from Dropzone
-                formData.append('government_id_file', governmentIdDropzone.files[0])
-                console.log('Government ID file added:', governmentIdDropzone.files[0])
-            } else {
-                console.log('No government ID file found')
-            }
+        // Remove default file inputs if they exist
+        formData.delete('certificate_file')
+        formData.delete('government_id_file')
 
-            // Debug: Log all FormData entries
-            console.log('FormData contents:')
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ':', pair[1])
-            }
+        if (certificateDropzone && certificateDropzone.files.length > 0) {
+            // Get the raw File object from Dropzone
+            formData.append('certificate_file', certificateDropzone.files[0])
+            console.log('Certificate file added:', certificateDropzone.files[0])
+        } else {
+            console.log('No certificate file found')
+        }
 
-                $.ajax({
+        if (governmentIdDropzone && governmentIdDropzone.files.length > 0) {
+            // Get the raw File object from Dropzone
+            formData.append('government_id_file', governmentIdDropzone.files[0])
+            console.log('Government ID file added:', governmentIdDropzone.files[0])
+        } else {
+            console.log('No government ID file found')
+        }
+
+        // Debug: Log all FormData entries
+        console.log('FormData contents:')
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ':', pair[1])
+        }
+
+        $.ajax({
                     url: form.prop('action'),
                     type: 'POST',
                     data: formData,
@@ -169,8 +181,6 @@ $(() => {
                         }
                     },
                 })
-            }
-        }
     })
 
     if ($('.become-vendor-form').length) {
