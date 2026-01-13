@@ -80,12 +80,20 @@ class UnverifiedVendorController extends BaseController
 
         $storage = Storage::disk('local');
 
-        if ($vendor->store->certificate_file && $storage->exists($vendor->store->certificate_file)) {
-            $storage->delete($vendor->store->certificate_file);
+        if ($vendor->store->pan_card_file && $storage->exists($vendor->store->pan_card_file)) {
+            $storage->delete($vendor->store->pan_card_file);
         }
 
-        if ($vendor->store->government_id_file && $storage->exists($vendor->store->government_id_file)) {
-            $storage->delete($vendor->store->government_id_file);
+        if ($vendor->store->aadhar_card_file && $storage->exists($vendor->store->aadhar_card_file)) {
+            $storage->delete($vendor->store->aadhar_card_file);
+        }
+
+        if ($vendor->store->gst_certificate_file && $storage->exists($vendor->store->gst_certificate_file)) {
+            $storage->delete($vendor->store->gst_certificate_file);
+        }
+
+        if ($vendor->store->udyam_aadhar_file && $storage->exists($vendor->store->udyam_aadhar_file)) {
+            $storage->delete($vendor->store->udyam_aadhar_file);
         }
 
         if (MarketplaceHelper::getSetting('verify_vendor', 1) && ($vendor->store->email || $vendor->email)) {
@@ -132,5 +140,22 @@ class UnverifiedVendorController extends BaseController
         }
 
         return response()->file($storage->path($vendor->store->government_id_file));
+    }
+
+    public function downloadDocument(int|string $id, string $type)
+    {
+        $vendor = Vendor::query()->findOrFail($id);
+
+        $storage = Storage::disk('local');
+
+        $fileField = $type . '_file';
+
+        if (! isset($vendor->store->$fileField) || ! $storage->exists($vendor->store->$fileField)) {
+            return BaseHttpResponse::make()
+                ->setError()
+                ->setMessage(__('File not found!'));
+        }
+
+        return response()->file($storage->path($vendor->store->$fileField));
     }
 }

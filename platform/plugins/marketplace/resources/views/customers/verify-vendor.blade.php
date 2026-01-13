@@ -81,24 +81,46 @@
                             {{ BaseHelper::formatDateTime($vendor->created_at) }}
                         </x-core::datagrid.item>
 
-                        @if($vendor->store->certificate_file && Storage::disk('local')->exists($vendor->store->certificate_file))
+                        @if($vendor->store->pan_card_file && Storage::disk('local')->exists($vendor->store->pan_card_file))
                             <x-core::datagrid.item>
                                 <x-slot:title>
-                                    {{ trans('plugins/marketplace::unverified-vendor.forms.certificate') }}
+                                    PAN Card
                                 </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-certificate', $vendor) }}" target="_blank">
-                                    {{ trans('plugins/marketplace::unverified-vendor.view_certificate') }}
+                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'pan_card']) }}" target="_blank">
+                                    View PAN Card
                                 </a>
                             </x-core::datagrid.item>
                         @endif
 
-                        @if($vendor->store->government_id_file && Storage::disk('local')->exists($vendor->store->government_id_file))
+                        @if($vendor->store->aadhar_card_file && Storage::disk('local')->exists($vendor->store->aadhar_card_file))
                             <x-core::datagrid.item>
                                 <x-slot:title>
-                                    {{ trans('plugins/marketplace::unverified-vendor.forms.government_id') }}
+                                    Aadhar Card
                                 </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-government-id', $vendor) }}" target="_blank">
-                                    {{ trans('plugins/marketplace::unverified-vendor.view_government_id') }}
+                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'aadhar_card']) }}" target="_blank">
+                                    View Aadhar Card
+                                </a>
+                            </x-core::datagrid.item>
+                        @endif
+
+                        @if($vendor->store->gst_certificate_file && Storage::disk('local')->exists($vendor->store->gst_certificate_file))
+                            <x-core::datagrid.item>
+                                <x-slot:title>
+                                    GST Certificate
+                                </x-slot:title>
+                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'gst_certificate']) }}" target="_blank">
+                                    View GST Certificate
+                                </a>
+                            </x-core::datagrid.item>
+                        @endif
+
+                        @if($vendor->store->udyam_aadhar_file && Storage::disk('local')->exists($vendor->store->udyam_aadhar_file))
+                            <x-core::datagrid.item>
+                                <x-slot:title>
+                                    Udyam Aadhar
+                                </x-slot:title>
+                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'udyam_aadhar']) }}" target="_blank">
+                                    View Udyam Aadhar
                                 </a>
                             </x-core::datagrid.item>
                         @endif

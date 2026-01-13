@@ -110,6 +110,12 @@ AdminHelper::registerRoutes(function (): void {
                     'uses' => 'UnverifiedVendorController@downloadGovernmentId',
                     'permission' => 'marketplace.unverified-vendors.edit',
                 ])->wherePrimaryKey();
+
+                Route::get('download-document/{id}/{type}', [
+                    'as' => 'download-document',
+                    'uses' => 'UnverifiedVendorController@downloadDocument',
+                    'permission' => 'marketplace.unverified-vendors.edit',
+                ])->wherePrimaryKey();
             });
 
             Route::group(['prefix' => 'vendors', 'as' => 'vendors.'], function (): void {
