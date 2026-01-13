@@ -88,59 +88,47 @@ $(() => {
         })
     })
 
-    const vendorForms = $('form.become-vendor-form, form.js-base-form')
-    console.log('Vendor forms found:', vendorForms.length)
-
-    vendorForms.on('submit', function(e) {
-        const form = $(e.currentTarget)
+    // Prevent all form submissions first, then handle manually
+    $(document).on('submit', 'form.become-vendor-form, form.js-base-form', function(e) {
+        const form = $(this)
         const isVendorInput = form.find('input[name="is_vendor"]:checked').val()
         const isVendor = isVendorInput == 1 || form.hasClass('become-vendor-form')
 
-        console.log('Form submit triggered')
-        console.log('isVendorInput value:', isVendorInput)
-        console.log('isVendor:', isVendor)
-        console.log('Form classes:', form.attr('class'))
+        if (isVendor) {
+            e.preventDefault()
+            e.stopPropagation()
+            e.stopImmediatePropagation()
 
-        if (!isVendor) {
-            console.log('Not a vendor, allowing normal form submission')
-            return true
+            handleVendorRegistration(form)
+            return false
         }
+    })
 
-        // Always prevent default for vendor registration
-        e.preventDefault()
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-        console.log('Form submission prevented')
+    function handleVendorRegistration(form) {
+        console.log('=== Vendor Registration Started ===')
 
         initializeDropzones()
 
-        console.log('certificateDropzone:', certificateDropzone)
-        console.log('governmentIdDropzone:', governmentIdDropzone)
-
         const formData = new FormData(form.get(0))
 
-        // Remove default file inputs if they exist
         formData.delete('certificate_file')
         formData.delete('government_id_file')
 
         if (certificateDropzone && certificateDropzone.files.length > 0) {
             formData.append('certificate_file', certificateDropzone.files[0])
-            console.log('Certificate file added:', certificateDropzone.files[0])
+            console.log('Certificate file added:', certificateDropzone.files[0].name)
         } else {
-            console.log('No certificate file found')
+            console.log('No certificate file')
         }
 
         if (governmentIdDropzone && governmentIdDropzone.files.length > 0) {
             formData.append('government_id_file', governmentIdDropzone.files[0])
-            console.log('Government ID file added:', governmentIdDropzone.files[0])
+            console.log('Government ID file added:', governmentIdDropzone.files[0].name)
         } else {
-            console.log('No government ID file found')
+            console.log('No government ID file')
         }
 
-        console.log('FormData contents:')
-        for (let pair of formData.entries()) {
-            console.log(pair[0] + ':', pair[1])
-        }
+        console.log('Submitting to:', form.prop('action'))
 
         $.ajax({
             url: form.prop('action'),
@@ -148,46 +136,40 @@ $(() => {
             data: formData,
             processData: false,
             contentType: false,
-            success: function({ data }) {
-                console.log('Success response:', data)
-                if (data?.redirect_url) {
-                    window.location.href = data.redirect_url
+            success: function(response) {
+                console.log('Success:', response)
+                if (response?.data?.redirect_url) {
+                    window.location.href = response.data.redirect_url
+                } else if (response?.redirect_url) {
+                    window.location.href = response.redirect_url
                 }
             },
-            error: function(response) {
-                console.log('Error response:', response)
-                console.log('Error status:', response.status)
-                console.log('Error data:', response.responseJSON)
+            error: function(xhr) {
+                console.log('Error:', xhr.status, xhr.responseJSON)
 
-                const { errors } = response.responseJSON || {}
+                const errors = xhr.responseJSON?.errors || {}
 
-                form.find('input').removeClass('is-invalid').removeClass('is-valid')
+                form.find('input').removeClass('is-invalid')
                 form.find('.invalid-feedback').remove()
 
-                if (errors) {
-                    Object.keys(errors).forEach((key) => {
+                Object.keys(errors).forEach((key) => {
+                    const error = Array.isArray(errors[key]) ? errors[key][0] : errors[key]
+
+                    if (['certificate_file', 'government_id_file'].includes(key)) {
+                        const wrapper = form.find(`[data-field-name="${key}"]`)
+                        wrapper.find('.invalid-feedback').remove()
+                        wrapper.append(`<div class="invalid-feedback" style="display: block">${error}</div>`)
+                    } else {
                         const input = form.find(`input[name="${key}"]`)
-                        const error = Array.isArray(errors[key]) ? errors[key][0] : errors[key]
-
-                        console.log('Validation error:', key, error)
-
-                        if (['certificate_file', 'government_id_file'].includes(key)) {
-                            const wrapper = form.find(`[data-field-name="${key}"]`)
-                            wrapper.find('.invalid-feedback').remove()
-                            wrapper.append(`<div class="invalid-feedback" style="display: block">${error}</div>`)
-                        } else {
-                            input.addClass('is-invalid').removeClass('is-valid')
-                            if (!input.is(':checkbox')) {
-                                input.parent().append(`<div class="invalid-feedback">${error}</div>`)
-                            }
+                        input.addClass('is-invalid')
+                        if (!input.is(':checkbox')) {
+                            input.parent().append(`<div class="invalid-feedback">${error}</div>`)
                         }
-                    })
-                }
+                    }
+                })
             },
         })
-
-        return false
-    })
+    }
 
     if ($('.become-vendor-form').length) {
         initializeDropzones()
