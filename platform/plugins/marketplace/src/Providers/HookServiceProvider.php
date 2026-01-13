@@ -327,14 +327,16 @@ class HookServiceProvider extends ServiceProvider
             RegisterForm::extend(function (RegisterForm $form): void {
                 $timestamp = time();
 
-                // Load in correct order: CSS first, then JS dependencies, then our script
+                // Use CDN for Dropzone - no file deployment needed
                 Theme::asset()
-                    ->add('dropzone-css', 'vendor/core/base/libraries/dropzone/dropzone.css?' . $timestamp);
+                    ->usePath(false)
+                    ->add('dropzone-css', 'https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css');
 
                 Theme::asset()
                     ->container('footer')
-                    ->add('dropzone-js', 'vendor/core/base/libraries/dropzone/dropzone.js?' . $timestamp, ['jquery'])
-                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js']);
+                    ->usePath(false)
+                    ->add('dropzone-js', 'https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js', ['jquery'])
+                    ->add('marketplace-register', asset('vendor/core/plugins/marketplace/js/customer-register.js') . '?' . $timestamp, ['jquery', 'dropzone-js']);
 
                 $form
                     ->formClass('js-base-form')
