@@ -35,12 +35,7 @@ Route::group([
                 Route::get('/', [BecomeVendorController::class, 'index'])->name('become-vendor');
                 Route::post('/', [BecomeVendorController::class, 'store'])->name('become-vendor.post');
                 Route::put('/', [BecomeVendorController::class, 'update'])->name('become-vendor.update');
-                Route::get('download-certificate', [BecomeVendorController::class, 'downloadCertificate'])->name(
-                    'become-vendor.download-certificate'
-                );
-                Route::get('download-government-id', [BecomeVendorController::class, 'downloadGovernmentId'])->name(
-                    'become-vendor.download-government-id'
-                );
+                Route::get('download', [BecomeVendorController::class, 'downloadDocument'])->name('become-vendor.download');
             }
         );
     });

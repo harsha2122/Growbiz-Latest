@@ -56,7 +56,7 @@ class BecomeVendorController extends BaseController
 
             if (
                 MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true)
-                && (! $store->certificate_file || ! $store->government_id_file)
+                && (! $store->pan_card_file || ! $store->aadhar_card_file || ! $store->gst_certificate_file || ! $store->udyam_aadhar_file)
             ) {
                 $storeInfo = [
                     'shop_name' => $store->name,
@@ -70,7 +70,7 @@ class BecomeVendorController extends BaseController
                         'missing_documentation_alert',
                         HtmlField::class,
                         HtmlFieldOption::make()
-                            ->content('<div class="alert alert-warning">' . __('Missing documentations! Please upload your certificate of incorporation and government ID to continue.') . '</div>')
+                            ->content('<div class="alert alert-warning">' . __('Missing documentations! Please upload your PAN Card, Aadhar Card, GST Certificate and Udyam Aadhar to continue.') . '</div>')
                     )
                     ->setUrl(route('marketplace.vendor.become-vendor.update'))
                     ->setMethod('PUT');
@@ -124,7 +124,7 @@ class BecomeVendorController extends BaseController
 
         abort_if($customer->is_vendor
         && (! MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true)
-            || ($customer->certificate_of_incorporation && $customer->government_id)), 404);
+            || ($customer->store->pan_card_file && $customer->store->aadhar_card_file && $customer->store->gst_certificate_file && $customer->store->udyam_aadhar_file)), 404);
 
         $store = $customer->store;
 
@@ -144,14 +144,24 @@ class BecomeVendorController extends BaseController
             $storage->makeDirectory("marketplace/$store->slug");
         }
 
-        if ($certificateFile = $request->file('certificate_file')) {
-            $certificateFilePath = $storage->putFileAs("marketplace/$store->slug", $certificateFile, 'certificate.' . $certificateFile->getClientOriginalExtension());
-            $store->certificate_file = $certificateFilePath;
+        if ($panCardFile = $request->file('pan_card_file')) {
+            $panCardFilePath = $storage->putFileAs("marketplace/$store->slug", $panCardFile, 'pan_card.' . $panCardFile->getClientOriginalExtension());
+            $store->pan_card_file = $panCardFilePath;
         }
 
-        if ($governmentIdFile = $request->file('government_id_file')) {
-            $governmentIdFilePath = $storage->putFileAs("marketplace/$store->slug", $governmentIdFile, 'government_id.' . $governmentIdFile->getClientOriginalExtension());
-            $store->government_id_file = $governmentIdFilePath;
+        if ($aadharCardFile = $request->file('aadhar_card_file')) {
+            $aadharCardFilePath = $storage->putFileAs("marketplace/$store->slug", $aadharCardFile, 'aadhar_card.' . $aadharCardFile->getClientOriginalExtension());
+            $store->aadhar_card_file = $aadharCardFilePath;
+        }
+
+        if ($gstCertificateFile = $request->file('gst_certificate_file')) {
+            $gstCertificateFilePath = $storage->putFileAs("marketplace/$store->slug", $gstCertificateFile, 'gst_certificate.' . $gstCertificateFile->getClientOriginalExtension());
+            $store->gst_certificate_file = $gstCertificateFilePath;
+        }
+
+        if ($udyamAadharFile = $request->file('udyam_aadhar_file')) {
+            $udyamAadharFilePath = $storage->putFileAs("marketplace/$store->slug", $udyamAadharFile, 'udyam_aadhar.' . $udyamAadharFile->getClientOriginalExtension());
+            $store->udyam_aadhar_file = $udyamAadharFilePath;
         }
 
         $store->save();
@@ -164,41 +174,27 @@ class BecomeVendorController extends BaseController
             ->setMessage(__('Updated registration info successfully!'));
     }
 
-    public function downloadCertificate()
+    public function downloadDocument(Request $request)
     {
         $customer = auth('customer')->user();
 
         abort_if(! $customer->is_vendor || ! $customer->store, 404);
 
+        $fileType = $request->query('file');
+        $allowedTypes = ['pan_card', 'aadhar_card', 'gst_certificate', 'udyam_aadhar'];
+
+        abort_if(! in_array($fileType, $allowedTypes), 404);
+
         $storage = Storage::disk('local');
+        $fileField = $fileType . '_file';
+        $filePath = $customer->store->{$fileField};
 
-        $certificate = $customer->store->certificate_file;
-
-        if (! $storage->exists($certificate)) {
+        if (! $filePath || ! $storage->exists($filePath)) {
             return BaseHttpResponse::make()
                 ->setError()
                 ->setMessage(__('File not found!'));
         }
 
-        return response()->file($storage->path($certificate));
-    }
-
-    public function downloadGovernmentId()
-    {
-        $customer = auth('customer')->user();
-
-        abort_if(! $customer->is_vendor || ! $customer->store, 404);
-
-        $storage = Storage::disk('local');
-
-        $governmentId = $customer->store->government_id_file;
-
-        if (! $storage->exists($governmentId)) {
-            return BaseHttpResponse::make()
-                ->setError()
-                ->setMessage(__('File not found!'));
-        }
-
-        return response()->file($storage->path($governmentId));
+        return response()->file($storage->path($filePath));
     }
 }
