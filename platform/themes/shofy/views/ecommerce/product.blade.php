@@ -132,12 +132,6 @@
                 </div>
                 @php
                     $isOutOfStock = $product->isOutOfStock();
-                    // DEBUG: Check product type value
-                    \Log::info('Product Debug (Sticky)', [
-                        'id' => $product->id,
-                        'name' => $product->name,
-                        'product_type' => $product->product_type,
-                    ]);
                 @endphp
                 <div class="sticky-actions-button d-flex align-items-center gap-2">
                     <button
@@ -155,7 +149,7 @@
                             name="checkout"
                             @class(['tp-product-details-buy-now-btn', 'btn-disabled' => $isOutOfStock])
                             @disabled($isOutOfStock)
-                        >{{ $product->product_type === 'service' ? __('Book Now') : __('Buy Now') }}</button>
+                        >{{ $product->product_type?->value === 'service' ? __('Book Now') : __('Buy Now') }}</button>
                     @endif
                 </div>
             </div>
