@@ -89,34 +89,41 @@
     @if (EcommerceHelper::isCartEnabled())
         @php
             $isOutOfStock = $product->isOutOfStock();
+            $isService = $product->product_type === 'service';
         @endphp
         <div @class(['tp-product-details-action-wrapper mt-3', 'tp-cart-disabled' => $isOutOfStock])>
-            <h3 class="tp-product-details-action-title">{{ __('Quantity') }}</h3>
+            @if (!$isService)
+                <h3 class="tp-product-details-action-title">{{ __('Quantity') }}</h3>
+            @endif
             <div class="tp-product-details-action-item-wrapper d-flex align-items-center">
-                <div class="tp-product-details-quantity">
-                    <div class="tp-product-quantity mb-15 mr-15">
-                        <span class="tp-cart-minus" data-bb-toggle="decrease-qty">
-                            <svg width="11" height="2" viewBox="0 0 11 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M1 1H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </span>
-                        <input
-                            class="tp-cart-input"
-                            type="number"
-                            name="qty"
-                            value="{{ $product->min_cart_quantity }}"
-                            min="{{ $product->min_cart_quantity }}"
-                            max="{{ $product->max_cart_quantity }}"
-                            @readonly($isOutOfStock)
-                        />
-                        <span class="tp-cart-plus" data-bb-toggle="increase-qty">
-                            <svg width="11" height="12" viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M1 6H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M5.5 10.5V1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </span>
+                @if (!$isService)
+                    <div class="tp-product-details-quantity">
+                        <div class="tp-product-quantity mb-15 mr-15">
+                            <span class="tp-cart-minus" data-bb-toggle="decrease-qty">
+                                <svg width="11" height="2" viewBox="0 0 11 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                            <input
+                                class="tp-cart-input"
+                                type="number"
+                                name="qty"
+                                value="{{ $product->min_cart_quantity }}"
+                                min="{{ $product->min_cart_quantity }}"
+                                max="{{ $product->max_cart_quantity }}"
+                                @readonly($isOutOfStock)
+                            />
+                            <span class="tp-cart-plus" data-bb-toggle="increase-qty">
+                                <svg width="11" height="12" viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 6H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M5.5 10.5V1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </span>
+                        </div>
                     </div>
-                </div>
+                @else
+                    <input type="hidden" name="qty" value="1" />
+                @endif
                 <div class="tp-product-details-add-to-cart mb-15 w-100">
                     <button
                         type="submit"
@@ -126,7 +133,7 @@
                         data-bb-toggle="add-to-cart-in-form"
                         {!! EcommerceHelper::jsAttributes('add-to-cart-in-form', $product) !!}
                     >
-                        {{ $product->product_type === 'service' ? __('Add To Cart') : __('Add To Cart') }}
+                        {{ __('Add To Cart') }}
                     </button>
                 </div>
             </div>
@@ -137,7 +144,7 @@
                     @class(['tp-product-details-buy-now-btn w-100', 'btn-disabled' => $isOutOfStock])
                     @disabled($isOutOfStock)
                     {!! EcommerceHelper::jsAttributes('buy-now-in-form', $product) !!}
-                >{{ $product->product_type === 'service' ? __('Book Now') : __('Buy Now') }}</button>
+                >{{ $isService ? __('Book Now') : __('Buy Now') }}</button>
             @endif
         </div>
     @endif
