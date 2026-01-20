@@ -149,7 +149,7 @@
                             name="checkout"
                             @class(['tp-product-details-buy-now-btn', 'btn-disabled' => $isOutOfStock])
                             @disabled($isOutOfStock)
-                        >{{ __('Buy Now') }}</button>
+                        >{{ $product->product_type === 'service' ? __('Book Now') : __('Buy Now') }}</button>
                     @endif
                 </div>
             </div>
