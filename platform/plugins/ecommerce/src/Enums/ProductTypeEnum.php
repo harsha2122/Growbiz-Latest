@@ -10,6 +10,7 @@ use Illuminate\Support\HtmlString;
 /**
  * @method static ProductTypeEnum PHYSICAL()
  * @method static ProductTypeEnum DIGITAL()
+ * @method static ProductTypeEnum SERVICE()
  */
 class ProductTypeEnum extends Enum
 {
@@ -17,12 +18,15 @@ class ProductTypeEnum extends Enum
 
     public const DIGITAL = 'digital';
 
+    public const SERVICE = 'service';
+
     public static $langPath = 'plugins/ecommerce::products.types';
 
     public function toHtml(): HtmlString|string
     {
         $color = match ($this->value) {
             self::PHYSICAL => 'info',
+            self::SERVICE => 'success',
             default => 'primary',
         };
 
@@ -38,6 +42,7 @@ class ProductTypeEnum extends Enum
         $icon = match ($this->value) {
             self::PHYSICAL => 'ti ti-package',
             self::DIGITAL => 'ti ti-book-download',
+            self::SERVICE => 'ti ti-tools',
             default => 'ti ti-camera',
         };
 

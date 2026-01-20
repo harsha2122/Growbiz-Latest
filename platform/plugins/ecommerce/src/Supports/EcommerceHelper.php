@@ -978,9 +978,11 @@ class EcommerceHelper
             return true;
         }
 
-        $count = $this->countDigitalProducts($products);
+        $countDigital = $this->countDigitalProducts($products);
+        $countService = $this->countServiceProducts($products);
+        $totalNonPhysical = $countDigital + $countService;
 
-        return ! $count || $products->count() != $count;
+        return ! $totalNonPhysical || $products->count() != $totalNonPhysical;
     }
 
     public function countDigitalProducts(Collection $products): int
@@ -990,6 +992,15 @@ class EcommerceHelper
         }
 
         return $products->where('product_type', ProductTypeEnum::DIGITAL)->count();
+    }
+
+    public function countServiceProducts(Collection $products): int
+    {
+        if (! $this->isEnabledSupportDigitalProducts()) {
+            return 0;
+        }
+
+        return $products->where('product_type', ProductTypeEnum::SERVICE)->count();
     }
 
     public function canCheckoutForDigitalProducts(Collection $products): bool
@@ -1015,7 +1026,10 @@ class EcommerceHelper
 
     public function isSaveOrderShippingAddress(Collection $products): bool
     {
+        $hasServiceProducts = $this->countServiceProducts($products) > 0;
+
         return $this->isAvailableShipping($products) ||
+            $hasServiceProducts ||
             (! auth('customer')->check() && $this->allowGuestCheckoutForDigitalProducts());
     }
 
@@ -1813,8 +1827,11 @@ class EcommerceHelper
     public function getCurrentCreationContextProductType(): ?string
     {
         if ($this->isEnabledSupportDigitalProducts() && ! $this->isDisabledPhysicalProduct()) {
-            if (request()->input('product_type') == ProductTypeEnum::DIGITAL) {
+            $requestedType = request()->input('product_type');
+            if ($requestedType == ProductTypeEnum::DIGITAL) {
                 return ProductTypeEnum::DIGITAL;
+            } elseif ($requestedType == ProductTypeEnum::SERVICE) {
+                return ProductTypeEnum::SERVICE;
             } else {
                 return ProductTypeEnum::PHYSICAL;
             }

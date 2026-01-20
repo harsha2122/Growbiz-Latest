@@ -761,9 +761,11 @@ class HookServiceProvider extends ServiceProvider
                     $products = Cart::instance('cart')->products();
                     if (EcommerceHelper::isEnabledSupportDigitalProducts()) {
                         $digitalProductsCount = EcommerceHelper::countDigitalProducts($products);
-                        if ($digitalProductsCount > 0 && $digitalProductsCount === $products->count()) {
+                        $serviceProductsCount = EcommerceHelper::countServiceProducts($products);
+                        $nonPhysicalCount = $digitalProductsCount + $serviceProductsCount;
+                        if ($nonPhysicalCount > 0 && $nonPhysicalCount === $products->count()) {
                             $data['error'] = true;
-                            $data['message'] = __('COD (Cash On Delivery) payment method is not available for digital products only.');
+                            $data['message'] = __('COD (Cash On Delivery) payment method is not available for digital products or services only.');
 
                             break;
                         }

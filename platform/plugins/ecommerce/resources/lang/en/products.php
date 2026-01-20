@@ -7,6 +7,7 @@ return [
     'create_product_type' => [
         'physical' => 'New physical product',
         'digital' => 'New digital product',
+        'service' => 'New service',
     ],
     'edit' => 'Edit product - :name',
     'form' => [
@@ -179,6 +180,7 @@ return [
     'types' => [
         'physical' => 'Physical',
         'digital' => 'Digital',
+        'service' => 'Service',
     ],
     'digital_attachments' => [
         'title' => 'Digital attachments',

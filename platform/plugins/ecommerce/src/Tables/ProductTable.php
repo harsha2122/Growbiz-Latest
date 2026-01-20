@@ -243,6 +243,18 @@ class ProductTable extends TableAbstract
                             ]
                         )->toHtml(),
                     ],
+                    [
+                        'className' => 'action-item',
+                        'text' => ProductTypeEnum::SERVICE()->toIcon() . ' ' . Html::tag(
+                            'span',
+                            ProductTypeEnum::SERVICE()->label(),
+                            [
+                                'data-action' => 'service-product',
+                                'data-href' => route('products.create', ['product_type' => 'service']),
+                                'class' => 'ms-1',
+                            ]
+                        )->toHtml(),
+                    ],
                 ],
             ];
         } elseif (! EcommerceHelper::isEnabledSupportDigitalProducts() || EcommerceHelper::isDisabledPhysicalProduct()) {

@@ -48,10 +48,13 @@ class ProductController extends BaseController
         $this->pageTitle(trans('plugins/ecommerce::products.create'));
 
         if (EcommerceHelper::isEnabledSupportDigitalProducts() && ! EcommerceHelper::isDisabledPhysicalProduct()) {
-            if (EcommerceHelper::getCurrentCreationContextProductType() == ProductTypeEnum::DIGITAL) {
+            $productType = EcommerceHelper::getCurrentCreationContextProductType();
+            if ($productType == ProductTypeEnum::DIGITAL) {
                 $this->pageTitle(trans('plugins/ecommerce::products.create_product_type.digital'));
-            } elseif (EcommerceHelper::getCurrentCreationContextProductType() == ProductTypeEnum::PHYSICAL) {
+            } elseif ($productType == ProductTypeEnum::PHYSICAL) {
                 $this->pageTitle(trans('plugins/ecommerce::products.create_product_type.physical'));
+            } elseif ($productType == ProductTypeEnum::SERVICE) {
+                $this->pageTitle(trans('plugins/ecommerce::products.create_product_type.service'));
             }
         }
 
@@ -81,10 +84,13 @@ class ProductController extends BaseController
         $product = new Product();
 
         $product->status = $request->input('status');
-        if (EcommerceHelper::getCurrentCreationContextProductType() == ProductTypeEnum::DIGITAL) {
+        $productType = EcommerceHelper::getCurrentCreationContextProductType();
+        if ($productType == ProductTypeEnum::DIGITAL) {
             $product->product_type = ProductTypeEnum::DIGITAL;
-        } elseif (EcommerceHelper::getCurrentCreationContextProductType() == ProductTypeEnum::PHYSICAL) {
+        } elseif ($productType == ProductTypeEnum::PHYSICAL) {
             $product->product_type = ProductTypeEnum::PHYSICAL;
+        } elseif ($productType == ProductTypeEnum::SERVICE) {
+            $product->product_type = ProductTypeEnum::SERVICE;
         } else {
             abort(404);
         }

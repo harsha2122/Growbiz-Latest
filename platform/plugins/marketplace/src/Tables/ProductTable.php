@@ -145,6 +145,14 @@ class ProductTable extends TableAbstract
                             'class' => 'ms-1',
                         ])->toHtml(),
                     ],
+                    [
+                        'className' => 'action-item',
+                        'text' => ProductTypeEnum::SERVICE()->toIcon() . ' ' . Html::tag('span', ProductTypeEnum::SERVICE()->label(), [
+                            'data-action' => 'service-product',
+                            'data-href' => route('marketplace.vendor.products.create', ['product_type' => 'service']),
+                            'class' => 'ms-1',
+                        ])->toHtml(),
+                    ],
                 ],
             ];
         } elseif (! EcommerceHelper::isEnabledSupportDigitalProducts() || EcommerceHelper::isDisabledPhysicalProduct()) {
