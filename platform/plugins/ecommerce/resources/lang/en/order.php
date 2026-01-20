@@ -4,6 +4,8 @@ return [
     'statuses' => [
         'pending' => 'Pending',
         'processing' => 'Processing',
+        'confirmed' => 'Confirmed',
+        'booked' => 'Booked',
         'completed' => 'Completed',
         'canceled' => 'Canceled',
         'partial_returned' => 'Partial returned',

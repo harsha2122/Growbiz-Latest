@@ -376,6 +376,25 @@ class HookServiceProvider extends ServiceProvider
                 }, 123);
             }
 
+            add_filter('payment_methods_excluded', function ($excludedMethods) {
+                $products = Cart::instance('cart')->products();
+                $serviceProductsCount = EcommerceHelper::countServiceProducts($products);
+
+                if ($serviceProductsCount > 0) {
+                    $excludedMethods = array_merge($excludedMethods, [
+                        'stripe',
+                        'paypal',
+                        'razorpay',
+                        'mollie',
+                        'sslcommerz',
+                        'paystack',
+                        PaymentMethodEnum::BANK_TRANSFER,
+                    ]);
+                }
+
+                return $excludedMethods;
+            }, 123);
+
             if (is_plugin_active('payment')) {
                 CODPaymentMethodForm::extend(function (CODPaymentMethodForm $form): void {
                     $form->add(
@@ -755,17 +774,26 @@ class HookServiceProvider extends ServiceProvider
 
             $paymentData = apply_filters(PAYMENT_FILTER_PAYMENT_DATA, [], $request);
 
-            switch ($request->input('payment_method')) {
+            $products = Cart::instance('cart')->products();
+            $serviceProductsCount = EcommerceHelper::countServiceProducts($products);
+            $paymentMethod = $request->input('payment_method');
+
+            if ($serviceProductsCount > 0 && ! in_array($paymentMethod, [PaymentMethodEnum::COD])) {
+                $data['error'] = true;
+                $data['message'] = __('Only Cash on Delivery payment method is available for service bookings.');
+
+                return $data;
+            }
+
+            switch ($paymentMethod) {
                 case PaymentMethodEnum::COD:
 
                     $products = Cart::instance('cart')->products();
                     if (EcommerceHelper::isEnabledSupportDigitalProducts()) {
                         $digitalProductsCount = EcommerceHelper::countDigitalProducts($products);
-                        $serviceProductsCount = EcommerceHelper::countServiceProducts($products);
-                        $nonPhysicalCount = $digitalProductsCount + $serviceProductsCount;
-                        if ($nonPhysicalCount > 0 && $nonPhysicalCount === $products->count()) {
+                        if ($digitalProductsCount > 0 && $digitalProductsCount === $products->count()) {
                             $data['error'] = true;
-                            $data['message'] = __('COD (Cash On Delivery) payment method is not available for digital products or services only.');
+                            $data['message'] = __('COD (Cash On Delivery) payment method is not available for digital products only.');
 
                             break;
                         }
