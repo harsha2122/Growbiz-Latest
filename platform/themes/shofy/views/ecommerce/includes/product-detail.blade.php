@@ -126,7 +126,7 @@
                         data-bb-toggle="add-to-cart-in-form"
                         {!! EcommerceHelper::jsAttributes('add-to-cart-in-form', $product) !!}
                     >
-                        {{ __('Add To Cart') }}
+                        {{ $product->product_type === 'service' ? __('Add To Cart') : __('Add To Cart') }}
                     </button>
                 </div>
             </div>
@@ -137,7 +137,7 @@
                     @class(['tp-product-details-buy-now-btn w-100', 'btn-disabled' => $isOutOfStock])
                     @disabled($isOutOfStock)
                     {!! EcommerceHelper::jsAttributes('buy-now-in-form', $product) !!}
-                >{{ __('Buy Now') }}</button>
+                >{{ $product->product_type === 'service' ? __('Book Now') : __('Buy Now') }}</button>
             @endif
         </div>
     @endif
