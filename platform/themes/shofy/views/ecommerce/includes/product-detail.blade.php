@@ -89,7 +89,7 @@
     @if (EcommerceHelper::isCartEnabled())
         @php
             $isOutOfStock = $product->isOutOfStock();
-            $isService = $product->product_type?->value === 'service';
+            $isService = (string) $product->product_type === 'service';
         @endphp
         <div @class(['tp-product-details-action-wrapper mt-3', 'tp-cart-disabled' => $isOutOfStock])>
             @if (!$isService)
