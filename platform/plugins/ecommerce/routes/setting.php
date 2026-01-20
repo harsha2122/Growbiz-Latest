@@ -69,6 +69,17 @@ AdminHelper::registerRoutes(function (): void {
                     'permission' => 'ecommerce.settings.digital-products',
                 ]);
 
+                Route::get('service-products', [
+                    'as' => 'ecommerce.settings.service-products',
+                    'uses' => 'ServiceProductSettingController@edit',
+                ]);
+
+                Route::put('service-products', [
+                    'as' => 'ecommerce.settings.service-products.update',
+                    'uses' => 'ServiceProductSettingController@update',
+                    'permission' => 'ecommerce.settings.service-products',
+                ]);
+
                 Route::get('product-reviews', [
                     'as' => 'ecommerce.settings.product-reviews',
                     'uses' => 'ProductReviewSettingController@edit',

@@ -492,6 +492,11 @@ return [
         'parent_flag' => 'ecommerce.settings',
     ],
     [
+        'name' => 'Service Product',
+        'flag' => 'ecommerce.settings.service-products',
+        'parent_flag' => 'ecommerce.settings',
+    ],
+    [
         'name' => 'Store Locators',
         'flag' => 'ecommerce.settings.store-locators',
         'parent_flag' => 'ecommerce.settings',

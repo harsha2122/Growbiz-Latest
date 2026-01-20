@@ -51,6 +51,12 @@ class SettingEcommercePanelSection extends PanelSection
                     ->withDescription(trans('plugins/ecommerce::setting.digital_product.description'))
                     ->withPriority(60)
                     ->withRoute('ecommerce.settings.digital-products'),
+                PanelSectionItem::make('settings.ecommerce.service_product_settings')
+                    ->setTitle(trans('plugins/ecommerce::setting.service_product.name'))
+                    ->withIcon('ti ti-tools')
+                    ->withDescription(trans('plugins/ecommerce::setting.service_product.description'))
+                    ->withPriority(65)
+                    ->withRoute('ecommerce.settings.service-products'),
                 PanelSectionItem::make('settings.ecommerce.product_review_settings')
                     ->setTitle(trans('plugins/ecommerce::setting.product_review.name'))
                     ->withIcon('ti ti-star')

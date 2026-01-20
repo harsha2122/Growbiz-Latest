@@ -112,6 +112,22 @@ return [
             'hide_used_license_codes_in_product_form_helper' => 'When enabled, used license codes will be hidden from the license codes table in the product edit form. This helps keep the interface clean when you have many used codes.',
         ],
     ],
+    'service_product' => [
+        'name' => 'Service Products',
+        'description' => 'View and update service products settings',
+        'service_products_settings' => 'Service products',
+        'service_products_settings_description' => 'Configure rules for service products',
+        'form' => [
+            'enable_support_service_product' => 'Enable support for service products',
+            'enable_support_service_product_helper' => 'When enabled, the system will support selling services such as home cleaning, plumbing, consulting, and other service-based offerings.',
+            'allow_guest_checkout_for_service_products' => 'Allow guest checkout for service products',
+            'allow_guest_checkout_for_service_products_helper' => 'When enabled, customers can book services without creating an account. Service details and confirmation will be sent via email.',
+            'require_customer_phone_for_services' => 'Require customer phone number for services',
+            'require_customer_phone_for_services_helper' => 'When enabled, customers must provide a phone number when booking services. This is recommended for coordination and service delivery.',
+            'auto_complete_service_orders_after_payment' => 'Auto-complete service orders after payment',
+            'auto_complete_service_orders_after_payment_helper' => 'When enabled, service bookings will be automatically marked as completed once payment is received. Disable this if services require manual confirmation or scheduling.',
+        ],
+    ],
     'product_review' => [
         'name' => 'Product Reviews',
         'description' => 'View and update your product reviews settings',
