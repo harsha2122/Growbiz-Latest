@@ -90,6 +90,13 @@
         @php
             $isOutOfStock = $product->isOutOfStock();
             $isService = $product->product_type === 'service';
+            // DEBUG: Check product type value
+            \Log::info('Product Debug', [
+                'id' => $product->id,
+                'name' => $product->name,
+                'product_type' => $product->product_type,
+                'isService' => $isService
+            ]);
         @endphp
         <div @class(['tp-product-details-action-wrapper mt-3', 'tp-cart-disabled' => $isOutOfStock])>
             @if (!$isService)

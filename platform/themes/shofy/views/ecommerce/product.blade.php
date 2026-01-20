@@ -132,6 +132,12 @@
                 </div>
                 @php
                     $isOutOfStock = $product->isOutOfStock();
+                    // DEBUG: Check product type value
+                    \Log::info('Product Debug (Sticky)', [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'product_type' => $product->product_type,
+                    ]);
                 @endphp
                 <div class="sticky-actions-button d-flex align-items-center gap-2">
                     <button
