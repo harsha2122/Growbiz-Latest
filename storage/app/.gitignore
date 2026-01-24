@@ -2,4 +2,5 @@
 !public/
 !marketplace/
 !marketplace/.gitkeep
+!marketplace/.gitignore
 !.gitignore
