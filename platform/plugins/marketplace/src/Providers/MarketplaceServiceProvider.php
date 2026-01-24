@@ -24,6 +24,7 @@ use Botble\Ecommerce\Models\SpecificationGroup;
 use Botble\Ecommerce\Models\SpecificationTable;
 use Botble\Ecommerce\PanelSections\SettingEcommercePanelSection;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
+use Botble\Marketplace\Commands\SyncVendorDocuments;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Http\Middleware\RedirectIfNotVendor;
 use Botble\Marketplace\Models\Revenue;
@@ -98,6 +99,12 @@ class MarketplaceServiceProvider extends ServiceProvider
             ->loadAndPublishViews()
             ->publishAssets()
             ->loadRoutes(['base', 'fronts', 'vendor']);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                SyncVendorDocuments::class,
+            ]);
+        }
 
         if (defined('LANGUAGE_MODULE_SCREEN_NAME') && defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME')) {
             LanguageAdvancedManager::registerModule(Store::class, [
