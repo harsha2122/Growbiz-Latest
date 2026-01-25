@@ -394,6 +394,24 @@ app()->booted(function (): void {
             'listing_page_after' => __('Listing Page (after)'),
             'detail_page_before' => __('Detail Page (before)'),
             'detail_page_after' => __('Detail Page (after)'),
+            // Homepage ad locations for shortcode usage
+            'homepage_top' => __('Homepage Top Banner'),
+            'homepage_middle' => __('Homepage Middle Banner'),
+            'homepage_bottom' => __('Homepage Bottom Banner'),
+            'homepage_slider' => __('Homepage Slider Ads'),
+            // Sidebar ad locations
+            'sidebar_top' => __('Sidebar Top'),
+            'sidebar_bottom' => __('Sidebar Bottom'),
+            // Product page ad locations
+            'product_page_top' => __('Product Page Top'),
+            'product_page_bottom' => __('Product Page Bottom'),
+            // Category page ad locations
+            'category_page_top' => __('Category Page Top'),
+            'category_page_bottom' => __('Category Page Bottom'),
+            // General purpose locations
+            'banner_primary' => __('Primary Banner'),
+            'banner_secondary' => __('Secondary Banner'),
+            'promo_section' => __('Promotional Section'),
         ];
     }, 128);
 });

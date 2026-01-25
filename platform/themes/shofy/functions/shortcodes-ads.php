@@ -2,6 +2,7 @@
 
 use Botble\Ads\Facades\AdsManager;
 use Botble\Ads\Models\Ads;
+use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Forms\FieldOptions\CheckboxFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\FieldOptions\UiSelectorFieldOption;
@@ -12,6 +13,7 @@ use Botble\Shortcode\Compilers\Shortcode as ShortcodeCompiler;
 use Botble\Shortcode\Facades\Shortcode;
 use Botble\Shortcode\Forms\ShortcodeForm;
 use Botble\Theme\Facades\Theme;
+use Carbon\Carbon;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Arr;
 use Theme\Shofy\Fields\FieldOptions\SliderAutoplayFieldOption;
@@ -23,25 +25,43 @@ app('events')->listen(RouteMatched::class, function (): void {
     }
 
     Shortcode::register('ads', __('Ads'), __('Ads'), function (ShortcodeCompiler $shortcode) {
-        if (! $shortcode->key_1 && ! $shortcode->key_2 && ! $shortcode->key_3 && ! $shortcode->key_4) {
-            return null;
-        }
-
-        $data = Ads::query()
-            ->whereIn('key', [$shortcode->key_1, $shortcode->key_2, $shortcode->key_3, $shortcode->key_4])
-            ->wherePublished()
-            ->orderBy('order')
-            ->get();
-
         $ads = [];
 
-        foreach (range(1, 4) as $i) {
-            if ($shortcode->{'key_' . $i}) {
-                $ads[] = $data->where('key', $shortcode->{'key_' . $i})->first();
+        // Location-based display - automatically shows all ads assigned to this location
+        if ($shortcode->location && $shortcode->location !== 'not_set') {
+            $ads = Ads::query()
+                ->where('location', $shortcode->location)
+                ->where('status', BaseStatusEnum::PUBLISHED)
+                ->where(function ($query) {
+                    $query->where('ads_type', 'google_adsense')
+                        ->orWhere('expired_at', '>=', Carbon::now());
+                })
+                ->orderBy('order')
+                ->limit($shortcode->limit ? (int) $shortcode->limit : 4)
+                ->get()
+                ->all();
+        }
+        // Key-based display - for backward compatibility
+        elseif ($shortcode->key_1 || $shortcode->key_2 || $shortcode->key_3 || $shortcode->key_4) {
+            $data = Ads::query()
+                ->whereIn('key', array_filter([$shortcode->key_1, $shortcode->key_2, $shortcode->key_3, $shortcode->key_4]))
+                ->where('status', BaseStatusEnum::PUBLISHED)
+                ->where(function ($query) {
+                    $query->where('ads_type', 'google_adsense')
+                        ->orWhere('expired_at', '>=', Carbon::now());
+                })
+                ->orderBy('order')
+                ->get();
+
+            foreach (range(1, 4) as $i) {
+                if ($shortcode->{'key_' . $i}) {
+                    $ad = $data->where('key', $shortcode->{'key_' . $i})->first();
+                    if ($ad) {
+                        $ads[] = $ad;
+                    }
+                }
             }
         }
-
-        $ads = array_filter($ads);
 
         if (empty($ads)) {
             return null;
@@ -58,6 +78,9 @@ app('events')->listen(RouteMatched::class, function (): void {
             ->merge(['' => __('-- Select --')])
             ->sortKeys()
             ->all();
+
+        // Get registered ad locations
+        $locations = AdsManager::getLocations();
 
         $styles = [];
 
@@ -86,6 +109,30 @@ app('events')->listen(RouteMatched::class, function (): void {
                     ->label(__('Style'))
                     ->choices($styles)
                     ->collapsible('style')
+            )
+            ->add(
+                'location',
+                SelectField::class,
+                SelectFieldOption::make()
+                    ->label(__('Ad Location (Auto-display)'))
+                    ->choices($locations)
+                    ->helperText(__('Select a location to automatically display all ads assigned to it. This takes priority over individual ad selection below.'))
+            )
+            ->add(
+                'limit',
+                SelectField::class,
+                SelectFieldOption::make()
+                    ->label(__('Max Ads to Display'))
+                    ->choices([
+                        '' => __('Default (4)'),
+                        '1' => '1',
+                        '2' => '2',
+                        '3' => '3',
+                        '4' => '4',
+                        '6' => '6',
+                        '8' => '8',
+                    ])
+                    ->helperText(__('Maximum number of ads to display when using location-based display.'))
             );
 
         foreach (range(1, 4) as $i) {
@@ -93,8 +140,9 @@ app('events')->listen(RouteMatched::class, function (): void {
                 "key_$i",
                 SelectField::class,
                 SelectFieldOption::make()
-                    ->label(__('Ad :number', ['number' => $i]))
+                    ->label(__('Ad :number (Manual)', ['number' => $i]))
                     ->choices($ads)
+                    ->helperText($i === 1 ? __('Or manually select specific ads below (only used if no location is selected above).') : null)
             );
         }
 
