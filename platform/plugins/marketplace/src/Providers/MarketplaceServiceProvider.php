@@ -24,6 +24,7 @@ use Botble\Ecommerce\Models\SpecificationGroup;
 use Botble\Ecommerce\Models\SpecificationTable;
 use Botble\Ecommerce\PanelSections\SettingEcommercePanelSection;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
+use Botble\Marketplace\Commands\DiagnoseVendorDocuments;
 use Botble\Marketplace\Commands\SyncVendorDocuments;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Http\Middleware\RedirectIfNotVendor;
@@ -103,6 +104,7 @@ class MarketplaceServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 SyncVendorDocuments::class,
+                DiagnoseVendorDocuments::class,
             ]);
         }
 

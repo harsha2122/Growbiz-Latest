@@ -168,49 +168,87 @@
                             </div>
                         @endif
 
-                        @if($store->pan_card_file || $store->aadhar_card_file || $store->gst_certificate_file || $store->udyam_aadhar_file)
-                            <div class="hr my-2"></div>
-                            <div class="p-3">
-                                <strong>{{ trans('plugins/marketplace::marketplace.documents') }}</strong>
-                                <div class="mt-2">
-                                    @if($store->pan_card_file && Storage::disk('local')->exists($store->pan_card_file))
-                                        <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'pan_card']) }}"
-                                           class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                           target="_blank">
-                                            <x-core::icon name="ti ti-file-text" />
-                                            View PAN Card
-                                        </a>
+                        <div class="hr my-2"></div>
+                        <div class="p-3">
+                            <strong>{{ trans('plugins/marketplace::marketplace.documents') }}</strong>
+                            <div class="mt-2">
+                                @php
+                                    $hasAnyDocument = $store->pan_card_file || $store->aadhar_card_file || $store->gst_certificate_file || $store->udyam_aadhar_file;
+                                @endphp
+
+                                @if(!$hasAnyDocument)
+                                    <p class="text-muted small">No documents uploaded</p>
+                                @else
+                                    @if($store->pan_card_file)
+                                        @if(Storage::disk('local')->exists($store->pan_card_file))
+                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'pan_card']) }}"
+                                               class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                               target="_blank">
+                                                <x-core::icon name="ti ti-file-text" />
+                                                View PAN Card
+                                            </a>
+                                        @else
+                                            <div class="alert alert-warning small mb-2 p-2">
+                                                <x-core::icon name="ti ti-alert-triangle" />
+                                                PAN Card: File missing on disk
+                                                <br><small class="text-muted">Path: {{ $store->pan_card_file }}</small>
+                                            </div>
+                                        @endif
                                     @endif
 
-                                    @if($store->aadhar_card_file && Storage::disk('local')->exists($store->aadhar_card_file))
-                                        <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'aadhar_card']) }}"
-                                           class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                           target="_blank">
-                                            <x-core::icon name="ti ti-id" />
-                                            View Aadhar Card
-                                        </a>
+                                    @if($store->aadhar_card_file)
+                                        @if(Storage::disk('local')->exists($store->aadhar_card_file))
+                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'aadhar_card']) }}"
+                                               class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                               target="_blank">
+                                                <x-core::icon name="ti ti-id" />
+                                                View Aadhar Card
+                                            </a>
+                                        @else
+                                            <div class="alert alert-warning small mb-2 p-2">
+                                                <x-core::icon name="ti ti-alert-triangle" />
+                                                Aadhar Card: File missing on disk
+                                                <br><small class="text-muted">Path: {{ $store->aadhar_card_file }}</small>
+                                            </div>
+                                        @endif
                                     @endif
 
-                                    @if($store->gst_certificate_file && Storage::disk('local')->exists($store->gst_certificate_file))
-                                        <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'gst_certificate']) }}"
-                                           class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                           target="_blank">
-                                            <x-core::icon name="ti ti-file-certificate" />
-                                            View GST Certificate
-                                        </a>
+                                    @if($store->gst_certificate_file)
+                                        @if(Storage::disk('local')->exists($store->gst_certificate_file))
+                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'gst_certificate']) }}"
+                                               class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                               target="_blank">
+                                                <x-core::icon name="ti ti-file-certificate" />
+                                                View GST Certificate
+                                            </a>
+                                        @else
+                                            <div class="alert alert-warning small mb-2 p-2">
+                                                <x-core::icon name="ti ti-alert-triangle" />
+                                                GST Certificate: File missing on disk
+                                                <br><small class="text-muted">Path: {{ $store->gst_certificate_file }}</small>
+                                            </div>
+                                        @endif
                                     @endif
 
-                                    @if($store->udyam_aadhar_file && Storage::disk('local')->exists($store->udyam_aadhar_file))
-                                        <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'udyam_aadhar']) }}"
-                                           class="btn btn-sm btn-outline-primary w-100"
-                                           target="_blank">
-                                            <x-core::icon name="ti ti-file-check" />
-                                            View Udyam Aadhar
-                                        </a>
+                                    @if($store->udyam_aadhar_file)
+                                        @if(Storage::disk('local')->exists($store->udyam_aadhar_file))
+                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'udyam_aadhar']) }}"
+                                               class="btn btn-sm btn-outline-primary w-100"
+                                               target="_blank">
+                                                <x-core::icon name="ti ti-file-check" />
+                                                View Udyam Aadhar
+                                            </a>
+                                        @else
+                                            <div class="alert alert-warning small mb-2 p-2">
+                                                <x-core::icon name="ti ti-alert-triangle" />
+                                                Udyam Aadhar: File missing on disk
+                                                <br><small class="text-muted">Path: {{ $store->udyam_aadhar_file }}</small>
+                                            </div>
+                                        @endif
                                     @endif
-                                </div>
+                                @endif
                             </div>
-                        @endif
+                        </div>
 
                         @if($store->tax_id)
                             <div class="hr my-2"></div>
