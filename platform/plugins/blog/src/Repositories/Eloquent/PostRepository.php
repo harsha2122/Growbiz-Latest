@@ -19,6 +19,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
     {
         $data = $this->model
             ->wherePublished()
+            ->notExpired()
             ->where('is_featured', true)
             ->limit($limit)
             ->with(array_merge(['slugable'], $with))
@@ -31,6 +32,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
     {
         $data = $this->model
             ->wherePublished()
+            ->notExpired()
             ->whereNotIn('id', $selected)
             ->limit($limit)
             ->with($with)
@@ -48,6 +50,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
 
         $data = $model
             ->wherePublished()
+            ->notExpired()
             ->where('id', '!=', $id)
             ->limit($limit)
             ->with('slugable')
@@ -81,6 +84,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
     ): Collection|LengthAwarePaginator {
         $data = $this->model
             ->wherePublished()
+            ->notExpired()
             ->whereHas('categories', function (Builder $query) use ($categoryId): void {
                 $query->whereIn('categories.id', array_filter((array) $categoryId));
             })
@@ -100,6 +104,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
     {
         $data = $this->model
             ->wherePublished()
+            ->notExpired()
             ->where('author_id', $authorId)
             ->with('slugable')
             ->orderByDesc('created_at');
@@ -111,6 +116,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
     {
         $data = $this->model
             ->wherePublished()
+            ->notExpired()
             ->with('slugable')
             ->orderByDesc('created_at');
 
@@ -122,6 +128,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
         $data = $this->model
             ->with(['slugable', 'categories', 'categories.slugable', 'author'])
             ->wherePublished()
+            ->notExpired()
             ->whereHas('tags', function (Builder $query) use ($tag): void {
                 $query->where('tags.id', $tag);
             })
@@ -132,7 +139,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
 
     public function getRecentPosts(int $limit = 5, int|string $categoryId = 0): Collection
     {
-        $data = $this->model->wherePublished();
+        $data = $this->model->wherePublished()->notExpired();
 
         if ($categoryId != 0) {
             $data = $data
@@ -157,6 +164,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
         $data = $this->model
             ->with('slugable')
             ->wherePublished()
+            ->notExpired()
             ->orderByDesc('created_at');
 
         $data = $this->search($data, $keyword);
@@ -182,7 +190,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
             ->orderByDesc('created_at');
 
         if ($active) {
-            $data = $data->wherePublished();
+            $data = $data->wherePublished()->notExpired();
         }
 
         return $this->applyBeforeExecuteQuery($data)->paginate($perPage);
@@ -194,6 +202,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
             ->with('slugable')
             ->orderByDesc('views')
             ->wherePublished()
+            ->notExpired()
             ->limit($limit);
 
         if (! empty(Arr::get($args, 'where'))) {
@@ -251,6 +260,7 @@ class PostRepository extends RepositoriesAbstract implements PostInterface
 
         $data = $data
             ->wherePublished()
+            ->notExpired()
             ->orderBy($orderBy, $order);
 
         return $this->applyBeforeExecuteQuery($data)->paginate((int) $filters['per_page']);

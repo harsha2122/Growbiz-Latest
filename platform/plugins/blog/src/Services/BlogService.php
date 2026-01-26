@@ -42,6 +42,7 @@ class BlogService
                  */
                 $post = Post::query()
                     ->where($condition)
+                    ->when(! AdminHelper::isPreviewing(), fn ($query) => $query->notExpired())
                     ->with(['categories', 'tags', 'slugable', 'categories.slugable', 'tags.slugable'])
                     ->firstOrFail();
 

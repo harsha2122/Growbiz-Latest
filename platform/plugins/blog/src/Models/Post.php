@@ -7,6 +7,8 @@ use Botble\Base\Casts\SafeContent;
 use Botble\Base\Models\BaseModel;
 use Botble\Blog\Enums\PostStatusEnum;
 use Botble\Revision\RevisionableTrait;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -38,6 +40,7 @@ class Post extends BaseModel
         'status',
         'author_id',
         'author_type',
+        'expired_at',
     ];
 
     protected static function booted(): void
@@ -57,7 +60,21 @@ class Post extends BaseModel
         'status' => PostStatusEnum::class,
         'name' => SafeContent::class,
         'description' => SafeContent::class,
+        'expired_at' => 'date',
     ];
+
+    public function scopeNotExpired(Builder $query): Builder
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('expired_at')
+              ->orWhere('expired_at', '>=', Carbon::now());
+        });
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expired_at && $this->expired_at->lt(Carbon::now());
+    }
 
     public function tags(): BelongsToMany
     {

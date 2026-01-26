@@ -14,6 +14,8 @@ return [
         'is_featured' => 'Feature this post',
         'note' => 'Note content',
         'format_type' => 'Format',
+        'expired_at' => 'Expiry Date',
+        'expired_at_helper' => 'Leave empty for no expiration. Post will be hidden after this date.',
     ],
     'cannot_delete' => 'Post could not be deleted',
     'post_deleted' => 'Post deleted',

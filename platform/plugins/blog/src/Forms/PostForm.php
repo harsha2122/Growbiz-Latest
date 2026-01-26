@@ -3,6 +3,7 @@
 namespace Botble\Blog\Forms;
 
 use Botble\Base\Forms\FieldOptions\ContentFieldOption;
+use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
 use Botble\Base\Forms\FieldOptions\DescriptionFieldOption;
 use Botble\Base\Forms\FieldOptions\IsFeaturedFieldOption;
 use Botble\Base\Forms\FieldOptions\MediaImageFieldOption;
@@ -11,6 +12,7 @@ use Botble\Base\Forms\FieldOptions\RadioFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\FieldOptions\StatusFieldOption;
 use Botble\Base\Forms\FieldOptions\TagFieldOption;
+use Botble\Base\Forms\Fields\DatePickerField;
 use Botble\Base\Forms\Fields\EditorField;
 use Botble\Base\Forms\Fields\MediaImageField;
 use Botble\Base\Forms\Fields\OnOffField;
@@ -42,6 +44,13 @@ class PostForm extends FormAbstract
             )
             ->add('content', EditorField::class, ContentFieldOption::make()->allowedShortcodes())
             ->add('status', SelectField::class, StatusFieldOption::make())
+            ->add(
+                'expired_at',
+                DatePickerField::class,
+                DatePickerFieldOption::make()
+                    ->label(trans('plugins/blog::posts.form.expired_at'))
+                    ->helperText(trans('plugins/blog::posts.form.expired_at_helper'))
+            )
             ->when(get_post_formats(true), function (PostForm $form, array $postFormats): void {
                 if (count($postFormats) > 1) {
                     $choices = [];
