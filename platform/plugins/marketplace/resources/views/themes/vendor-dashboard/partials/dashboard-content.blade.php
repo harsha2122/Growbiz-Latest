@@ -68,6 +68,7 @@
                             <span class="d-inline d-sm-none">{{ __('Settings') }}</span>
                         </a>
                     </div>
+                    {{-- Withdrawal button hidden for now
                     <div class="col-6 mt-2">
                         <a href="{{ route('marketplace.vendor.withdrawals.create') }}" class="btn btn-outline-success w-100 d-flex align-items-center justify-content-center gap-1">
                             <x-core::icon name="ti ti-cash-banknote" />
@@ -75,6 +76,7 @@
                             <span class="d-inline d-sm-none">{{ __('Withdraw') }}</span>
                         </a>
                     </div>
+                    --}}
                 </div>
             </x-core::card.body>
         </x-core::card>
