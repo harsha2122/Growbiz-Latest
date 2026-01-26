@@ -9,6 +9,8 @@
     <div class="container">
         @include(MarketplaceHelper::viewPath('includes.store-detail-banner'))
 
+        @include(MarketplaceHelper::viewPath('includes.sponsored-video'))
+
         <div class="row">
             <div class="col-xl-3 col-lg-4">
                 @include(MarketplaceHelper::viewPath('includes.store-filters'))

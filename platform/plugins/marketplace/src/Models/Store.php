@@ -57,6 +57,9 @@ class Store extends BaseModel
         'verified_at',
         'verified_by',
         'verification_note',
+        'sponsored_video_url',
+        'sponsored_video_thumbnail',
+        'sponsored_video_expires_at',
     ];
 
     protected $casts = [
@@ -69,6 +72,7 @@ class Store extends BaseModel
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
         'verification_note' => SafeContent::class,
+        'sponsored_video_expires_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -236,5 +240,18 @@ class Store extends BaseModel
         }
 
         return parent::getMetaData($key, $single);
+    }
+
+    public function hasActiveSponsoredVideo(): bool
+    {
+        if (empty($this->sponsored_video_url)) {
+            return false;
+        }
+
+        if ($this->sponsored_video_expires_at && $this->sponsored_video_expires_at->isPast()) {
+            return false;
+        }
+
+        return true;
     }
 }

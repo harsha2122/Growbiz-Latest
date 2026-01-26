@@ -33,6 +33,9 @@ class StoreRequest extends Request
             'logo' => ['nullable', 'string', new MediaImageRule()],
             'logo_square' => ['nullable', 'string', new MediaImageRule()],
             'cover_image' => ['nullable', 'string', new MediaImageRule()],
+            'sponsored_video_url' => ['nullable', 'string', 'url', 'max:500'],
+            'sponsored_video_thumbnail' => ['nullable', 'string', new MediaImageRule()],
+            'sponsored_video_expires_at' => ['nullable', 'date'],
         ];
     }
 }

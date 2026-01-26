@@ -4,13 +4,16 @@ namespace Botble\Marketplace\Forms;
 
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Facades\Assets;
+use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Forms\FieldOptions\ContentFieldOption;
+use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
 use Botble\Base\Forms\FieldOptions\DescriptionFieldOption;
 use Botble\Base\Forms\FieldOptions\EmailFieldOption;
 use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
 use Botble\Base\Forms\FieldOptions\MediaImageFieldOption;
 use Botble\Base\Forms\FieldOptions\NameFieldOption;
 use Botble\Base\Forms\FieldOptions\TextFieldOption;
+use Botble\Base\Forms\Fields\DatePickerField;
 use Botble\Base\Forms\Fields\EditorField;
 use Botble\Base\Forms\Fields\EmailField;
 use Botble\Base\Forms\Fields\HtmlField;
@@ -19,6 +22,7 @@ use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Forms\Fields\TextareaField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Forms\FormAbstract;
+use Carbon\Carbon;
 use Botble\Ecommerce\Enums\CustomerStatusEnum;
 use Botble\Ecommerce\Forms\Concerns\HasLocationFields;
 use Botble\Ecommerce\Models\Customer;
@@ -101,6 +105,40 @@ class StoreForm extends FormAbstract
                 MediaImageFieldOption::make()
                     ->label(__('Cover Image'))
                     ->colspan(2)
+            )
+            ->add(
+                'sponsored_video_section',
+                HtmlField::class,
+                HtmlFieldOption::make()
+                    ->content('<h4 style="margin-top: 20px; margin-bottom: 10px; padding-top: 15px; border-top: 1px solid #eee;">' . __('Sponsored Video (Admin Only)') . '</h4>')
+                    ->colspan(6)
+            )
+            ->add(
+                'sponsored_video_url',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(__('Sponsored Video URL'))
+                    ->placeholder(__('Enter YouTube or Vimeo video URL'))
+                    ->helperText(__('This video will be displayed as sponsored content on the vendor store page.'))
+                    ->maxLength(500)
+                    ->colspan(3)
+            )
+            ->add(
+                'sponsored_video_expires_at',
+                DatePickerField::class,
+                DatePickerFieldOption::make()
+                    ->label(__('Video Expiry Date'))
+                    ->defaultValue($this->getModel()->sponsored_video_expires_at ? BaseHelper::formatDate($this->getModel()->sponsored_video_expires_at) : '')
+                    ->helperText(__('Leave empty for no expiration. Video will be hidden after this date.'))
+                    ->colspan(3)
+            )
+            ->add(
+                'sponsored_video_thumbnail',
+                MediaImageField::class,
+                MediaImageFieldOption::make()
+                    ->label(__('Sponsored Video Thumbnail'))
+                    ->helperText(__('Thumbnail image for the sponsored video.'))
+                    ->colspan(6)
             )
             ->add('status', SelectField::class, [
                 'label' => trans('core/base::tables.status'),

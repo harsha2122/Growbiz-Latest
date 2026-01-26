@@ -18,7 +18,7 @@ class VendorStoreForm extends StoreForm
         $this
             ->setValidatorClass(VendorStoreRequest::class)
             ->modify('content', CustomEditorField::class)
-            ->remove(['status', 'customer_id'])
+            ->remove(['status', 'customer_id', 'sponsored_video_section', 'sponsored_video_url', 'sponsored_video_expires_at', 'sponsored_video_thumbnail'])
             // Disable name, email, and phone fields - only admin can change these
             ->modify('name', TextField::class, NameFieldOption::make()->required()->colspan(6)->addAttribute('disabled', 'disabled'))
             ->modify('email', EmailField::class, EmailFieldOption::make()->required()->colspan(3)->addAttribute('disabled', 'disabled'))
