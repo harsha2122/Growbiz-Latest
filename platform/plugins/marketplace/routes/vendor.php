@@ -308,4 +308,16 @@ Route::group([
 
     Route::get('settings/languages', [LanguageSettingController::class, 'index'])->name('language-settings.index');
     Route::put('settings/languages', [LanguageSettingController::class, 'update'])->name('language-settings.update');
+
+    Route::prefix('contact-admin')->group(function (): void {
+        Route::get('/', [
+            'as' => 'contact-admin',
+            'uses' => 'ContactAdminController@index',
+        ]);
+
+        Route::post('/', [
+            'as' => 'contact-admin.store',
+            'uses' => 'ContactAdminController@store',
+        ]);
+    });
 });

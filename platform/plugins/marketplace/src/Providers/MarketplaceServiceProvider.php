@@ -278,6 +278,13 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-wallet',
                 ])
                 ->registerItem([
+                    'id' => 'marketplace.vendor.contact-admin',
+                    'priority' => 998,
+                    'name' => __('Contact Admin'),
+                    'url' => fn () => route('marketplace.vendor.contact-admin'),
+                    'icon' => 'ti ti-message-circle',
+                ])
+                ->registerItem([
                     'id' => 'marketplace.vendor.settings',
                     'priority' => 999,
                     'name' => __('Settings'),
