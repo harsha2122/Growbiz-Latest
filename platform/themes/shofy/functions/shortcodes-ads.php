@@ -160,4 +160,53 @@ app('events')->listen(RouteMatched::class, function (): void {
             SliderAutoplayFieldOption::make()
         );
     });
+
+    // New shortcode: Display ALL ads in a grid layout
+    Shortcode::register('all-ads', __('All Ads'), __('Display all published ads in a grid'), function (ShortcodeCompiler $shortcode) {
+        $ads = Ads::query()
+            ->where('status', BaseStatusEnum::PUBLISHED)
+            ->where(function ($query) {
+                $query->where('ads_type', 'google_adsense')
+                    ->orWhere('expired_at', '>=', Carbon::now());
+            })
+            ->whereNotNull('image')
+            ->orderBy('order')
+            ->get();
+
+        if ($ads->isEmpty()) {
+            return null;
+        }
+
+        $title = $shortcode->title ?: __('All Promotions');
+        $columns = $shortcode->columns ?: 3;
+
+        return Theme::partial('shortcodes.ads.all-ads', compact('shortcode', 'ads', 'title', 'columns'));
+    });
+
+    Shortcode::setAdminConfig('all-ads', function (array $attributes) {
+        return ShortcodeForm::createFromArray($attributes)
+            ->withLazyLoading()
+            ->add(
+                'title',
+                'text',
+                [
+                    'label' => __('Title'),
+                    'attr' => [
+                        'placeholder' => __('All Promotions'),
+                    ],
+                ]
+            )
+            ->add(
+                'columns',
+                SelectField::class,
+                SelectFieldOption::make()
+                    ->label(__('Columns'))
+                    ->choices([
+                        '2' => '2',
+                        '3' => '3',
+                        '4' => '4',
+                    ])
+                    ->defaultValue('3')
+            );
+    });
 });
