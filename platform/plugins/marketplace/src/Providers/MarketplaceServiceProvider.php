@@ -262,13 +262,14 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'url' => fn () => route('marketplace.vendor.discounts.index'),
                     'icon' => 'ti ti-tag',
                 ])
-                ->registerItem([
-                    'id' => 'marketplace.vendor.withdrawals',
-                    'priority' => 5,
-                    'name' => __('Withdrawals'),
-                    'url' => fn () => route('marketplace.vendor.withdrawals.index'),
-                    'icon' => 'ti ti-cash',
-                ])
+                // Withdrawals menu hidden for now
+                // ->registerItem([
+                //     'id' => 'marketplace.vendor.withdrawals',
+                //     'priority' => 5,
+                //     'name' => __('Withdrawals'),
+                //     'url' => fn () => route('marketplace.vendor.withdrawals.index'),
+                //     'icon' => 'ti ti-cash',
+                // ])
                 ->registerItem([
                     'id' => 'marketplace.vendor.revenues',
                     'priority' => 6,
