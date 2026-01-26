@@ -17,6 +17,7 @@
     @include(MarketplaceHelper::viewPath('includes.store-detail-banner'))
 
     <div class="container">
+        @include(MarketplaceHelper::viewPath('includes.sponsored-video'))
         <ul class="bb-shop-nav-tabs nav nav-tabs" id="storeTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">
