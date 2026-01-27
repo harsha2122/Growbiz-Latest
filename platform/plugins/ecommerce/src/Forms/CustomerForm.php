@@ -21,6 +21,7 @@ use Botble\Base\Forms\FormAbstract;
 use Botble\Ecommerce\Enums\CustomerStatusEnum;
 use Botble\Ecommerce\Http\Requests\CustomerCreateRequest;
 use Botble\Ecommerce\Models\Customer;
+use Botble\Marketplace\Models\Store;
 
 class CustomerForm extends FormAbstract
 {
@@ -137,6 +138,21 @@ class CustomerForm extends FormAbstract
                         'wrap' => true,
                         'has_table' => true,
                     ];
+                }
+
+                // Add subscription info for vendors
+                if ($model->is_vendor && is_plugin_active('marketplace')) {
+                    $store = Store::query()->where('customer_id', $model->id)->first();
+                    if ($store) {
+                        $subscriptionStatus = $store->getSubscriptionStatus();
+                        $metaBoxes['subscription'] = [
+                            'title' => trans('plugins/marketplace::marketplace.subscription_plan'),
+                            'content' => view('plugins/ecommerce::customers.subscription-info', [
+                                'subscriptionStatus' => $subscriptionStatus,
+                            ])->render(),
+                            'wrap' => true,
+                        ];
+                    }
                 }
 
                 $this->addMetaBoxes($metaBoxes);

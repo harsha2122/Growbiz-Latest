@@ -300,4 +300,5 @@ return [
     'products_count' => 'Products',
     'store_status' => 'Store Status',
     'verified' => 'Verified',
+    'subscription_plan' => 'Subscription Plan',
 ];

@@ -44,6 +44,9 @@ class VendorController extends BaseController
         $storeProducts = $vendor->products_count;
         $storeOrders = $vendor->orders_count;
 
+        // Get subscription status for the store
+        $subscriptionStatus = $store ? $store->getSubscriptionStatus() : null;
+
         return view('plugins/marketplace::vendors.view', compact(
             'vendor',
             'totalSpent',
@@ -57,7 +60,8 @@ class VendorController extends BaseController
             'pendingWithdrawals',
             'balance',
             'storeProducts',
-            'storeOrders'
+            'storeOrders',
+            'subscriptionStatus'
         ));
     }
 
