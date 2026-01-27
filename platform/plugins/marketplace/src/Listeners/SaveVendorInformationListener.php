@@ -63,27 +63,27 @@ class SaveVendorInformationListener
 
         $storage = Storage::disk('local');
 
-        if (! $storage->exists("marketplace/$store->slug")) {
-            $storage->makeDirectory("marketplace/$store->slug");
+        if (! $storage->exists("vendor-documents/$store->slug")) {
+            $storage->makeDirectory("vendor-documents/$store->slug");
         }
 
         if ($panCardFile = $this->request->file('pan_card_file')) {
-            $panCardFilePath = $storage->putFileAs("marketplace/$store->slug", $panCardFile, 'pan_card.' . $panCardFile->getClientOriginalExtension());
+            $panCardFilePath = $storage->putFileAs("vendor-documents/$store->slug", $panCardFile, 'pan_card.' . $panCardFile->getClientOriginalExtension());
             $store->pan_card_file = $panCardFilePath;
         }
 
         if ($aadharCardFile = $this->request->file('aadhar_card_file')) {
-            $aadharCardFilePath = $storage->putFileAs("marketplace/$store->slug", $aadharCardFile, 'aadhar_card.' . $aadharCardFile->getClientOriginalExtension());
+            $aadharCardFilePath = $storage->putFileAs("vendor-documents/$store->slug", $aadharCardFile, 'aadhar_card.' . $aadharCardFile->getClientOriginalExtension());
             $store->aadhar_card_file = $aadharCardFilePath;
         }
 
         if ($gstCertificateFile = $this->request->file('gst_certificate_file')) {
-            $gstCertificateFilePath = $storage->putFileAs("marketplace/$store->slug", $gstCertificateFile, 'gst_certificate.' . $gstCertificateFile->getClientOriginalExtension());
+            $gstCertificateFilePath = $storage->putFileAs("vendor-documents/$store->slug", $gstCertificateFile, 'gst_certificate.' . $gstCertificateFile->getClientOriginalExtension());
             $store->gst_certificate_file = $gstCertificateFilePath;
         }
 
         if ($udyamAadharFile = $this->request->file('udyam_aadhar_file')) {
-            $udyamAadharFilePath = $storage->putFileAs("marketplace/$store->slug", $udyamAadharFile, 'udyam_aadhar.' . $udyamAadharFile->getClientOriginalExtension());
+            $udyamAadharFilePath = $storage->putFileAs("vendor-documents/$store->slug", $udyamAadharFile, 'udyam_aadhar.' . $udyamAadharFile->getClientOriginalExtension());
             $store->udyam_aadhar_file = $udyamAadharFilePath;
         }
 
