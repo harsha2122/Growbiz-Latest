@@ -17,38 +17,55 @@
                         <div class="row g-3">
                             <div class="col-6 col-md-3">
                                 <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.current_plan') }}</div>
-                                <div class="fw-bold">{{ $subscriptionStatus['plan_name'] }}</div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.products_used') }}</div>
-                                <div class="fw-bold">
-                                    {{ $subscriptionStatus['products_used'] }}
-                                    @if($subscriptionStatus['products_limit'] > 0)
-                                        / {{ $subscriptionStatus['products_limit'] }}
-                                    @else
-                                        / {{ trans('plugins/marketplace::subscription-plan.unlimited') }}
-                                    @endif
+                                <div class="mt-1">
+                                    <span class="badge bg-primary text-primary-fg fs-6">{{ $subscriptionStatus['plan_name'] }}</span>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
-                                <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.products_remaining') }}</div>
-                                <div class="fw-bold {{ $subscriptionStatus['products_remaining'] == 0 ? 'text-danger' : '' }}">
-                                    @if($subscriptionStatus['products_remaining'] == -1)
-                                        {{ trans('plugins/marketplace::subscription-plan.unlimited') }}
+                                <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.products_used') }}</div>
+                                <div class="fw-bold mt-1">
+                                    <span class="fs-4">{{ $subscriptionStatus['products_used'] }}</span>
+                                    <span class="text-muted">/</span>
+                                    @if($subscriptionStatus['products_limit'] > 0)
+                                        <span>{{ $subscriptionStatus['products_limit'] }}</span>
                                     @else
-                                        {{ $subscriptionStatus['products_remaining'] }}
+                                        <span class="text-success">{{ trans('plugins/marketplace::subscription-plan.unlimited') }}</span>
+                                    @endif
+                                </div>
+                                @if($subscriptionStatus['products_limit'] > 0)
+                                    @php
+                                        $percentage = min(100, ($subscriptionStatus['products_used'] / $subscriptionStatus['products_limit']) * 100);
+                                        $progressClass = $percentage >= 90 ? 'bg-danger' : ($percentage >= 70 ? 'bg-warning' : 'bg-success');
+                                    @endphp
+                                    <div class="progress mt-2" style="height: 6px;">
+                                        <div class="progress-bar {{ $progressClass }}" role="progressbar" style="width: {{ $percentage }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ $subscriptionStatus['products_remaining'] }} {{ __('remaining') }}</small>
+                                @endif
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-muted small">{{ __('Valid Till') }}</div>
+                                <div class="fw-bold mt-1">
+                                    @if($subscriptionStatus['expires_at'])
+                                        <span class="{{ $subscriptionStatus['is_expired'] ? 'text-danger' : ($subscriptionStatus['days_remaining'] <= 7 ? 'text-warning' : 'text-success') }}">
+                                            {{ $subscriptionStatus['expires_at']->format('d M Y') }}
+                                        </span>
+                                    @else
+                                        <span class="text-success">{{ __('Never expires') }}</span>
                                     @endif
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
                                 <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.days_remaining') }}</div>
-                                <div class="fw-bold {{ $subscriptionStatus['is_expired'] ? 'text-danger' : ($subscriptionStatus['days_remaining'] !== -1 && $subscriptionStatus['days_remaining'] <= 7 ? 'text-warning' : 'text-success') }}">
+                                <div class="mt-1">
                                     @if($subscriptionStatus['is_expired'])
-                                        {{ __('Expired') }}
+                                        <span class="badge bg-danger text-danger-fg">{{ __('Expired') }}</span>
                                     @elseif($subscriptionStatus['days_remaining'] == -1)
-                                        {{ trans('plugins/marketplace::subscription-plan.unlimited') }}
+                                        <span class="badge bg-success text-success-fg">{{ trans('plugins/marketplace::subscription-plan.unlimited') }}</span>
+                                    @elseif($subscriptionStatus['days_remaining'] <= 7)
+                                        <span class="badge bg-warning text-warning-fg">{{ $subscriptionStatus['days_remaining'] }} {{ __('days left') }}</span>
                                     @else
-                                        {{ $subscriptionStatus['days_remaining'] }} {{ __('days') }}
+                                        <span class="badge bg-success text-success-fg">{{ $subscriptionStatus['days_remaining'] }} {{ __('days left') }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -62,6 +79,11 @@
                             <div class="alert alert-warning mt-3 mb-0">
                                 <x-core::icon name="ti ti-alert-triangle" />
                                 {{ trans('plugins/marketplace::subscription-plan.product_limit_reached') }}
+                            </div>
+                        @elseif($subscriptionStatus['days_remaining'] !== -1 && $subscriptionStatus['days_remaining'] <= 7 && $subscriptionStatus['days_remaining'] > 0)
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <x-core::icon name="ti ti-alert-triangle" />
+                                {{ __('Your subscription will expire in :days days. Please contact admin to renew.', ['days' => $subscriptionStatus['days_remaining']]) }}
                             </div>
                         @endif
                     @else
