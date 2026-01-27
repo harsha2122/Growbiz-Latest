@@ -3,36 +3,44 @@
 @section('title', __('Contact Admin'))
 
 @section('content')
-    <div class="bb-contact-admin-wrapper">
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="mb-4">
-                    <p class="text-muted">{{ __('Have a question or need assistance? Send us a message and our team will get back to you as soon as possible.') }}</p>
+    <div class="bb-customer-card-list">
+        <div class="bb-customer-card">
+            <div class="bb-customer-card-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-2">
+                        <x-core::icon name="ti ti-message-circle" class="text-primary" />
+                    </div>
+                    <div>
+                        <h3 class="bb-customer-card-title h5 mb-1">{{ __('Contact Admin') }}</h3>
+                        <p class="text-muted small mb-0">{{ __('Have a question or need assistance? Send us a message and our team will get back to you as soon as possible.') }}</p>
+                    </div>
                 </div>
+            </div>
+            <div class="bb-customer-card-body">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show d-flex align-items-start gap-3" role="alert">
+                        <x-core::icon name="ti ti-check" class="text-success flex-shrink-0 mt-1" />
+                        <div>{{ session('success') }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
 
                 <form action="{{ route('customer.contact-admin.store') }}" method="POST">
                     @csrf
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">{{ __('Name') }}</label>
-                            <input type="text" class="form-control bg-light" value="{{ auth('customer')->user()->name }}" readonly disabled>
+                            <label class="form-label fw-semibold">{{ __('Name') }}</label>
+                            <input type="text" class="form-control" value="{{ auth('customer')->user()->name }}" readonly disabled>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">{{ __('Email') }}</label>
-                            <input type="email" class="form-control bg-light" value="{{ auth('customer')->user()->email }}" readonly disabled>
+                            <label class="form-label fw-semibold">{{ __('Email') }}</label>
+                            <input type="email" class="form-control" value="{{ auth('customer')->user()->email }}" readonly disabled>
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label" for="subject">{{ __('Subject') }} <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold" for="subject">{{ __('Subject') }} <span class="text-danger">*</span></label>
                             <select name="subject" id="subject" class="form-select @error('subject') is-invalid @enderror" required>
                                 <option value="">{{ __('Select a subject') }}</option>
                                 <option value="General Inquiry" {{ old('subject') == 'General Inquiry' ? 'selected' : '' }}>{{ __('General Inquiry') }}</option>
@@ -49,12 +57,12 @@
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label" for="content">{{ __('Message') }} <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold" for="content">{{ __('Message') }} <span class="text-danger">*</span></label>
                             <textarea
                                 name="content"
                                 id="content"
                                 class="form-control @error('content') is-invalid @enderror"
-                                rows="6"
+                                rows="5"
                                 placeholder="{{ __('Describe your issue or question in detail...') }}"
                                 required
                             >{{ old('content') }}</textarea>
@@ -65,7 +73,7 @@
 
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary">
-                                <x-core::icon name="ti ti-send" />
+                                <x-core::icon name="ti ti-send" class="me-1" />
                                 {{ __('Send Message') }}
                             </button>
                         </div>
