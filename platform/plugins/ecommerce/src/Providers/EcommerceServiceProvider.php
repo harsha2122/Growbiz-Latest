@@ -1036,13 +1036,6 @@ class EcommerceServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-settings',
                 ])
                 ->registerItem([
-                    'id' => 'cms-customer-contact-admin',
-                    'priority' => 80,
-                    'name' => __('Contact Admin'),
-                    'url' => fn () => route('customer.contact-admin'),
-                    'icon' => 'ti ti-message-circle',
-                ])
-                ->registerItem([
                     'id' => 'cms-customer-logout',
                     'priority' => 999,
                     'name' => __('Logout'),

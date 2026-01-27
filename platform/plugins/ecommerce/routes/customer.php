@@ -287,17 +287,6 @@ Theme::registerRoutes(function (): void {
                 'uses' => 'PublicController@getProductReviews',
             ]);
 
-            Route::prefix('contact-admin')->group(function (): void {
-                Route::get('/', [
-                    'as' => 'contact-admin',
-                    'uses' => 'ContactAdminController@index',
-                ]);
-
-                Route::post('/', [
-                    'as' => 'contact-admin.store',
-                    'uses' => 'ContactAdminController@store',
-                ]);
-            });
         });
 
     Route::group(['namespace' => 'Botble\Ecommerce\Http\Controllers\Customers', 'as' => 'public.'], function (): void {
