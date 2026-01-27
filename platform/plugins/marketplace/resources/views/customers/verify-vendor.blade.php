@@ -152,17 +152,39 @@
 @endsection
 
 @push('footer')
-    <x-core::modal.action
+    <x-core::modal
         id="approve-vendor-for-selling-modal"
         type="warning"
-        :form-action="route('marketplace.unverified-vendors.approve-vendor', $vendor)"
         :title="trans('plugins/marketplace::unverified-vendor.approve_vendor_confirmation')"
-        :description="trans('plugins/marketplace::unverified-vendor.approve_vendor_confirmation_description', [
-            'vendor' => $vendor->name,
-        ])"
-        :submit-button-attrs="['id' => 'confirm-vendor-button']"
-        :submit-button-label="trans('plugins/marketplace::unverified-vendor.approve')"
-    />
+    >
+        <form action="{{ route('marketplace.unverified-vendors.approve-vendor', $vendor) }}" method="POST">
+            @csrf
+            <p>{{ trans('plugins/marketplace::unverified-vendor.approve_vendor_confirmation_description', ['vendor' => $vendor->name]) }}</p>
+
+            @if($subscriptionPlans->count())
+                <div class="mb-3">
+                    <label class="form-label" for="subscription_plan_id">{{ trans('plugins/marketplace::subscription-plan.select_plan') }}</label>
+                    <select name="subscription_plan_id" id="subscription_plan_id" class="form-select">
+                        @foreach($subscriptionPlans as $plan)
+                            <option value="{{ $plan->id }}" {{ $defaultPlan && $defaultPlan->id == $plan->id ? 'selected' : '' }}>
+                                {{ $plan->name }} - {{ $plan->max_products == 0 ? __('Unlimited Products') : $plan->max_products . ' ' . __('Products') }} / {{ $plan->duration_text }}
+                                @if($plan->price > 0)
+                                    ({{ format_price($plan->price) }})
+                                @else
+                                    ({{ __('Free') }})
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                <button type="submit" class="btn btn-warning" id="confirm-vendor-button">{{ trans('plugins/marketplace::unverified-vendor.approve') }}</button>
+            </div>
+        </form>
+    </x-core::modal>
 
     <x-core::modal.action
         id="reject-vendor-modal"

@@ -8,8 +8,11 @@ use Botble\Base\Facades\EmailHandler;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Base\Supports\Breadcrumb;
 use Botble\Marketplace\Facades\MarketplaceHelper;
+use Botble\Marketplace\Models\SubscriptionPlan;
 use Botble\Marketplace\Models\Vendor;
+use Botble\Marketplace\Models\VendorSubscription;
 use Botble\Marketplace\Tables\UnverifiedVendorTable;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -40,7 +43,10 @@ class UnverifiedVendorController extends BaseController
 
         Assets::addScriptsDirectly(['vendor/core/plugins/marketplace/js/marketplace-vendor.js']);
 
-        return view('plugins/marketplace::customers.verify-vendor', compact('vendor'));
+        $subscriptionPlans = SubscriptionPlan::getActivePlans();
+        $defaultPlan = SubscriptionPlan::getDefault();
+
+        return view('plugins/marketplace::customers.verify-vendor', compact('vendor', 'subscriptionPlans', 'defaultPlan'));
     }
 
     public function approveVendor(int|string $id, Request $request)
@@ -50,6 +56,33 @@ class UnverifiedVendorController extends BaseController
             ->findOrFail($id);
 
         $vendor->verify();
+
+        // Assign subscription plan
+        $planId = $request->input('subscription_plan_id');
+        if (!$planId) {
+            $defaultPlan = SubscriptionPlan::getDefault();
+            $planId = $defaultPlan?->id;
+        }
+
+        if ($planId && $vendor->store) {
+            $plan = SubscriptionPlan::query()->find($planId);
+            if ($plan) {
+                $startsAt = Carbon::now();
+                $expiresAt = $plan->duration_days > 0
+                    ? $startsAt->copy()->addDays($plan->duration_days)
+                    : null;
+
+                VendorSubscription::query()->create([
+                    'store_id' => $vendor->store->id,
+                    'plan_id' => $plan->id,
+                    'starts_at' => $startsAt,
+                    'expires_at' => $expiresAt,
+                    'status' => VendorSubscription::STATUS_ACTIVE,
+                    'assigned_by' => auth()->id(),
+                    'notes' => trans('plugins/marketplace::subscription-plan.plan_assigned'),
+                ]);
+            }
+        }
 
         event(new UpdatedContentEvent(CUSTOMER_MODULE_SCREEN_NAME, $request, $vendor));
 

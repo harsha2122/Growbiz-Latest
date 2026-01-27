@@ -106,4 +106,25 @@ return [
         'flag' => 'marketplace.messages.destroy',
         'parent_flag' => 'marketplace.messages.index',
     ],
+
+    [
+        'name' => 'Subscription Plans',
+        'flag' => 'marketplace.subscription-plans.index',
+        'parent_flag' => 'marketplace.index',
+    ],
+    [
+        'name' => 'Create',
+        'flag' => 'marketplace.subscription-plans.create',
+        'parent_flag' => 'marketplace.subscription-plans.index',
+    ],
+    [
+        'name' => 'Edit',
+        'flag' => 'marketplace.subscription-plans.edit',
+        'parent_flag' => 'marketplace.subscription-plans.index',
+    ],
+    [
+        'name' => 'Delete',
+        'flag' => 'marketplace.subscription-plans.destroy',
+        'parent_flag' => 'marketplace.subscription-plans.index',
+    ],
 ];

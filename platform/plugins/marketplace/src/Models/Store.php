@@ -19,6 +19,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -253,5 +254,69 @@ class Store extends BaseModel
         }
 
         return true;
+    }
+
+    public function activeSubscription(): HasOne
+    {
+        return $this->hasOne(VendorSubscription::class)
+            ->where('status', VendorSubscription::STATUS_ACTIVE)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->latest();
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(VendorSubscription::class);
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription()->exists();
+    }
+
+    public function canCreateProduct(): bool
+    {
+        $subscription = VendorSubscription::getActiveForStore($this->id);
+
+        if (!$subscription) {
+            return false;
+        }
+
+        return $subscription->canCreateProduct($this->products()->count());
+    }
+
+    public function getSubscriptionStatus(): array
+    {
+        $subscription = VendorSubscription::getActiveForStore($this->id);
+
+        if (!$subscription) {
+            return [
+                'has_subscription' => false,
+                'plan_name' => null,
+                'products_used' => $this->products()->count(),
+                'products_limit' => 0,
+                'products_remaining' => 0,
+                'days_remaining' => 0,
+                'expires_at' => null,
+                'is_expired' => true,
+            ];
+        }
+
+        $productsUsed = $this->products()->count();
+        $productsLimit = $subscription->plan->max_products ?? 0;
+
+        return [
+            'has_subscription' => true,
+            'plan_name' => $subscription->plan->name ?? __('Unknown'),
+            'products_used' => $productsUsed,
+            'products_limit' => $productsLimit,
+            'products_remaining' => $productsLimit == 0 ? -1 : max(0, $productsLimit - $productsUsed),
+            'days_remaining' => $subscription->days_remaining,
+            'expires_at' => $subscription->expires_at,
+            'is_expired' => $subscription->isExpired(),
+        ];
     }
 }

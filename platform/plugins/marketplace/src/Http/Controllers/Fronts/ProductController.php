@@ -50,6 +50,29 @@ class ProductController extends BaseController
 
     public function create()
     {
+        $store = auth('customer')->user()->store;
+
+        // Check subscription and product limit
+        if ($store && !$store->canCreateProduct()) {
+            $subscriptionStatus = $store->getSubscriptionStatus();
+
+            if (!$subscriptionStatus['has_subscription']) {
+                return redirect()
+                    ->route('marketplace.vendor.dashboard')
+                    ->with('error', trans('plugins/marketplace::subscription-plan.no_subscription'));
+            }
+
+            if ($subscriptionStatus['is_expired']) {
+                return redirect()
+                    ->route('marketplace.vendor.dashboard')
+                    ->with('error', trans('plugins/marketplace::subscription-plan.subscription_expired'));
+            }
+
+            return redirect()
+                ->route('marketplace.vendor.dashboard')
+                ->with('error', trans('plugins/marketplace::subscription-plan.product_limit_reached'));
+        }
+
         $productType = EcommerceHelper::getCurrentCreationContextProductType();
         if ($productType == ProductTypeEnum::DIGITAL) {
             $this->pageTitle(trans('plugins/ecommerce::products.create_product_type.digital'));
@@ -70,6 +93,16 @@ class ProductController extends BaseController
         StoreAttributesOfProductService $storeAttributesOfProductService,
         StoreProductTagService $storeProductTagService
     ) {
+        $store = auth('customer')->user()->store;
+
+        // Double-check subscription and product limit
+        if ($store && !$store->canCreateProduct()) {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage(trans('plugins/marketplace::subscription-plan.product_limit_reached'));
+        }
+
         $request->merge(['video_media' => $this->uploadVideoMedia($request)]);
 
         $request = $this->processRequestData($request);

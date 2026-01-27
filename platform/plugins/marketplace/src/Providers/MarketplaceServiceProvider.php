@@ -195,7 +195,16 @@ class MarketplaceServiceProvider extends ServiceProvider
                             'permissions' => ['marketplace.messages.index'],
                         ]);
                     }
-                );
+                )
+                ->registerItem([
+                    'id' => 'cms-plugins-marketplace-subscription-plans',
+                    'priority' => 6,
+                    'parent_id' => 'cms-plugins-marketplace',
+                    'name' => 'plugins/marketplace::subscription-plan.name',
+                    'icon' => 'ti ti-credit-card',
+                    'url' => fn () => route('marketplace.subscription-plans.index'),
+                    'permissions' => ['marketplace.subscription-plans.index'],
+                ]);
         });
 
         DashboardMenu::for('vendor')->beforeRetrieving(function (): void {

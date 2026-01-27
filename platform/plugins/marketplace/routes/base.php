@@ -184,6 +184,10 @@ AdminHelper::registerRoutes(function (): void {
                     'uses' => 'MessageController@show',
                 ])->wherePrimaryKey();
             });
+
+            Route::group(['prefix' => 'subscription-plans', 'as' => 'subscription-plans.'], function (): void {
+                Route::resource('', 'SubscriptionPlanController')->parameters(['' => 'subscription-plan']);
+            });
         });
 
         Route::group(['prefix' => 'ecommerce/products', 'as' => 'products.'], function (): void {

@@ -15,3 +15,7 @@ if (! defined('REVENUE_MODULE_SCREEN_NAME')) {
 if (! defined('WITHDRAWAL_MODULE_SCREEN_NAME')) {
     define('WITHDRAWAL_MODULE_SCREEN_NAME', 'withdrawal');
 }
+
+if (! defined('SUBSCRIPTION_PLAN_MODULE_SCREEN_NAME')) {
+    define('SUBSCRIPTION_PLAN_MODULE_SCREEN_NAME', 'subscription-plan');
+}

@@ -1,4 +1,82 @@
-<div class="row mb-3 mt-5 g-2">
+@php
+    $subscriptionStatus = $user->store ? $user->store->getSubscriptionStatus() : null;
+@endphp
+
+@if($subscriptionStatus)
+    <div class="row mb-3 mt-5 g-2">
+        <div class="col-12">
+            <x-core::card class="{{ $subscriptionStatus['is_expired'] ? 'border-danger' : ($subscriptionStatus['days_remaining'] !== -1 && $subscriptionStatus['days_remaining'] <= 7 ? 'border-warning' : 'border-success') }}">
+                <x-core::card.header>
+                    <x-core::card.title>
+                        <x-core::icon name="ti ti-credit-card" />
+                        {{ trans('plugins/marketplace::subscription-plan.subscription_info') }}
+                    </x-core::card.title>
+                </x-core::card.header>
+                <x-core::card.body>
+                    @if($subscriptionStatus['has_subscription'])
+                        <div class="row g-3">
+                            <div class="col-6 col-md-3">
+                                <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.current_plan') }}</div>
+                                <div class="fw-bold">{{ $subscriptionStatus['plan_name'] }}</div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.products_used') }}</div>
+                                <div class="fw-bold">
+                                    {{ $subscriptionStatus['products_used'] }}
+                                    @if($subscriptionStatus['products_limit'] > 0)
+                                        / {{ $subscriptionStatus['products_limit'] }}
+                                    @else
+                                        / {{ trans('plugins/marketplace::subscription-plan.unlimited') }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.products_remaining') }}</div>
+                                <div class="fw-bold {{ $subscriptionStatus['products_remaining'] == 0 ? 'text-danger' : '' }}">
+                                    @if($subscriptionStatus['products_remaining'] == -1)
+                                        {{ trans('plugins/marketplace::subscription-plan.unlimited') }}
+                                    @else
+                                        {{ $subscriptionStatus['products_remaining'] }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.days_remaining') }}</div>
+                                <div class="fw-bold {{ $subscriptionStatus['is_expired'] ? 'text-danger' : ($subscriptionStatus['days_remaining'] !== -1 && $subscriptionStatus['days_remaining'] <= 7 ? 'text-warning' : 'text-success') }}">
+                                    @if($subscriptionStatus['is_expired'])
+                                        {{ __('Expired') }}
+                                    @elseif($subscriptionStatus['days_remaining'] == -1)
+                                        {{ trans('plugins/marketplace::subscription-plan.unlimited') }}
+                                    @else
+                                        {{ $subscriptionStatus['days_remaining'] }} {{ __('days') }}
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        @if($subscriptionStatus['is_expired'])
+                            <div class="alert alert-danger mt-3 mb-0">
+                                <x-core::icon name="ti ti-alert-circle" />
+                                {{ trans('plugins/marketplace::subscription-plan.subscription_expired') }}
+                            </div>
+                        @elseif($subscriptionStatus['products_remaining'] == 0)
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <x-core::icon name="ti ti-alert-triangle" />
+                                {{ trans('plugins/marketplace::subscription-plan.product_limit_reached') }}
+                            </div>
+                        @endif
+                    @else
+                        <div class="alert alert-warning mb-0">
+                            <x-core::icon name="ti ti-alert-triangle" />
+                            {{ trans('plugins/marketplace::subscription-plan.no_subscription') }}
+                        </div>
+                    @endif
+                </x-core::card.body>
+            </x-core::card>
+        </div>
+    </div>
+@endif
+
+<div class="row mb-3 {{ !$subscriptionStatus ? 'mt-5' : '' }} g-2">
     <x-core::stat-widget.item
         label="{{ __('Orders') }}"
         :value="$data['orders']->count()"
