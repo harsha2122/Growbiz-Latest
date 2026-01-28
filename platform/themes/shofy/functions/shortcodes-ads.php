@@ -169,7 +169,13 @@ app('events')->listen(RouteMatched::class, function (): void {
                 $query->where('ads_type', 'google_adsense')
                     ->orWhere('expired_at', '>=', Carbon::now());
             })
-            ->whereNotNull('image')
+            ->where(function ($query) {
+                $query->whereNotNull('image')
+                    ->orWhere(function ($q) {
+                        $q->where('ad_media_type', 'video')
+                            ->whereNotNull('video_url');
+                    });
+            })
             ->orderBy('order')
             ->get();
 
