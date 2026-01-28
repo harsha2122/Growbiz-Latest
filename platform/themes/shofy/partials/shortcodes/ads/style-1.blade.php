@@ -60,3 +60,66 @@
         </div>
     </div>
 </section>
+
+<style>
+    .tp-video-play-btn:hover {
+        background: rgba(0,0,0,0.85) !important;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    .tp-video-close-btn:hover {
+        background: rgba(220,53,69,0.9) !important;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.tp-video-ad-wrapper').forEach(function(wrapper) {
+        const playBtn = wrapper.querySelector('.tp-video-play-btn');
+        const closeBtn = wrapper.querySelector('.tp-video-close-btn');
+        const thumbnail = wrapper.querySelector('.tp-video-thumbnail');
+        const player = wrapper.querySelector('.tp-video-player');
+        const iframe = wrapper.querySelector('.tp-video-iframe');
+        const videoUrl = wrapper.dataset.videoUrl;
+
+        function getEmbedUrl(url) {
+            const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (ytMatch) return 'https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=1';
+            const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+            if (vimeoMatch) return 'https://player.vimeo.com/video/' + vimeoMatch[1] + '?autoplay=1';
+            return url;
+        }
+
+        if (playBtn) {
+            playBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const embedUrl = getEmbedUrl(videoUrl);
+                if (embedUrl.includes('youtube.com') || embedUrl.includes('vimeo.com')) {
+                    iframe.src = embedUrl;
+                } else {
+                    player.innerHTML = '<div class="tp-video-close-btn" style="position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; background: rgba(0,0,0,0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div><video src="' + embedUrl + '" style="width: 100%; height: 100%; object-fit: cover;" autoplay controls></video>';
+                    player.querySelector('.tp-video-close-btn').addEventListener('click', closeVideo);
+                }
+                thumbnail.style.display = 'none';
+                player.style.display = 'block';
+            });
+        }
+
+        function closeVideo() {
+            iframe.src = '';
+            const video = player.querySelector('video');
+            if (video) video.pause();
+            player.style.display = 'none';
+            thumbnail.style.display = 'block';
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeVideo();
+            });
+        }
+    });
+});
+</script>
