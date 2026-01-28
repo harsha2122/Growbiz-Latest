@@ -166,7 +166,9 @@ class ThumbnailService
                     return $destinationPath;
                 }
 
-                $thumbImage->cover($this->thumbWidth, $this->thumbHeight, $this->fitPosition);
+                // Use scaleDown instead of cover to prevent cropping
+                // scaleDown maintains aspect ratio and fits within dimensions without cropping
+                $thumbImage->scaleDown($this->thumbWidth, $this->thumbHeight);
 
                 break;
         }
