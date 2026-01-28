@@ -1,14 +1,16 @@
 /**
  * Custom CSS Overrides
  * Product image contain mode - shows full image without cropping
- * Fixed height for all product cards
+ * Fixed height 250px for all product cards
  */
 
-/* GLOBAL - All product thumb containers */
+/* ALL product thumb variants - fixed height */
 .tp-product-thumb,
-.tp-product-thumb.fix,
-.tp-product-thumb.m-img,
-.tp-product-thumb.p-relative {
+.tp-product-thumb-2,
+.tp-product-thumb-3,
+.tp-product-thumb-4,
+.tp-product-thumb-5,
+[class*="tp-product-thumb"] {
     height: 250px !important;
     max-height: 250px !important;
     min-height: 250px !important;
@@ -19,21 +21,32 @@
     overflow: hidden !important;
 }
 
-/* All product thumb links */
+/* All thumb links */
 .tp-product-thumb a,
-.tp-product-thumb > a {
+.tp-product-thumb-2 a,
+.tp-product-thumb-3 a,
+.tp-product-thumb-4 a,
+.tp-product-thumb-5 a,
+[class*="tp-product-thumb"] a {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     width: 100% !important;
     height: 100% !important;
-    max-height: 250px !important;
 }
 
-/* GLOBAL - All product images */
+/* ALL product images - contain mode */
 .tp-product-thumb img,
+.tp-product-thumb-2 img,
+.tp-product-thumb-3 img,
+.tp-product-thumb-4 img,
+.tp-product-thumb-5 img,
+[class*="tp-product-thumb"] img,
 .tp-product-item img,
-.tp-trending-item img {
+.tp-product-item-2 img,
+.tp-product-item-3 img,
+.tp-product-item-4 img,
+.tp-product-item-5 img {
     width: auto !important;
     height: auto !important;
     max-width: 100% !important;
@@ -42,24 +55,31 @@
     transform: none !important;
 }
 
-/* Disable zoom effect on hover */
-.tp-product-item:hover .tp-product-thumb img,
-.tp-trending-item:hover img {
+/* Override w-img class that forces width:100% */
+.w-img img,
+.m-img img {
+    width: auto !important;
+    height: auto !important;
+    max-height: 240px !important;
+    object-fit: contain !important;
+}
+
+/* Disable zoom on hover */
+[class*="tp-product"]:hover img {
     transform: none !important;
 }
 
 /* Product List View */
 .tp-product-list-thumb {
-    background-color: #ffffff !important;
     height: 250px !important;
     max-height: 250px !important;
+    background-color: #ffffff !important;
 }
 
 .tp-product-list-thumb a {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    height: 100% !important;
 }
 
 .tp-product-list-thumb img {
