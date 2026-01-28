@@ -20,6 +20,9 @@ class AdsRequest extends Request
             'expired_at' => ['required', 'date'],
             'ads_type' => ['required', 'in:custom_ad,google_adsense'],
             'google_adsense_slot_id' => ['nullable', 'string', 'max:255'],
+            'ad_media_type' => ['nullable', 'in:image,video'],
+            'video_url' => ['nullable', 'url', 'max:500'],
+            'video_thumbnail' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

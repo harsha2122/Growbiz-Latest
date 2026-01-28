@@ -61,6 +61,17 @@ class AdsForm extends FormAbstract
             )
             ->addCloseCollapsible('ads_type', 'google_adsense')
             ->addOpenCollapsible('ads_type', 'custom_ad', $this->getModel()->ads_type ?? 'custom_ad')
+            ->add(
+                'ad_media_type',
+                SelectField::class,
+                SelectFieldOption::make()
+                    ->label(trans('plugins/ads::ads.ad_media_type'))
+                    ->choices([
+                        'image' => trans('plugins/ads::ads.media_type_image'),
+                        'video' => trans('plugins/ads::ads.media_type_video'),
+                    ])
+                    ->helperText(trans('plugins/ads::ads.ad_media_type_helper'))
+            )
             ->add('url', TextField::class, [
                 'label' => trans('plugins/ads::ads.url'),
                 'attr' => [
@@ -72,7 +83,13 @@ class AdsForm extends FormAbstract
                 'label' => trans('plugins/ads::ads.open_in_new_tab'),
                 'default_value' => true,
             ])
-            ->add('image', MediaImageField::class, MediaImageFieldOption::make())
+            ->addOpenCollapsible('ad_media_type', 'image', $this->getModel()->ad_media_type ?? 'image')
+            ->add('image', MediaImageField::class, [
+                'label' => trans('plugins/ads::ads.image'),
+                'help_block' => [
+                    'text' => trans('plugins/ads::ads.image_size_guide'),
+                ],
+            ])
             ->add('tablet_image', MediaImageField::class, [
                 'label' => __('Tablet Image'),
                 'help_block' => [
@@ -85,6 +102,25 @@ class AdsForm extends FormAbstract
                     'text' => __('For devices with width less than 768px, if empty, will use the image from the tablet.'),
                 ],
             ])
+            ->addCloseCollapsible('ad_media_type', 'image')
+            ->addOpenCollapsible('ad_media_type', 'video', $this->getModel()->ad_media_type)
+            ->add('video_url', TextField::class, [
+                'label' => trans('plugins/ads::ads.video_url'),
+                'attr' => [
+                    'placeholder' => 'https://www.youtube.com/watch?v=... or https://vimeo.com/...',
+                    'data-counter' => 500,
+                ],
+                'help_block' => [
+                    'text' => trans('plugins/ads::ads.video_url_helper'),
+                ],
+            ])
+            ->add('video_thumbnail', MediaImageField::class, [
+                'label' => trans('plugins/ads::ads.video_thumbnail'),
+                'help_block' => [
+                    'text' => trans('plugins/ads::ads.video_thumbnail_helper'),
+                ],
+            ])
+            ->addCloseCollapsible('ad_media_type', 'video')
             ->addCloseCollapsible('ads_type', 'custom_ad')
             ->add('status', SelectField::class, StatusFieldOption::make())
             ->when(($adLocations = AdsManager::getLocations()) && count($adLocations) > 1, function () use ($adLocations): void {

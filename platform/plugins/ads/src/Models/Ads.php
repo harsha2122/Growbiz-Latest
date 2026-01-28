@@ -31,6 +31,9 @@ class Ads extends BaseModel
         'order',
         'ads_type',
         'google_adsense_slot_id',
+        'ad_media_type',
+        'video_url',
+        'video_thumbnail',
     ];
 
     protected $casts = [
@@ -107,6 +110,40 @@ class Ads extends BaseModel
             'size' => $size,
             'hashName' => md5($this->key),
         ]);
+    }
+
+    protected function videoThumbnailUrl(): Attribute
+    {
+        return Attribute::get(
+            fn (): ?string => $this->video_thumbnail ? RvMedia::getImageUrl($this->video_thumbnail) : null
+        );
+    }
+
+    public function isVideoAd(): bool
+    {
+        return $this->ad_media_type === 'video' && ! empty($this->video_url);
+    }
+
+    public function getEmbedVideoUrl(): ?string
+    {
+        if (! $this->video_url) {
+            return null;
+        }
+
+        $url = $this->video_url;
+
+        // Convert YouTube URLs to embed format
+        if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            return 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1';
+        }
+
+        // Convert Vimeo URLs to embed format
+        if (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $url, $matches)) {
+            return 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1';
+        }
+
+        // Return as-is for direct video URLs
+        return $url;
     }
 
     protected static function newFactory()

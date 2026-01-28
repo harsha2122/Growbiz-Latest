@@ -23,6 +23,7 @@
                             {!! Theme::partial('shortcodes.ads.includes.item', ['item' => $ad]) !!}
                         </div>
 
+                        @if(!$ad->isVideoAd())
                         <div class="tp-banner-content">
                             @if($subtitle = $ad->getMetaData('subtitle', true))
                                 <span>{!! BaseHelper::clean(nl2br($subtitle)) !!}</span>
@@ -54,9 +55,43 @@
                                 </div>
                             @endif
                         </div>
+                        @endif
                     </div>
                 </div>
             @endforeach
         </div>
     </div>
 </section>
+
+@once
+@push('footer')
+<style>
+.ad-video-wrapper:hover .ad-video-play-btn {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.ad-video-container').forEach(function(container) {
+        var wrapper = container.querySelector('.ad-video-wrapper');
+        var player = container.querySelector('.ad-video-player');
+        var iframe = player.querySelector('iframe');
+        var closeBtn = player.querySelector('.ad-video-close');
+        var videoUrl = container.dataset.videoUrl;
+
+        wrapper.addEventListener('click', function() {
+            iframe.src = videoUrl;
+            wrapper.style.display = 'none';
+            player.style.display = 'block';
+        });
+
+        closeBtn.addEventListener('click', function() {
+            iframe.src = '';
+            player.style.display = 'none';
+            wrapper.style.display = 'block';
+        });
+    });
+});
+</script>
+@endpush
+@endonce

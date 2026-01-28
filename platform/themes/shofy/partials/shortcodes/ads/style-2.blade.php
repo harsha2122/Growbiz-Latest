@@ -27,31 +27,33 @@
                         >
                             {!! Theme::partial('shortcodes.ads.includes.item', ['item' => $ad]) !!}
                         </div>
-                        @if($title = $ad->getMetaData('title', true))
-                            <h3 class="tp-banner-title-2">
-                                @if ($ad->url)
-                                    <a href="{{ $ad->click_url }}" @if($ad->open_in_new_tab) target="_blank" @endif>
-                                @endif
-                                    {!! BaseHelper::clean(nl2br($title)) !!}</a>
-                                @if ($ad->url)
-                                    </a>
-                                @endif
-                            </h3>
-                        @endif
-                        @if($buttonLabel = $ad->getMetaData('button_label', true))
-                            <div class="tp-banner-btn-2">
-                                @if ($ad->url)
-                                    <a href="{{ $ad->click_url }}" @if($ad->open_in_new_tab) target="_blank" @endif class="tp-btn tp-btn-border tp-btn-border-sm">
-                                @endif
-                                    {{ $buttonLabel }}
-                                    <svg width="17" height="15" viewBox="0 0 17 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M16 7.49988L1 7.49988" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                        <path d="M9.9502 1.47554L16.0002 7.49954L9.9502 13.5245" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                @if ($ad->url)
-                                    </a>
-                                @endif
-                            </div>
+                        @if(!$ad->isVideoAd())
+                            @if($title = $ad->getMetaData('title', true))
+                                <h3 class="tp-banner-title-2">
+                                    @if ($ad->url)
+                                        <a href="{{ $ad->click_url }}" @if($ad->open_in_new_tab) target="_blank" @endif>
+                                    @endif
+                                        {!! BaseHelper::clean(nl2br($title)) !!}</a>
+                                    @if ($ad->url)
+                                        </a>
+                                    @endif
+                                </h3>
+                            @endif
+                            @if($buttonLabel = $ad->getMetaData('button_label', true))
+                                <div class="tp-banner-btn-2">
+                                    @if ($ad->url)
+                                        <a href="{{ $ad->click_url }}" @if($ad->open_in_new_tab) target="_blank" @endif class="tp-btn tp-btn-border tp-btn-border-sm">
+                                    @endif
+                                        {{ $buttonLabel }}
+                                        <svg width="17" height="15" viewBox="0 0 17 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M16 7.49988L1 7.49988" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                            <path d="M9.9502 1.47554L16.0002 7.49954L9.9502 13.5245" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    @if ($ad->url)
+                                        </a>
+                                    @endif
+                                </div>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -59,3 +61,36 @@
         </div>
     </div>
 </section>
+
+@once
+@push('footer')
+<style>
+.ad-video-wrapper:hover .ad-video-play-btn {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.ad-video-container').forEach(function(container) {
+        var wrapper = container.querySelector('.ad-video-wrapper');
+        var player = container.querySelector('.ad-video-player');
+        var iframe = player.querySelector('iframe');
+        var closeBtn = player.querySelector('.ad-video-close');
+        var videoUrl = container.dataset.videoUrl;
+
+        wrapper.addEventListener('click', function() {
+            iframe.src = videoUrl;
+            wrapper.style.display = 'none';
+            player.style.display = 'block';
+        });
+
+        closeBtn.addEventListener('click', function() {
+            iframe.src = '';
+            player.style.display = 'none';
+            wrapper.style.display = 'block';
+        });
+    });
+});
+</script>
+@endpush
+@endonce
