@@ -29,6 +29,7 @@ return [
             $theme->asset()->usePath()->add('owl-carousel', 'libraries/owl-carousel/owl.carousel.css');
             $theme->asset()->add('slick-js', 'vendor/core/plugins/ecommerce/libraries/slick/slick.css');
             $theme->asset()->usePath()->add('theme', 'css/theme.css', version: $version);
+            $theme->asset()->usePath()->add('custom-overrides', 'css/custom-overrides.css', version: $version);
 
             $theme->asset()->container('footer')->usePath()->add('jquery', 'js/jquery-3.7.1.min.js');
             $theme->asset()->container('footer')->usePath()->add('bootstrap', 'plugins/bootstrap/bootstrap.min.js', attributes: ['defer']);
