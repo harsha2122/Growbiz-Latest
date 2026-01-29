@@ -77,12 +77,18 @@
         }
         .custom-variation-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
+        }
+        @media (max-width: 768px) {
+            .custom-variation-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         @media (max-width: 480px) {
             .custom-variation-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
             }
         }
         .custom-variation-card {
@@ -92,6 +98,7 @@
             background: #fff;
             cursor: pointer;
             transition: all 0.2s ease;
+            overflow: hidden;
         }
         .custom-variation-card:hover {
             border-color: #0989ff;
@@ -104,18 +111,18 @@
         .custom-variation-card-label {
             display: flex;
             flex-direction: column;
-            padding: 12px 14px;
+            padding: 10px 12px;
             cursor: pointer;
             margin: 0;
-            min-height: 70px;
+            min-height: 65px;
             justify-content: center;
         }
         .variation-check {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 20px;
-            height: 20px;
+            top: 6px;
+            right: 6px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background: #e5e5e5;
             display: flex;
@@ -123,8 +130,11 @@
             justify-content: center;
             color: #fff;
             transition: all 0.2s ease;
+            flex-shrink: 0;
         }
         .variation-check svg {
+            width: 12px;
+            height: 12px;
             opacity: 0;
             transform: scale(0.5);
             transition: all 0.2s ease;
@@ -137,17 +147,24 @@
             transform: scale(1);
         }
         .variation-name {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             color: #333;
-            line-height: 1.4;
-            padding-right: 25px;
+            line-height: 1.3;
+            padding-right: 22px;
             margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-word;
         }
         .variation-price {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: #0989ff;
+            white-space: nowrap;
         }
         .visually-hidden {
             position: absolute;
@@ -159,6 +176,29 @@
             clip: rect(0, 0, 0, 0);
             white-space: nowrap;
             border: 0;
+        }
+        @media (max-width: 480px) {
+            .custom-variation-card-label {
+                padding: 8px 10px;
+                min-height: 60px;
+            }
+            .variation-name {
+                font-size: 11px;
+                padding-right: 20px;
+            }
+            .variation-price {
+                font-size: 13px;
+            }
+            .variation-check {
+                width: 16px;
+                height: 16px;
+                top: 5px;
+                right: 5px;
+            }
+            .variation-check svg {
+                width: 10px;
+                height: 10px;
+            }
         }
     </style>
 
