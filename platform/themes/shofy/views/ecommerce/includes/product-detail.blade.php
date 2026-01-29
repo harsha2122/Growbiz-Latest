@@ -63,6 +63,8 @@
         {!! render_product_swatches($product, ['selected' => $selectedAttrs]) !!}
     @endif
 
+    @include(Theme::getThemeNamespace('views.ecommerce.includes.custom-variations'), ['product' => $product])
+
     {!! render_product_options($product) !!}
 
     @include(Theme::getThemeNamespace('views.ecommerce.includes.product-availability'))

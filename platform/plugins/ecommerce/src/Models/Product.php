@@ -51,6 +51,7 @@ class Product extends BaseModel
         'image', // Featured image
         'images',
         'video_media',
+        'custom_variations',
         'sku',
         'order',
         'quantity',
@@ -106,6 +107,7 @@ class Product extends BaseModel
         'generate_license_code' => 'bool',
         'notify_attachment_updated' => 'bool',
         'video_media' => 'json',
+        'custom_variations' => 'json',
         'length' => 'float',
         'wide' => 'float',
         'height' => 'float',

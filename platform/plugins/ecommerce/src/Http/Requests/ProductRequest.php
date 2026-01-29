@@ -110,6 +110,11 @@ class ProductRequest extends Request
             'specification_attributes' => ['nullable', 'array'],
             'specification_attributes.*.hidden' => ['nullable', 'boolean'],
             'specification_attributes.*.order' => ['required', 'numeric', 'min:0'],
+            'custom_variations' => ['nullable', 'array'],
+            'custom_variations.*.name' => ['required_with:custom_variations', 'string', 'max:255'],
+            'custom_variations.*.price' => ['required_with:custom_variations', 'numeric', 'min:0'],
+            'custom_variations.*.sku' => ['nullable', 'string', 'max:150'],
+            'custom_variations.*.quantity' => ['nullable', 'numeric', 'min:0'],
         ];
 
         if (EcommerceHelper::isEnabledProductOptions()) {

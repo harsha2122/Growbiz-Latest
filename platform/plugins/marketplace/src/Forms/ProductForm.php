@@ -260,6 +260,16 @@ class ProductForm extends BaseProductForm
                 ]);
         }
 
+        $this->addMetaBoxes([
+            'custom_variations' => [
+                'title' => __('Product Variations (Size/Color with Price)'),
+                'content' => view('plugins/ecommerce::products.partials.custom-variations-form', [
+                    'product' => $this->getModel(),
+                ]),
+                'priority' => 5,
+            ],
+        ]);
+
         $productAttributeSets = ProductAttributeSet::getAllWithSelected($productId, []);
 
         $this

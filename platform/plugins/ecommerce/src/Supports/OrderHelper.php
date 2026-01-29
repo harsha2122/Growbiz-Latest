@@ -656,22 +656,46 @@ class OrderHelper
             $image = RvMedia::getImageUrl($image);
         }
 
+        // Handle custom variations
+        $customVariationData = null;
+        $price = $product->price()->getPrice(false);
+        $productName = BaseHelper::clean($parentProduct->name ?: $product->name);
+        $productSku = $product->sku;
+
+        if ($customVariationJson = $request->input('custom_variation_data')) {
+            $customVariationData = json_decode($customVariationJson, true);
+            if ($customVariationData && isset($customVariationData['price'])) {
+                $price = (float) $customVariationData['price'];
+                if (!empty($customVariationData['name'])) {
+                    $productName .= ' - ' . $customVariationData['name'];
+                }
+                if (!empty($customVariationData['sku'])) {
+                    $productSku = $customVariationData['sku'];
+                }
+            }
+        }
+
+        $extras = $request->input('extras', []);
+        if ($customVariationData) {
+            $extras['custom_variation'] = $customVariationData;
+        }
+
         /**
          * Add cart to session
          */
         Cart::instance('cart')->add(
             $product->getKey(),
-            BaseHelper::clean($parentProduct->name ?: $product->name),
+            $productName,
             $request->input('qty', 1),
-            $product->price()->getPrice(false),
+            $price,
             [
                 'image' => $image,
                 'attributes' => $product->is_variation ? $product->variation_attributes : '',
                 'taxRate' => $taxRate,
                 'taxClasses' => $taxClasses,
                 'options' => $options,
-                'extras' => $request->input('extras', []),
-                'sku' => $product->sku,
+                'extras' => $extras,
+                'sku' => $productSku,
                 'weight' => $product->weight,
             ]
         );
