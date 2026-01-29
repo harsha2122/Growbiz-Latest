@@ -739,11 +739,17 @@ class Cart
 
                 $options['taxRate'] = $cartItem->getTaxRate();
 
+                // Preserve custom variation price if set
+                $price = $product->price()->getPrice(false);
+                if (!empty($options['extras']['custom_variation']['price'])) {
+                    $price = (float) $options['extras']['custom_variation']['price'];
+                }
+
                 $cart->addQuietly(
                     $cartItem->id,
                     $cartItem->name,
                     $cartItem->qty,
-                    $product->price()->getPrice(false),
+                    $price,
                     $options
                 );
             }
