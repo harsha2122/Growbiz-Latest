@@ -285,7 +285,7 @@ class Store extends BaseModel
             return false;
         }
 
-        return $subscription->canCreateProduct($this->products()->count());
+        return $subscription->canCreateProduct($this->products()->where('is_variation', 0)->count());
     }
 
     public function getSubscriptionStatus(): array
@@ -296,7 +296,7 @@ class Store extends BaseModel
             return [
                 'has_subscription' => false,
                 'plan_name' => null,
-                'products_used' => $this->products()->count(),
+                'products_used' => $this->products()->where('is_variation', 0)->count(),
                 'products_limit' => 0,
                 'products_remaining' => 0,
                 'days_remaining' => 0,
@@ -305,7 +305,7 @@ class Store extends BaseModel
             ];
         }
 
-        $productsUsed = $this->products()->count();
+        $productsUsed = $this->products()->where('is_variation', 0)->count();
         $productsLimit = $subscription->plan->max_products ?? 0;
 
         return [
