@@ -3,14 +3,42 @@
     if (is_string($customVariations)) {
         $customVariations = json_decode($customVariations, true) ?? [];
     }
+    $basePrice = $product->front_sale_price ?? $product->price ?? 0;
+    $baseSku = $product->sku ?? '';
 @endphp
 
 @if(!empty($customVariations))
     <div class="tp-product-custom-variations mb-20">
         <h3 class="tp-product-details-action-title">{{ __('Select Variation') }}</h3>
         <div class="custom-variation-grid">
+            {{-- Default/Base variation --}}
+            <div class="custom-variation-card selected" data-index="default">
+                <input
+                    class="custom-variation-radio visually-hidden"
+                    type="radio"
+                    name="custom_variation"
+                    id="custom_variation_default"
+                    value="default"
+                    data-variation-name="{{ __('Default') }}"
+                    data-variation-price="{{ $basePrice }}"
+                    data-variation-sku="{{ $baseSku }}"
+                    data-variation-quantity=""
+                    checked
+                >
+                <label class="custom-variation-card-label" for="custom_variation_default">
+                    <span class="variation-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </span>
+                    <span class="variation-name">{{ __('Default') }}</span>
+                    <span class="variation-price">{{ format_price($basePrice) }}</span>
+                </label>
+            </div>
+
+            {{-- Custom variations --}}
             @foreach($customVariations as $index => $variation)
-                <div class="custom-variation-card {{ $index === 0 ? 'selected' : '' }}" data-index="{{ $index }}">
+                <div class="custom-variation-card" data-index="{{ $index }}">
                     <input
                         class="custom-variation-radio visually-hidden"
                         type="radio"
@@ -21,7 +49,6 @@
                         data-variation-price="{{ $variation['price'] ?? 0 }}"
                         data-variation-sku="{{ $variation['sku'] ?? '' }}"
                         data-variation-quantity="{{ $variation['quantity'] ?? '' }}"
-                        {{ $index === 0 ? 'checked' : '' }}
                     >
                     <label class="custom-variation-card-label" for="custom_variation_{{ $index }}">
                         <span class="variation-check">
@@ -147,6 +174,7 @@
             const price = parseFloat(radio.dataset.variationPrice) || 0;
             const sku = radio.dataset.variationSku || '';
             const name = radio.dataset.variationName || '';
+            const isDefault = radio.value === 'default';
 
             // Update price display
             if (priceElement) {
@@ -159,14 +187,18 @@
                 skuElement.closest('.tp-product-details-query-item')?.style.setProperty('display', '');
             }
 
-            // Store selected variation data for cart
+            // Store selected variation data for cart (empty for default)
             if (variationDataInput) {
-                variationDataInput.value = JSON.stringify({
-                    index: radio.value,
-                    name: name,
-                    price: price,
-                    sku: sku
-                });
+                if (isDefault) {
+                    variationDataInput.value = '';
+                } else {
+                    variationDataInput.value = JSON.stringify({
+                        index: radio.value,
+                        name: name,
+                        price: price,
+                        sku: sku
+                    });
+                }
             }
 
             // Update card selection visual
@@ -199,11 +231,6 @@
             radio.addEventListener('change', function() {
                 updateProductDisplay(this);
             });
-
-            // Initialize first selected variation
-            if (radio.checked) {
-                updateProductDisplay(radio);
-            }
         });
     });
     </script>
