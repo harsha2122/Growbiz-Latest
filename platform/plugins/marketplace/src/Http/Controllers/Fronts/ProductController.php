@@ -109,10 +109,8 @@ class ProductController extends BaseController
 
         $product = new Product();
 
-        $product->status = MarketplaceHelper::getSetting(
-            'enable_product_approval',
-            1
-        ) ? BaseStatusEnum::PENDING : BaseStatusEnum::PUBLISHED;
+        // Auto-publish vendor products since vendor accounts are already approved
+        $product->status = BaseStatusEnum::PUBLISHED;
 
         $productType = EcommerceHelper::getCurrentCreationContextProductType();
         if ($productType == ProductTypeEnum::DIGITAL) {
@@ -176,15 +174,6 @@ class ProductController extends BaseController
             }, array_filter(explode(',', $request->input('grouped_products', '')))));
         }
 
-        if (MarketplaceHelper::getSetting('enable_product_approval', 1)) {
-            EmailHandler::setModule(MARKETPLACE_MODULE_SCREEN_NAME)
-                ->setVariableValues([
-                    'product_name' => $product->name,
-                    'product_url' => route('products.edit', $product->getKey()),
-                    'store_name' => auth('customer')->user()->store->name,
-                ])
-                ->sendUsingTemplate('pending-product-approval');
-        }
 
         return $this
             ->httpResponse()
