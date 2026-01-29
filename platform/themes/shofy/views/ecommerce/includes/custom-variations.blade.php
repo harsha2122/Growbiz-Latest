@@ -21,7 +21,6 @@
                         data-variation-price="{{ $variation['price'] ?? 0 }}"
                         data-variation-sku="{{ $variation['sku'] ?? '' }}"
                         data-variation-quantity="{{ $variation['quantity'] ?? '' }}"
-                        {{ $index === 0 ? 'checked' : '' }}
                     >
                     <label class="form-check-label custom-variation-label" for="custom_variation_{{ $index }}">
                         <span class="variation-name">{{ $variation['name'] ?? '' }}</span>
@@ -126,11 +125,6 @@
             radio.addEventListener('change', function() {
                 updateProductDisplay(this);
             });
-
-            // Initialize with first selected variation
-            if (radio.checked) {
-                updateProductDisplay(radio);
-            }
         });
     });
     </script>
