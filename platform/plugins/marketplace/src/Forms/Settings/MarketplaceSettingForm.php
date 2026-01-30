@@ -236,6 +236,16 @@ class MarketplaceSettingForm extends SettingForm
                     ->value(MarketplaceHelper::allowVendorDeleteTheirOrders())
             )
             ->add(
+                'allow_vendor_manage_payment_status',
+                OnOffCheckboxField::class,
+                CheckboxFieldOption::make()
+                    ->label(trans('plugins/marketplace::marketplace.settings.allow_vendor_manage_payment_status'))
+                    ->helperText(
+                        trans('plugins/marketplace::marketplace.settings.allow_vendor_manage_payment_status_description')
+                    )
+                    ->value(MarketplaceHelper::allowVendorManagePaymentStatus())
+            )
+            ->add(
                 'single_vendor_checkout',
                 OnOffCheckboxField::class,
                 OnOffFieldOption::make()

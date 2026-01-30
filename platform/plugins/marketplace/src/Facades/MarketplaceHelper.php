@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool isVendorRegistrationEnabled()
  * @method static float getMinimumWithdrawalAmount()
  * @method static bool allowVendorDeleteTheirOrders()
+ * @method static bool allowVendorManagePaymentStatus()
  * @method static bool isEnabledMessagingSystem()
  * @method static array getAllowedSocialLinks()
  * @method static bool isSingleVendorCheckout()

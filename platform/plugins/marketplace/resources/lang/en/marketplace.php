@@ -209,6 +209,8 @@ return [
         'minimum_withdrawal_amount_helper' => 'Specify the minimum amount a vendor can withdraw. Default is 0.',
         'allow_vendor_delete_their_orders' => 'Allow vendors to delete their orders',
         'allow_vendor_delete_their_orders_description' => 'When enabled, vendors can manage their order list by removing unwanted entries. Use with caution as deleted orders may impact transaction records.',
+        'allow_vendor_manage_payment_status' => 'Allow vendors to manage payment status',
+        'allow_vendor_manage_payment_status_description' => 'When enabled, vendors can confirm payment status for their orders in their dashboard.',
         'enable_messaging_system' => 'Enable messaging system',
         'enable_messaging_system_description' => 'If enabled, vendors and customers can communicate with each other via the messaging system.',
         'term_and_privacy_policy_url' => 'Term and privacy policy URL',

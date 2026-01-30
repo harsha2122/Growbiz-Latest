@@ -20,6 +20,25 @@ class OrderAdminManagement {
                 })
         })
 
+        $(document).on('click', '.btn-confirm-payment', (event) => {
+            event.preventDefault()
+
+            const _self = $(event.currentTarget)
+
+            $httpClient
+                .make()
+                .withButtonLoading(_self)
+                .post(_self.closest('form').prop('action'), _self.closest('form').serialize())
+                .then(({ data }) => {
+                    if (!data.error) {
+                        $('#main-order-content').load(`${window.location.href} #main-order-content > *`)
+                        Botble.showSuccess(data.message)
+                    } else {
+                        Botble.showError(data.message)
+                    }
+                })
+        })
+
         $(document).on('click', '.btn-trigger-resend-order-confirmation-modal', (event) => {
             event.preventDefault()
             $('#confirm-resend-confirmation-email-button').data('action', $(event.currentTarget).data('action'))

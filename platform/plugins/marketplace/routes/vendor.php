@@ -227,6 +227,11 @@ Route::group([
             'uses' => 'OrderController@postCancelOrder',
         ])->wherePrimaryKey();
 
+        Route::post('confirm-payment/{id}', [
+            'as' => 'confirm-payment',
+            'uses' => 'OrderController@postConfirmPayment',
+        ])->wherePrimaryKey();
+
         Route::post('update-shipping-status/{id}', [
             'as' => 'update-shipping-status',
             'uses' => 'ShipmentController@postUpdateStatus',

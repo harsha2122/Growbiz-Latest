@@ -214,6 +214,30 @@ class OrderController extends BaseController
             ->setMessage(trans('plugins/ecommerce::order.customer.messages.cancel_success'));
     }
 
+    public function postConfirmPayment(int|string $id)
+    {
+        abort_unless(MarketplaceHelper::allowVendorManagePaymentStatus(), 403);
+
+        /**
+         * @var Order $order
+         */
+        $order = $this->findOrFail($id);
+
+        if ($order->status === OrderStatusEnum::PENDING) {
+            $order->status = OrderStatusEnum::PROCESSING;
+        }
+
+        $order->save();
+
+        $order->load(['payment']);
+
+        OrderHelper::confirmPayment($order);
+
+        return $this
+            ->httpResponse()
+            ->setMessage(trans('plugins/ecommerce::order.confirm_payment_success'));
+    }
+
     public function downloadProof(Order $order)
     {
         abort_unless($order->store_id === auth('customer')->user()->store?->id, 403);

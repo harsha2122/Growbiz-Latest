@@ -63,6 +63,28 @@
                         @endif
                     </div>
 
+                    @if (is_plugin_active('payment') && $order->payment->id && MarketplaceHelper::allowVendorManagePaymentStatus())
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                            <div class="text-uppercase">
+                                <x-core::icon name="ti ti-credit-card" @class(['text-success' => $order->payment->status == Botble\Payment\Enums\PaymentStatusEnum::COMPLETED]) />
+
+                                @if ($order->payment->status == Botble\Payment\Enums\PaymentStatusEnum::COMPLETED)
+                                    {{ trans('plugins/ecommerce::order.payment_was_confirmed') }}
+                                @else
+                                    {{ trans('plugins/ecommerce::order.confirm_payment') }}
+                                @endif
+                            </div>
+
+                            @if ($order->payment->status != Botble\Payment\Enums\PaymentStatusEnum::COMPLETED)
+                                <x-core::form :url="route('marketplace.vendor.orders.confirm-payment', $order->id)">
+                                    <x-core::button type="button" color="success" class="btn-confirm-payment">
+                                        {{ trans('plugins/ecommerce::order.confirm') }}
+                                    </x-core::button>
+                                </x-core::form>
+                            @endif
+                        </div>
+                    @endif
+
                     @if ($order->status == Botble\Ecommerce\Enums\OrderStatusEnum::CANCELED)
                         <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-start gap-1">

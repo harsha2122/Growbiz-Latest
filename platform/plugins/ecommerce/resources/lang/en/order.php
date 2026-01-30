@@ -56,6 +56,7 @@ return [
     'order_was_verified_by' => 'Order was verified by %user_name%',
     'new_order' => 'New order :order_id',
     'payment_was_confirmed_by' => 'Payment was confirmed (amount :money) by %user_name%',
+    'payment_was_confirmed' => 'Payment was confirmed',
     'edit_order' => 'Edit order :code',
     'confirm_order_success' => 'Confirm order successfully!',
     'error_when_sending_email' => 'There is an error when sending email',

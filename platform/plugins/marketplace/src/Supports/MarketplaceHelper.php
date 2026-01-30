@@ -150,6 +150,11 @@ class MarketplaceHelper
         return (bool) $this->getSetting('allow_vendor_delete_their_orders', true);
     }
 
+    public function allowVendorManagePaymentStatus(): bool
+    {
+        return (bool) $this->getSetting('allow_vendor_manage_payment_status', false);
+    }
+
     public function isEnabledMessagingSystem(): bool
     {
         return (bool) $this->getSetting('enabled_messaging_system', true);
