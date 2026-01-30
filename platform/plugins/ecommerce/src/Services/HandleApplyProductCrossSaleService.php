@@ -68,6 +68,13 @@ class HandleApplyProductCrossSaleService
                 continue;
             }
 
+            $options = $cartItem->options->toArray();
+
+            // Preserve custom variation price if set
+            if (!empty($options['extras']['custom_variation']['price'])) {
+                continue;
+            }
+
             $newPrice = $productPrices[$cartItem->id];
 
             if ($cartItem->price == $newPrice) {
@@ -81,7 +88,7 @@ class HandleApplyProductCrossSaleService
                 $cartItem->name,
                 $cartItem->qty,
                 $newPrice,
-                $cartItem->options->toArray()
+                $options
             );
         }
     }
