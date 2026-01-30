@@ -63,24 +63,29 @@
                         @endif
                     </div>
 
-                    @if (is_plugin_active('payment') && $order->payment->id && MarketplaceHelper::allowVendorManagePaymentStatus())
+                    @if (is_plugin_active('payment') && $order->payment->id && MarketplaceHelper::allowVendorManagePaymentStatus() && $order->payment->status != \Botble\Payment\Enums\PaymentStatusEnum::REFUNDED)
                         <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
                             <div class="text-uppercase">
-                                <x-core::icon name="ti ti-credit-card" @class(['text-success' => $order->payment->status == Botble\Payment\Enums\PaymentStatusEnum::COMPLETED]) />
-
-                                @if ($order->payment->status == Botble\Payment\Enums\PaymentStatusEnum::COMPLETED)
-                                    {{ trans('plugins/ecommerce::order.payment_was_confirmed') }}
-                                @else
-                                    {{ trans('plugins/ecommerce::order.confirm_payment') }}
+                                @if (!$order->payment->status || $order->payment->status == Botble\Payment\Enums\PaymentStatusEnum::PENDING)
+                                    <x-core::icon name="ti ti-credit-card" />
+                                    {{ trans('plugins/ecommerce::order.pending_payment') }}
+                                @elseif ($order->payment->status == Botble\Payment\Enums\PaymentStatusEnum::COMPLETED)
+                                    <x-core::icon name="ti ti-check" class="text-success" />
+                                    {{ trans('plugins/ecommerce::order.payment_was_accepted', ['money' => format_price($order->payment->amount - $order->payment->refunded_amount)]) }}
+                                @elseif ($order->payment->amount - $order->payment->refunded_amount == 0)
+                                    {{ trans('plugins/ecommerce::order.payment_was_refunded') }}
                                 @endif
                             </div>
 
-                            @if ($order->payment->status != Botble\Payment\Enums\PaymentStatusEnum::COMPLETED)
-                                <x-core::form :url="route('marketplace.vendor.orders.confirm-payment', $order->id)">
-                                    <x-core::button type="button" color="success" class="btn-confirm-payment">
-                                        {{ trans('plugins/ecommerce::order.confirm') }}
-                                    </x-core::button>
-                                </x-core::form>
+                            @if (!$order->payment->status || $order->payment->status == Botble\Payment\Enums\PaymentStatusEnum::PENDING)
+                                <x-core::button
+                                    type="button"
+                                    color="info"
+                                    class="btn-trigger-confirm-payment"
+                                    :data-target="route('marketplace.vendor.orders.confirm-payment', $order->id)"
+                                >
+                                    {{ trans('plugins/ecommerce::order.confirm_payment') }}
+                                </x-core::button>
                             @endif
                         </div>
                     @endif
@@ -491,4 +496,17 @@
             ])
         </x-core::modal>
     @endif
+@endpushif
+
+@pushif(is_plugin_active('payment') && $order->payment->id && MarketplaceHelper::allowVendorManagePaymentStatus() && $order->payment->status != \Botble\Payment\Enums\PaymentStatusEnum::REFUNDED, 'footer')
+    <x-core::modal.action
+        id="confirm-payment-modal"
+        type="info"
+        :title="trans('plugins/ecommerce::order.confirm_payment')"
+        :description="trans('plugins/ecommerce::order.confirm_payment_confirmation_description', [
+            'method' => $order->payment->payment_channel->label(),
+        ])"
+        :submit-button-attrs="['id' => 'confirm-payment-order-button']"
+        :submit-button-label="trans('plugins/ecommerce::order.confirm_payment')"
+    />
 @endpushif
