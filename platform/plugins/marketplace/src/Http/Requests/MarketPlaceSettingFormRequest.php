@@ -47,6 +47,7 @@ class MarketPlaceSettingFormRequest extends BaseProductRequest
             'enabled_vendor_registration' => [new OnOffRule()],
             'minimum_withdrawal_amount' => 'nullable|numeric|min:0',
             'allow_vendor_delete_their_orders' => [new OnOffRule()],
+            'allow_vendor_manage_payment_status' => [new OnOffRule()],
             'enabled_messaging_system' => [new OnOffRule()],
             'term_and_privacy_policy_url' => ['nullable', 'string'],
             'single_vendor_checkout' => [new OnOffRule()],
