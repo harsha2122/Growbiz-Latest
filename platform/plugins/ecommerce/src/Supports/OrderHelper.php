@@ -667,7 +667,7 @@ class OrderHelper
             if ($customVariationData && isset($customVariationData['price'])) {
                 $price = (float) $customVariationData['price'];
                 if (!empty($customVariationData['name'])) {
-                    $productName .= ' - ' . $customVariationData['name'];
+                    $productName = $customVariationData['name'];
                 }
                 if (!empty($customVariationData['sku'])) {
                     $productSku = $customVariationData['sku'];
