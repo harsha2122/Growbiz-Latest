@@ -128,6 +128,11 @@ class ProductController extends BaseController
         $product->store_id = auth('customer')->user()->store?->id;
         $product->created_by_id = auth('customer')->id();
         $product->created_by_type = Customer::class;
+
+        if (auth('customer')->user()->store?->is_key_account && $request->has('vendor_commission')) {
+            $product->vendor_commission = $request->input('vendor_commission');
+        }
+
         $product->save();
 
         $storeProductTagService->execute($request, $product);
@@ -211,6 +216,10 @@ class ProductController extends BaseController
         $request = $this->processRequestData($request);
 
         $product->store_id = auth('customer')->user()->store?->id;
+
+        if (auth('customer')->user()->store?->is_key_account && $request->has('vendor_commission')) {
+            $product->vendor_commission = $request->input('vendor_commission');
+        }
 
         $product = $service->execute($request, $product);
         $storeProductTagService->execute($request, $product);
@@ -296,6 +305,10 @@ class ProductController extends BaseController
             'is_featured',
             'status',
         ];
+
+        if (! auth('customer')->user()->store?->is_key_account) {
+            $except[] = 'vendor_commission';
+        }
 
         foreach ($except as $item) {
             $request->request->remove($item);

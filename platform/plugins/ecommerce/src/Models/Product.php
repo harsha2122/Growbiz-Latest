@@ -80,6 +80,7 @@ class Product extends BaseModel
         'maximum_order_quantity',
         'notify_attachment_updated',
         'specification_table_id',
+        'vendor_commission',
     ];
 
     protected $appends = [
@@ -112,6 +113,7 @@ class Product extends BaseModel
         'wide' => 'float',
         'height' => 'float',
         'weight' => 'float',
+        'vendor_commission' => 'float',
         'views' => 'int',
         'quantity' => 'int',
         'order' => 'int',

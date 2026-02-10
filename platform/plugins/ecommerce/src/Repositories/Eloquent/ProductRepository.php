@@ -450,6 +450,13 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
                 return $join->on('products_with_final_price.id', '=', 'ec_products.id');
             });
 
+        // Prioritize key account products first
+        if (is_plugin_active('marketplace')) {
+            $this->model = $this->model
+                ->leftJoin('mp_stores', 'mp_stores.id', '=', 'ec_products.store_id')
+                ->orderByRaw('CASE WHEN mp_stores.is_key_account = 1 THEN 0 ELSE 1 END ASC');
+        }
+
         // Add custom order for out-of-stock products
         $this->model = $this->model->orderByRaw('
                 CASE

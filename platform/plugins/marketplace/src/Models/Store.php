@@ -61,6 +61,7 @@ class Store extends BaseModel
         'sponsored_video_url',
         'sponsored_video_thumbnail',
         'sponsored_video_expires_at',
+        'is_key_account',
     ];
 
     protected $casts = [
@@ -71,6 +72,7 @@ class Store extends BaseModel
         'address' => SafeContent::class,
         'company' => SafeContent::class,
         'is_verified' => 'boolean',
+        'is_key_account' => 'boolean',
         'verified_at' => 'datetime',
         'verification_note' => SafeContent::class,
         'sponsored_video_expires_at' => 'datetime',

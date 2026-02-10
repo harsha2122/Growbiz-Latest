@@ -200,6 +200,27 @@ class StoreController extends BaseController
             ->setMessage(trans('plugins/marketplace::store.verify_success', ['name' => $store->name]));
     }
 
+    public function toggleKeyAccount(int|string $id)
+    {
+        $store = Store::query()->findOrFail($id);
+
+        if (! $store->is_key_account) {
+            // Ensure only one key account exists at a time
+            Store::query()->where('is_key_account', true)->update(['is_key_account' => false]);
+        }
+
+        $store->is_key_account = ! $store->is_key_account;
+        $store->save();
+
+        $message = $store->is_key_account
+            ? __('Store ":name" has been set as Key Account.', ['name' => $store->name])
+            : __('Store ":name" has been removed as Key Account.', ['name' => $store->name]);
+
+        return $this
+            ->httpResponse()
+            ->setMessage($message);
+    }
+
     public function unverify(int|string $id, Request $request)
     {
         $store = Store::query()->findOrFail($id);

@@ -35,6 +35,7 @@ use Botble\Marketplace\Forms\Fields\CustomEditorField;
 use Botble\Marketplace\Forms\Fields\CustomImagesField;
 use Botble\Marketplace\Http\Requests\ProductRequest;
 use Botble\Marketplace\Tables\ProductVariationTable;
+use Botble\Base\Forms\FieldOptions\NumberFieldOption;
 
 class ProductForm extends BaseProductForm
 {
@@ -222,6 +223,16 @@ class ProductForm extends BaseProductForm
                     'data-url' => route('marketplace.vendor.tags.all'),
                 ],
             ])
+            ->when(auth('customer')->user()?->store?->is_key_account, function (): void {
+                $this->add(
+                    'vendor_commission',
+                    NumberField::class,
+                    NumberFieldOption::make()
+                        ->label(__('Commission (%)'))
+                        ->helperText(__('Commission percentage for this product. Only available for Key Account vendors.'))
+                        ->defaultValue($this->getModel()?->vendor_commission ?? 0)
+                );
+            })
             ->setBreakFieldPoint('categories[]');
 
         if (EcommerceHelper::isProductSpecificationEnabled()) {

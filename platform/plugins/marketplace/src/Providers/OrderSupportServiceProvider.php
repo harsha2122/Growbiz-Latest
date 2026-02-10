@@ -1355,7 +1355,9 @@ class OrderSupportServiceProvider extends ServiceProvider
 
             if ($vendorInfo->id) {
                 $orderAmountWithoutShippingFee = $order->amount - $order->shipping_amount - $order->tax_amount - $order->payment_fee;
-                if (! MarketplaceHelper::isCommissionCategoryFeeBasedEnabled()) {
+                if ($order->store?->is_key_account) {
+                    $fee = $this->calculateKeyAccountCommission($order->products);
+                } elseif (! MarketplaceHelper::isCommissionCategoryFeeBasedEnabled()) {
                     $feePercentage = MarketplaceHelper::getSetting('fee_per_order', 0);
                     $fee = $orderAmountWithoutShippingFee * ($feePercentage / 100);
                 } else {
@@ -1440,6 +1442,25 @@ class OrderSupportServiceProvider extends ServiceProvider
             }
 
             $totalFee += $orderProduct->price * $commissionFeePercentage / 100;
+        }
+
+        return $totalFee;
+    }
+
+    protected function calculateKeyAccountCommission(Collection $orderProducts): float|int
+    {
+        $totalFee = 0;
+        $globalFee = MarketplaceHelper::getSetting('fee_per_order', 0);
+
+        foreach ($orderProducts as $orderProduct) {
+            $product = $orderProduct->product->original_product;
+
+            if (! $product) {
+                continue;
+            }
+
+            $commissionPercentage = $product->vendor_commission ?? $globalFee;
+            $totalFee += $orderProduct->price * $commissionPercentage / 100;
         }
 
         return $totalFee;

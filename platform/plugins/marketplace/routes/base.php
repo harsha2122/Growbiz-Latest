@@ -38,6 +38,12 @@ AdminHelper::registerRoutes(function (): void {
                     'permission' => 'marketplace.store.edit',
                 ])->wherePrimaryKey();
 
+                Route::post('toggle-key-account/{id}', [
+                    'as' => 'toggle-key-account',
+                    'uses' => 'StoreController@toggleKeyAccount',
+                    'permission' => 'marketplace.store.edit',
+                ])->wherePrimaryKey();
+
                 Route::group(['prefix' => 'revenues', 'as' => 'revenue.'], function (): void {
                     Route::match(['GET', 'POST'], 'list/{id}', [
                         'as' => 'index',

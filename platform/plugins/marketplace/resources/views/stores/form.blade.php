@@ -4,6 +4,25 @@
     @php
         $hasMoreThanOneLanguage = count(\Botble\Base\Supports\Language::getAvailableLocales()) > 1;
     @endphp
+
+    @if($store && $store->id)
+        <div class="mb-3">
+            <form action="{{ route('marketplace.store.toggle-key-account', $store->id) }}" method="POST" style="display:inline;">
+                @csrf
+                @if($store->is_key_account)
+                    <button type="submit" class="btn btn-warning btn-sm">
+                        {{ __('Remove Key Account') }}
+                    </button>
+                    <span class="badge bg-success ms-2">{{ __('Key Account') }}</span>
+                @else
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        {{ __('Set as Key Account') }}
+                    </button>
+                @endif
+            </form>
+        </div>
+    @endif
+
     <x-core::card>
         <x-core::card.header>
             <x-core::tab class="card-header-tabs">
