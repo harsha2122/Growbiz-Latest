@@ -20,6 +20,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProductRepository extends RepositoriesAbstract implements ProductInterface
 {
@@ -461,10 +462,9 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
             ', [StockStatusEnum::OUT_OF_STOCK]);
 
         // Prioritize key account store products
-        if (is_plugin_active('marketplace')) {
+        if (is_plugin_active('marketplace') && Schema::hasColumn('mp_stores', 'is_key_account')) {
             $this->model = $this->model
-                ->leftJoin('mp_stores', 'mp_stores.id', '=', 'ec_products.store_id')
-                ->orderByRaw('COALESCE(mp_stores.is_key_account, 0) DESC');
+                ->orderByRaw('COALESCE((SELECT mp_stores.is_key_account FROM mp_stores WHERE mp_stores.id = ec_products.store_id), 0) DESC');
         }
 
         if ($keyword = $filters['keyword']) {
