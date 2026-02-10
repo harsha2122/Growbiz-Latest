@@ -1434,7 +1434,11 @@ class OrderSupportServiceProvider extends ServiceProvider
 
             // Use product-level vendor_commission if set (key account feature)
             if ($product->vendor_commission !== null) {
-                $totalFee += $orderProduct->price * $product->vendor_commission / 100;
+                if ($product->vendor_commission_type === 'flat') {
+                    $totalFee += $product->vendor_commission * $orderProduct->qty;
+                } else {
+                    $totalFee += $orderProduct->price * $product->vendor_commission / 100;
+                }
                 continue;
             }
 

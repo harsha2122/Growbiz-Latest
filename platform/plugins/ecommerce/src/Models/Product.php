@@ -81,6 +81,7 @@ class Product extends BaseModel
         'notify_attachment_updated',
         'specification_table_id',
         'vendor_commission',
+        'vendor_commission_type',
     ];
 
     protected $appends = [

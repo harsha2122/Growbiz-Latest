@@ -305,6 +305,7 @@ class ProductController extends BaseController
         $store = auth('customer')->user()?->store;
         if (! $store || ! $store->is_key_account) {
             $request->request->remove('vendor_commission');
+            $request->request->remove('vendor_commission_type');
         }
 
         return $request;

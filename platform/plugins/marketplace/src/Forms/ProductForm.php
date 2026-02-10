@@ -224,15 +224,26 @@ class ProductForm extends BaseProductForm
             ])
             ->when(auth('customer')->user()?->store?->is_key_account, function () {
                 $this->add(
+                    'vendor_commission_type',
+                    SelectField::class,
+                    SelectFieldOption::make()
+                        ->label(__('Commission Type'))
+                        ->choices([
+                            'percentage' => __('Percentage (%)'),
+                            'flat' => __('Flat Amount'),
+                        ])
+                        ->defaultValue($this->getModel()?->vendor_commission_type ?? 'percentage')
+                );
+
+                $this->add(
                     'vendor_commission',
                     NumberField::class,
                     NumberFieldOption::make()
-                        ->label(__('Commission (%)'))
-                        ->helperText(__('Product-level commission percentage. Leave empty to use global/category default.'))
+                        ->label(__('Commission Value'))
+                        ->helperText(__('Product-level commission. Leave empty to use global/category default.'))
                         ->defaultValue(null)
                         ->addAttribute('step', '0.01')
                         ->addAttribute('min', '0')
-                        ->addAttribute('max', '100')
                 );
             })
             ->setBreakFieldPoint('categories[]');
