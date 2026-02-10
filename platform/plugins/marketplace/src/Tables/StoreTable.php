@@ -60,6 +60,12 @@ class StoreTable extends TableAbstract
                 }
 
                 return Html::link(route('customers.edit', $item->customer->id), $item->customer->name);
+            })
+            ->editColumn('is_key_account', function ($item) {
+                $checked = $item->is_key_account ? 'checked' : '';
+                $url = route('marketplace.store.toggle-key-account', $item->id);
+
+                return '<div class="form-check form-switch"><input type="checkbox" class="form-check-input toggle-key-account" data-url="' . $url . '" ' . $checked . '></div>';
             });
 
         return $this->toJson($data);
@@ -78,6 +84,7 @@ class StoreTable extends TableAbstract
                 'status',
                 'customer_id',
                 'is_verified',
+                'is_key_account',
             ])
             ->with(['customer', 'customer.vendorInfo'])
             ->withCount(['products']);
@@ -108,6 +115,11 @@ class StoreTable extends TableAbstract
                 ->orderable(false)
                 ->searchable(false)
                 ->printable(false),
+            Column::make('is_key_account')
+                ->title(trans('Key Account'))
+                ->width(100)
+                ->orderable(false)
+                ->searchable(false),
             CreatedAtColumn::make(),
             StatusColumn::make(),
         ];
@@ -123,6 +135,27 @@ class StoreTable extends TableAbstract
         return [
             DeleteBulkAction::make()->permission('marketplace.store.destroy'),
         ];
+    }
+
+    public function htmlDrawCallbackFunction(): ?string
+    {
+        return parent::htmlDrawCallbackFunction() . "
+            $('.toggle-key-account').off('change').on('change', function () {
+                var toggle = $(this);
+                $.ajax({
+                    url: toggle.data('url'),
+                    type: 'POST',
+                    headers: {'X-CSRF-TOKEN': $('meta[name=\"csrf-token\"]').attr('content')},
+                    success: function (response) {
+                        Botble.showSuccess(response.message);
+                    },
+                    error: function () {
+                        toggle.prop('checked', !toggle.prop('checked'));
+                        Botble.showError('Failed to toggle key account status.');
+                    }
+                });
+            });
+        ";
     }
 
     public function getBulkChanges(): array
