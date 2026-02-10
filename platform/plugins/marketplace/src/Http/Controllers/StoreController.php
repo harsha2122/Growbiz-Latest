@@ -161,6 +161,22 @@ class StoreController extends BaseController
         return DeleteResourceAction::make($store);
     }
 
+    public function toggleKeyAccount(int|string $id)
+    {
+        $store = Store::query()->findOrFail($id);
+
+        $store->is_key_account = ! $store->is_key_account;
+        $store->save();
+
+        $message = $store->is_key_account
+            ? __('Store ":name" has been marked as key account.', ['name' => $store->name])
+            : __('Store ":name" has been removed from key accounts.', ['name' => $store->name]);
+
+        return $this
+            ->httpResponse()
+            ->setMessage($message);
+    }
+
     public function verify(int|string $id, Request $request)
     {
         $store = Store::query()->findOrFail($id);

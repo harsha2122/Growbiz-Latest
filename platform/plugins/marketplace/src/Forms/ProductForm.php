@@ -222,6 +222,19 @@ class ProductForm extends BaseProductForm
                     'data-url' => route('marketplace.vendor.tags.all'),
                 ],
             ])
+            ->when(auth('customer')->user()?->store?->is_key_account, function () {
+                $this->add(
+                    'vendor_commission',
+                    NumberField::class,
+                    NumberFieldOption::make()
+                        ->label(__('Commission (%)'))
+                        ->helperText(__('Product-level commission percentage. Leave empty to use global/category default.'))
+                        ->defaultValue(null)
+                        ->addAttribute('step', '0.01')
+                        ->addAttribute('min', '0')
+                        ->addAttribute('max', '100')
+                );
+            })
             ->setBreakFieldPoint('categories[]');
 
         if (EcommerceHelper::isProductSpecificationEnabled()) {

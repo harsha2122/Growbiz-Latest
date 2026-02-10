@@ -460,6 +460,13 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
                 END ASC
             ', [StockStatusEnum::OUT_OF_STOCK]);
 
+        // Prioritize key account store products
+        if (is_plugin_active('marketplace')) {
+            $this->model = $this->model
+                ->leftJoin('mp_stores', 'mp_stores.id', '=', 'ec_products.store_id')
+                ->orderByRaw('COALESCE(mp_stores.is_key_account, 0) DESC');
+        }
+
         if ($keyword = $filters['keyword']) {
             $searchProductsBy = EcommerceHelper::getProductsSearchBy();
             $isPartial = (int) get_ecommerce_setting('search_for_an_exact_phrase', 0) != 1;

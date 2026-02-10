@@ -301,6 +301,12 @@ class ProductController extends BaseController
             $request->request->remove($item);
         }
 
+        // Only allow vendor_commission for key account vendors
+        $store = auth('customer')->user()?->store;
+        if (! $store || ! $store->is_key_account) {
+            $request->request->remove('vendor_commission');
+        }
+
         return $request;
     }
 

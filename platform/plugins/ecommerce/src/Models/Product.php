@@ -80,6 +80,7 @@ class Product extends BaseModel
         'maximum_order_quantity',
         'notify_attachment_updated',
         'specification_table_id',
+        'vendor_commission',
     ];
 
     protected $appends = [
