@@ -2551,11 +2551,17 @@ footer {
 }
 
 .tp-store-icon {
-    display: inline-block;
+    display: inline-block !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px;
+    min-height: 14px;
     vertical-align: middle;
     margin-inline-end: 3px;
-    color: var(--primary-color);
+    color: var(--tp-theme-primary);
     stroke-width: 1.5;
+    fill: none;
+    flex-shrink: 0;
 }
 
 .product-flash-sale-badge {
