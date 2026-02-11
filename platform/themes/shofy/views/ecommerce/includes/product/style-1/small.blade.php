@@ -8,7 +8,6 @@
         <div class="tp-product-sm-content">
             @if (is_plugin_active('marketplace') && $product->store?->id)
                 <div class="tp-product-category tp-store-name">
-                    <svg class="tp-store-icon" style="display:inline-block;width:14px;height:14px;vertical-align:middle;margin-right:3px;fill:none;stroke:currentColor" width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     <a href="{{ $product->store->url }}">{{ $product->store->name }}</a> {!! $product->store->badge !!}
                 </div>
             @endif
