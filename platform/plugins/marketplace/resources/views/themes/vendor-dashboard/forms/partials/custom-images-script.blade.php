@@ -43,7 +43,7 @@
             maxFilesize: {{ MarketplaceHelper::maxFilesizeUploadByVendor() }}, // MB
             maxFiles: {{ MarketplaceHelper::maxProductImagesUploadByVendor() }}, // max files upload,
             paramName: 'file',
-            acceptedFiles: 'image/*',
+            acceptedFiles: '.{{ implode(',.', MarketplaceHelper::mediaMimeTypesAllowed()) }}',
             url: '{{ route('marketplace.vendor.upload') }}',
             sending: function(file, xhr, formData) {
                 formData.append('_token', '{{ csrf_token() }}');
