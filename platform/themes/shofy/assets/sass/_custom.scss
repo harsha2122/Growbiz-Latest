@@ -2550,6 +2550,32 @@ footer {
     }
 }
 
+.tp-store-icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-inline-end: 3px;
+    color: var(--primary-color);
+    stroke-width: 1.5;
+}
+
+.product-flash-sale-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: linear-gradient(135deg, #ff6b35, #f7c948);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    line-height: 1.4;
+    margin-top: 4px;
+
+    svg {
+        stroke-width: 0;
+    }
+}
+
 @media (max-width: 830px) {
     .row-cols-2 .tp-product-item-5 .tp-product-action-2, .swiper-wrapper .tp-product-item-5 .tp-product-action-2 {
         top: 15px;
