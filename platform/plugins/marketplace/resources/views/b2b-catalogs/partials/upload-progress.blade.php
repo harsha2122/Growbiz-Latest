@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
             sizeText.textContent = 'Network error.';
         });
 
-        xhr.open('POST', form.action, true);
+        xhr.open('POST', '{{ $actionUrl }}', true);
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.setRequestHeader('Accept', 'application/json');
         xhr.send(formData);

@@ -38,5 +38,5 @@
         </div>
     </form>
 
-    @include('plugins/marketplace::b2b-catalogs.partials.upload-progress', ['redirectUrl' => route('marketplace.b2b-catalogs.index')])
+    @include('plugins/marketplace::b2b-catalogs.partials.upload-progress', ['redirectUrl' => route('marketplace.b2b-catalogs.index'), 'actionUrl' => route('marketplace.b2b-catalogs.store')])
 @endsection

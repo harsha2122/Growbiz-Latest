@@ -41,5 +41,5 @@
         </div>
     </form>
 
-    @include(MarketplaceHelper::viewPath('vendor-dashboard.b2b-catalogs.partials.upload-progress'))
+    @include(MarketplaceHelper::viewPath('vendor-dashboard.b2b-catalogs.partials.upload-progress'), ['actionUrl' => route('marketplace.vendor.b2b-catalogs.store')])
 @endsection
