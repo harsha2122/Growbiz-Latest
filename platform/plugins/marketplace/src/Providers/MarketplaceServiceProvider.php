@@ -204,6 +204,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-credit-card',
                     'url' => fn () => route('marketplace.subscription-plans.index'),
                     'permissions' => ['marketplace.subscription-plans.index'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-marketplace-b2b-catalogs',
+                    'priority' => 11,
+                    'parent_id' => 'cms-plugins-marketplace',
+                    'name' => __('B2B Catalogs'),
+                    'icon' => 'ti ti-file-type-pdf',
+                    'url' => fn () => route('marketplace.b2b-catalogs.index'),
+                    'permissions' => ['marketplace.b2b-catalogs.index'],
                 ]);
         });
 
@@ -334,6 +343,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                         'name' => __('Shipments'),
                         'url' => fn () => route('marketplace.vendor.shipments.index'),
                         'icon' => 'ti ti-truck',
+                    ]);
+                })
+                ->when(auth('customer')->check() && auth('customer')->user()->store?->is_key_account, function (DashboardMenuSupport $dashboardMenu) {
+                    return $dashboardMenu->registerItem([
+                        'id' => 'marketplace.vendor.b2b-catalogs',
+                        'priority' => 9,
+                        'name' => __('B2B Catalogs'),
+                        'url' => fn () => route('marketplace.vendor.b2b-catalogs.index'),
+                        'icon' => 'ti ti-file-type-pdf',
                     ]);
                 });
         });

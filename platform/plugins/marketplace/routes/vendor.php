@@ -311,6 +311,11 @@ Route::group([
         });
     });
 
+    Route::group(['prefix' => 'b2b-catalogs', 'as' => 'b2b-catalogs.'], function (): void {
+        Route::resource('', \Botble\Marketplace\Http\Controllers\Fronts\B2bCatalogController::class)
+            ->parameters(['' => 'b2b_catalog']);
+    });
+
     Route::get('settings/languages', [LanguageSettingController::class, 'index'])->name('language-settings.index');
     Route::put('settings/languages', [LanguageSettingController::class, 'update'])->name('language-settings.update');
 
