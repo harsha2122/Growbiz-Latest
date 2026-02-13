@@ -7,9 +7,11 @@ use Botble\Base\Forms\FieldOptions\CheckboxFieldOption;
 use Botble\Base\Forms\FieldOptions\MultiChecklistFieldOption;
 use Botble\Base\Forms\FieldOptions\NumberFieldOption;
 use Botble\Base\Forms\FieldOptions\OnOffFieldOption;
+use Botble\Base\Forms\FieldOptions\TextFieldOption;
 use Botble\Base\Forms\Fields\MultiCheckListField;
 use Botble\Base\Forms\Fields\NumberField;
 use Botble\Base\Forms\Fields\OnOffCheckboxField;
+use Botble\Base\Forms\Fields\TextField;
 use Botble\Marketplace\Enums\WithdrawalFeeTypeEnum;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Http\Requests\MarketPlaceSettingFormRequest;
@@ -268,6 +270,22 @@ class MarketplaceSettingForm extends SettingForm
                     ->label(trans('plugins/marketplace::marketplace.settings.show_vendor_info_at_checkout'))
                     ->value(MarketplaceHelper::getSetting('show_vendor_info_at_checkout', true))
                     ->helperText(trans('plugins/marketplace::marketplace.settings.show_vendor_info_at_checkout_helper'))
+            )
+            ->add(
+                'b2b_contact_call_number',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(trans('plugins/marketplace::marketplace.settings.b2b_contact_call_number'))
+                    ->helperText(trans('plugins/marketplace::marketplace.settings.b2b_contact_call_number_helper'))
+                    ->value(MarketplaceHelper::getSetting('b2b_contact_call_number', ''))
+            )
+            ->add(
+                'b2b_contact_whatsapp_number',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(trans('plugins/marketplace::marketplace.settings.b2b_contact_whatsapp_number'))
+                    ->helperText(trans('plugins/marketplace::marketplace.settings.b2b_contact_whatsapp_number_helper'))
+                    ->value(MarketplaceHelper::getSetting('b2b_contact_whatsapp_number', ''))
             );
     }
 }

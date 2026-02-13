@@ -55,6 +55,8 @@ class MarketPlaceSettingFormRequest extends BaseProductRequest
             'show_vendor_info_at_checkout' => [new OnOffRule()],
             'media_mime_types_allowed' => ['nullable', 'array'],
             'media_mime_types_allowed.*' => ['nullable', 'string', Rule::in(explode(',', RvMedia::getConfig('allowed_mime_types')))],
+            'b2b_contact_call_number' => ['nullable', 'string', 'max:20'],
+            'b2b_contact_whatsapp_number' => ['nullable', 'string', 'max:20'],
         ];
 
         if ($this->input('enable_commission_fee_for_each_category')) {

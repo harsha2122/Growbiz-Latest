@@ -224,6 +224,10 @@ return [
         'show_vendor_info_at_checkout_helper' => 'If enabled, vendor information (name, logo, reviews) will be displayed on the checkout page.',
         'media_file_types_can_be_uploaded_by_vendor' => 'Media file types can be uploaded by vendor',
         'media_file_types_can_be_uploaded_by_vendor_helper' => 'Specify the media file types that vendors can upload. Select them in the above list.',
+        'b2b_contact_call_number' => 'B2B Contact Call Number',
+        'b2b_contact_call_number_helper' => 'Phone number displayed on B2B catalog cards for direct calling (e.g. +919876543210).',
+        'b2b_contact_whatsapp_number' => 'B2B Contact WhatsApp Number',
+        'b2b_contact_whatsapp_number_helper' => 'WhatsApp number displayed on B2B catalog cards for messaging (e.g. 919876543210 without + or spaces).',
     ],
     'theme_options' => [
         'name' => 'Marketplace',
