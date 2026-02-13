@@ -19,6 +19,7 @@ class B2bCatalogForm extends FormAbstract
         $this
             ->model(B2bCatalog::class)
             ->setValidatorClass(B2bCatalogRequest::class)
+            ->setFormOption('enctype', 'multipart/form-data')
             ->add('title', TextField::class, NameFieldOption::make()->label(__('Title'))->required())
             ->add('description', TextareaField::class, DescriptionFieldOption::make()->label(__('Description')))
             ->add('pdf_file', 'file', [
