@@ -39,7 +39,7 @@ class B2bCatalogController extends BaseController
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'pdf_file' => ['required', 'file', 'mimes:pdf'],
+            'pdf_file' => ['required', 'file', 'mimes:pdf', 'max:524288'],
         ]);
 
         $data = $request->only(['title', 'description']);
@@ -71,7 +71,7 @@ class B2bCatalogController extends BaseController
         $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'pdf_file' => ['nullable', 'file', 'mimes:pdf'],
+            'pdf_file' => ['nullable', 'file', 'mimes:pdf', 'max:524288'],
         ]);
 
         $data = $request->only(['title', 'description']);

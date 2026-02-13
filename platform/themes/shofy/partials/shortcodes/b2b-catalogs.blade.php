@@ -38,7 +38,7 @@
                             @if ($catalog->description)
                                 <p class="card-text text-muted flex-grow-1">{{ Str::limit($catalog->description, 150) }}</p>
                             @endif
-                            <a href="{{ Storage::disk('public')->url($catalog->pdf_path) }}" target="_blank" class="btn btn-primary mt-auto">
+                            <a href="{{ Storage::disk('public')->url($catalog->pdf_path) }}" target="_blank" class="btn btn-primary mt-auto" style="color: #fff !important;">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                     <polyline points="7 10 12 15 17 10"/>
