@@ -87,10 +87,6 @@ app()->booted(function (): void {
     add_shortcode('b2b-catalogs', __('B2B Catalogs'), __('Display B2B product catalogs for download'), function (Shortcode $shortcode) {
         $catalogs = \Botble\Marketplace\Models\B2bCatalog::query()->latest()->get();
 
-        if ($catalogs->isEmpty()) {
-            return null;
-        }
-
         return Theme::partial('shortcodes.b2b-catalogs', compact('shortcode', 'catalogs'));
     });
 

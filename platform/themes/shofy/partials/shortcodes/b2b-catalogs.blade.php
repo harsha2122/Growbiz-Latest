@@ -10,6 +10,11 @@
             </div>
         @endif
 
+        @if ($catalogs->isEmpty())
+            <div class="alert alert-info text-center">
+                {{ __('No B2B catalogs available yet. Please check back later.') }}
+            </div>
+        @else
         <div class="row">
             @foreach ($catalogs as $catalog)
                 <div class="col-lg-4 col-md-6 mb-30">
@@ -46,5 +51,6 @@
                 </div>
             @endforeach
         </div>
+        @endif
     </div>
 </section>
