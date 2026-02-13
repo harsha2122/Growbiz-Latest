@@ -21,10 +21,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!form) return;
 
     form.addEventListener('submit', function (e) {
-        var fileInput = document.getElementById('pdf_file');
-        if (!fileInput || !fileInput.files.length) return;
-
         e.preventDefault();
+        e.stopImmediatePropagation();
+
+        var fileInput = document.getElementById('pdf_file');
+        var hasFile = fileInput && fileInput.files.length > 0;
 
         var toast = document.getElementById('upload-progress-toast');
         var bar = document.getElementById('upload-progress-bar');
@@ -33,20 +34,24 @@ document.addEventListener('DOMContentLoaded', function () {
         var sizeText = document.getElementById('upload-size-text');
         var submitBtn = document.getElementById('b2b-submit-btn');
 
-        var fileSize = fileInput.files[0].size;
-        toast.style.display = 'block';
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> {{ __("Uploading...") }}';
+
+        if (hasFile) {
+            toast.style.display = 'block';
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> {{ __("Uploading...") }}';
+        } else {
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> {{ __("Saving...") }}';
+        }
 
         var formData = new FormData(form);
         var xhr = new XMLHttpRequest();
 
-        xhr.upload.addEventListener('progress', function (e) {
-            if (e.lengthComputable) {
-                var percent = Math.round((e.loaded / e.total) * 100);
+        xhr.upload.addEventListener('progress', function (ev) {
+            if (hasFile && ev.lengthComputable) {
+                var percent = Math.round((ev.loaded / ev.total) * 100);
                 bar.style.width = percent + '%';
                 percentText.textContent = percent + '%';
-                sizeText.textContent = formatBytes(e.loaded) + ' / ' + formatBytes(e.total);
+                sizeText.textContent = formatBytes(ev.loaded) + ' / ' + formatBytes(ev.total);
 
                 if (percent >= 100) {
                     statusText.textContent = '{{ __("Processing...") }}';
@@ -58,10 +63,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         xhr.addEventListener('load', function () {
             if (xhr.status >= 200 && xhr.status < 400) {
-                statusText.textContent = '{{ __("Upload Complete!") }}';
-                bar.classList.remove('progress-bar-animated');
-                bar.classList.add('bg-success');
-                percentText.textContent = '100%';
+                if (hasFile) {
+                    statusText.textContent = '{{ __("Upload Complete!") }}';
+                    bar.classList.remove('progress-bar-animated');
+                    bar.classList.add('bg-success');
+                    percentText.textContent = '100%';
+                }
 
                 try {
                     var response = JSON.parse(xhr.responseText);
@@ -73,32 +80,60 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 window.location.href = '{{ route("marketplace.vendor.b2b-catalogs.index") }}';
             } else {
-                statusText.textContent = '{{ __("Upload Failed!") }}';
-                bar.classList.remove('progress-bar-animated', 'bg-success');
-                bar.classList.add('bg-danger');
+                if (hasFile) {
+                    statusText.textContent = '{{ __("Upload Failed!") }}';
+                    bar.classList.remove('progress-bar-animated', 'bg-success');
+                    bar.classList.add('bg-danger');
+                }
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '{{ __("Retry") }}';
 
                 try {
                     var errResponse = JSON.parse(xhr.responseText);
-                    if (errResponse.message) {
+                    if (errResponse.errors) {
+                        var msgs = [];
+                        for (var field in errResponse.errors) {
+                            msgs.push(errResponse.errors[field][0]);
+                        }
+                        if (hasFile) {
+                            sizeText.innerHTML = msgs.join('<br>');
+                        } else {
+                            toast.style.display = 'block';
+                            statusText.textContent = '{{ __("Error") }}';
+                            sizeText.innerHTML = msgs.join('<br>');
+                            bar.style.display = 'none';
+                            percentText.style.display = 'none';
+                        }
+                    } else if (errResponse.message) {
+                        toast.style.display = 'block';
+                        statusText.textContent = '{{ __("Error") }}';
                         sizeText.textContent = errResponse.message;
+                        bar.style.display = 'none';
+                        percentText.style.display = 'none';
                     }
                 } catch (ex) {
+                    toast.style.display = 'block';
+                    statusText.textContent = '{{ __("Error") }}';
                     sizeText.textContent = '{{ __("Server error. Please try again.") }}';
+                    bar.style.display = 'none';
+                    percentText.style.display = 'none';
                 }
             }
         });
 
         xhr.addEventListener('error', function () {
-            statusText.textContent = '{{ __("Upload Failed!") }}';
-            bar.classList.add('bg-danger');
+            if (hasFile) {
+                statusText.textContent = '{{ __("Upload Failed!") }}';
+                bar.classList.add('bg-danger');
+            }
+            toast.style.display = 'block';
+            statusText.textContent = '{{ __("Error") }}';
+            sizeText.textContent = '{{ __("Network error. Please check your connection.") }}';
             submitBtn.disabled = false;
             submitBtn.innerHTML = '{{ __("Retry") }}';
-            sizeText.textContent = '{{ __("Network error. Please check your connection.") }}';
         });
 
-        xhr.open(form.method, form.action, true);
+        xhr.open('POST', form.action, true);
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.setRequestHeader('Accept', 'application/json');
         xhr.send(formData);

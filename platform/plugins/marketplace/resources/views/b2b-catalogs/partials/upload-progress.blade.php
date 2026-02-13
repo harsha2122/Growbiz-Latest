@@ -19,11 +19,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!form) return;
 
     form.addEventListener('submit', function (e) {
-        var fileInput = document.getElementById('pdf_file');
-        if (!fileInput || !fileInput.files.length) return;
-
         e.preventDefault();
         e.stopImmediatePropagation();
+
+        var fileInput = document.getElementById('pdf_file');
+        var hasFile = fileInput && fileInput.files.length > 0;
 
         var toast = document.getElementById('upload-progress-toast');
         var bar = document.getElementById('upload-progress-bar');
@@ -32,15 +32,20 @@ document.addEventListener('DOMContentLoaded', function () {
         var sizeText = document.getElementById('upload-size-text');
         var submitBtn = document.getElementById('b2b-submit-btn');
 
-        toast.style.display = 'block';
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...';
+
+        if (hasFile) {
+            toast.style.display = 'block';
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...';
+        } else {
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        }
 
         var formData = new FormData(form);
         var xhr = new XMLHttpRequest();
 
         xhr.upload.addEventListener('progress', function (ev) {
-            if (ev.lengthComputable) {
+            if (hasFile && ev.lengthComputable) {
                 var pct = Math.round((ev.loaded / ev.total) * 100);
                 bar.style.width = pct + '%';
                 percentText.textContent = pct + '%';
@@ -55,17 +60,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
         xhr.addEventListener('load', function () {
             if (xhr.status >= 200 && xhr.status < 400) {
-                statusText.textContent = 'Upload Complete!';
-                bar.classList.add('bg-success');
-                percentText.textContent = '100%';
+                if (hasFile) {
+                    statusText.textContent = 'Upload Complete!';
+                    bar.classList.add('bg-success');
+                    percentText.textContent = '100%';
+                }
                 try {
                     var resp = JSON.parse(xhr.responseText);
                     if (resp.next_url) { window.location.href = resp.next_url; return; }
                 } catch (ex) {}
                 window.location.href = '{{ $redirectUrl }}';
             } else {
-                statusText.textContent = 'Upload Failed!';
-                bar.classList.add('bg-danger');
+                if (hasFile) {
+                    statusText.textContent = 'Upload Failed!';
+                    bar.classList.add('bg-danger');
+                }
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Retry';
                 try {
@@ -75,23 +84,35 @@ document.addEventListener('DOMContentLoaded', function () {
                         for (var field in err.errors) {
                             msgs.push(err.errors[field][0]);
                         }
+                        toast.style.display = 'block';
+                        statusText.textContent = 'Error';
                         sizeText.innerHTML = msgs.join('<br>');
+                        if (!hasFile) { bar.style.display = 'none'; percentText.style.display = 'none'; }
                     } else if (err.message) {
+                        toast.style.display = 'block';
+                        statusText.textContent = 'Error';
                         sizeText.textContent = err.message;
+                        if (!hasFile) { bar.style.display = 'none'; percentText.style.display = 'none'; }
                     }
-                } catch (ex) { sizeText.textContent = 'Server error.'; }
+                } catch (ex) {
+                    toast.style.display = 'block';
+                    statusText.textContent = 'Error';
+                    sizeText.textContent = 'Server error.';
+                    if (!hasFile) { bar.style.display = 'none'; percentText.style.display = 'none'; }
+                }
             }
         });
 
         xhr.addEventListener('error', function () {
-            statusText.textContent = 'Upload Failed!';
+            toast.style.display = 'block';
+            statusText.textContent = 'Error';
             bar.classList.add('bg-danger');
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Retry';
             sizeText.textContent = 'Network error.';
         });
 
-        xhr.open(form.method, form.action, true);
+        xhr.open('POST', form.action, true);
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.setRequestHeader('Accept', 'application/json');
         xhr.send(formData);
