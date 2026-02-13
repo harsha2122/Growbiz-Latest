@@ -8,7 +8,7 @@
         </a>
     </div>
 
-    <form action="{{ route('marketplace.vendor.b2b-catalogs.update', $catalog->id) }}" method="POST" enctype="multipart/form-data">
+    <form id="b2b-catalog-form" action="{{ route('marketplace.vendor.b2b-catalogs.update', $catalog->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <div class="card">
@@ -45,8 +45,10 @@
                     @enderror
                 </div>
 
-                <button type="submit" class="btn btn-primary">{{ __('Update') }}</button>
+                <button type="submit" class="btn btn-primary" id="b2b-submit-btn">{{ __('Update') }}</button>
             </div>
         </div>
     </form>
+
+    @include(MarketplaceHelper::viewPath('vendor-dashboard.b2b-catalogs.partials.upload-progress'))
 @endsection
