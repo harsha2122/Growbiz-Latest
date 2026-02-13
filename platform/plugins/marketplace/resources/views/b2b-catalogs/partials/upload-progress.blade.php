@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!fileInput || !fileInput.files.length) return;
 
         e.preventDefault();
+        e.stopImmediatePropagation();
 
         var toast = document.getElementById('upload-progress-toast');
         var bar = document.getElementById('upload-progress-bar');
@@ -69,7 +70,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitBtn.innerHTML = 'Retry';
                 try {
                     var err = JSON.parse(xhr.responseText);
-                    if (err.message) sizeText.textContent = err.message;
+                    if (err.errors) {
+                        var msgs = [];
+                        for (var field in err.errors) {
+                            msgs.push(err.errors[field][0]);
+                        }
+                        sizeText.innerHTML = msgs.join('<br>');
+                    } else if (err.message) {
+                        sizeText.textContent = err.message;
+                    }
                 } catch (ex) { sizeText.textContent = 'Server error.'; }
             }
         });
