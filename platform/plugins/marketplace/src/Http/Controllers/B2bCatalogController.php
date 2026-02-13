@@ -5,7 +5,6 @@ namespace Botble\Marketplace\Http\Controllers;
 use Botble\Base\Http\Actions\DeleteResourceAction;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Supports\Breadcrumb;
-use Botble\Marketplace\Forms\B2bCatalogForm;
 use Botble\Marketplace\Http\Requests\B2bCatalogRequest;
 use Botble\Marketplace\Models\B2bCatalog;
 use Botble\Marketplace\Tables\B2bCatalogTable;
@@ -31,7 +30,7 @@ class B2bCatalogController extends BaseController
     {
         $this->pageTitle(__('Create B2B Catalog'));
 
-        return B2bCatalogForm::create()->renderForm();
+        return view('plugins/marketplace::b2b-catalogs.create');
     }
 
     public function store(B2bCatalogRequest $request)
@@ -49,8 +48,7 @@ class B2bCatalogController extends BaseController
 
         return $this
             ->httpResponse()
-            ->setPreviousRoute('marketplace.b2b-catalogs.index')
-            ->setNextRoute('marketplace.b2b-catalogs.edit', $catalog->id)
+            ->setNextUrl(route('marketplace.b2b-catalogs.index'))
             ->withCreatedSuccessMessage();
     }
 
@@ -58,7 +56,7 @@ class B2bCatalogController extends BaseController
     {
         $this->pageTitle(__('Edit B2B Catalog: :title', ['title' => $b2b_catalog->title]));
 
-        return B2bCatalogForm::createFromModel($b2b_catalog)->renderForm();
+        return view('plugins/marketplace::b2b-catalogs.edit', ['catalog' => $b2b_catalog]);
     }
 
     public function update(B2bCatalog $b2b_catalog, B2bCatalogRequest $request)
@@ -76,7 +74,7 @@ class B2bCatalogController extends BaseController
 
         return $this
             ->httpResponse()
-            ->setPreviousRoute('marketplace.b2b-catalogs.index')
+            ->setNextUrl(route('marketplace.b2b-catalogs.index'))
             ->withUpdatedSuccessMessage();
     }
 
