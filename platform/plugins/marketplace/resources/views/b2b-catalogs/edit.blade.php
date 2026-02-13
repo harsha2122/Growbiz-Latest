@@ -3,7 +3,6 @@
 @section('content')
     <form id="b2b-catalog-form" action="{{ route('marketplace.b2b-catalogs.update', $catalog->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
-        @method('PUT')
         <div class="card">
             <div class="card-header">
                 <h4 class="card-title">{{ __('Edit B2B Catalog: :title', ['title' => $catalog->title]) }}</h4>

@@ -10,7 +10,6 @@
 
     <form id="b2b-catalog-form" action="{{ route('marketplace.vendor.b2b-catalogs.update', $catalog->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
-        @method('PUT')
         <div class="card">
             <div class="card-body">
                 <div class="mb-3">
