@@ -11,6 +11,7 @@ class B2bCatalogRequest extends Request
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
+            'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'pdf_file' => [$this->route('b2b_catalog') ? 'nullable' : 'required', 'file', 'mimes:pdf', 'max:524288'],
         ];
     }

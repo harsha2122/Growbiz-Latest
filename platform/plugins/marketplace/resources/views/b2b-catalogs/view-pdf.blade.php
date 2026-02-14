@@ -82,9 +82,11 @@
                 const loadingTask = pdfjsLib.getDocument({
                     url: url,
                     rangeChunkSize: 65536,
-                    disableAutoFetch: true,
+                    disableAutoFetch: false,
                     disableStream: false,
                 });
+
+                let firstPageRendered = false;
 
                 loadingTask.onProgress = function (data) {
                     if (data.total > 0) {
@@ -100,7 +102,10 @@
                     document.getElementById('loading-indicator').style.display = 'none';
                     document.getElementById('prev-page').disabled = false;
                     document.getElementById('next-page').disabled = false;
-                    renderPage(pageNum);
+                    if (!firstPageRendered) {
+                        firstPageRendered = true;
+                        renderPage(pageNum);
+                    }
                 });
 
                 document.getElementById('prev-page').addEventListener('click', function () {

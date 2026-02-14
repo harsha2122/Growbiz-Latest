@@ -32,6 +32,18 @@ class B2bCatalogTable extends TableAbstract
                     ->title(__('Description'))
                     ->alignStart()
                     ->width(300),
+                Column::make('discount_percentage')
+                    ->title(__('Discount'))
+                    ->alignCenter()
+                    ->width(100)
+                    ->renderUsing(function (Column $column) {
+                        $value = $column->getItem()->discount_percentage;
+                        if ($value > 0) {
+                            $formatted = rtrim(rtrim(number_format($value, 2), '0'), '.');
+                            return '<span class="badge bg-danger">' . $formatted . '% OFF</span>';
+                        }
+                        return '<span class="text-muted">-</span>';
+                    }),
                 Column::make('uploaded_by_type')
                     ->title(__('Uploaded By'))
                     ->alignStart()
@@ -40,7 +52,7 @@ class B2bCatalogTable extends TableAbstract
             ])
             ->addBulkAction(DeleteBulkAction::make()->permission('marketplace.b2b-catalogs.destroy'))
             ->queryUsing(function ($query) {
-                return $query->select(['id', 'title', 'description', 'pdf_path', 'uploaded_by', 'uploaded_by_type', 'created_at'])->latest();
+                return $query->select(['id', 'title', 'description', 'discount_percentage', 'pdf_path', 'uploaded_by', 'uploaded_by_type', 'created_at'])->latest();
             });
     }
 }

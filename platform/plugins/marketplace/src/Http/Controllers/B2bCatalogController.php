@@ -37,7 +37,7 @@ class B2bCatalogController extends BaseController
 
     public function store(B2bCatalogRequest $request)
     {
-        $data = $request->only(['title', 'description']);
+        $data = $request->only(['title', 'description', 'discount_percentage']);
 
         if ($request->hasFile('pdf_file')) {
             $data['pdf_path'] = $request->file('pdf_file')->store('b2b-catalogs', 'public');
@@ -63,7 +63,7 @@ class B2bCatalogController extends BaseController
 
     public function update(B2bCatalog $b2b_catalog, B2bCatalogRequest $request)
     {
-        $data = $request->only(['title', 'description']);
+        $data = $request->only(['title', 'description', 'discount_percentage']);
 
         if ($request->hasFile('pdf_file')) {
             if ($b2b_catalog->pdf_path && Storage::disk('public')->exists($b2b_catalog->pdf_path)) {
@@ -115,6 +115,10 @@ class B2bCatalogController extends BaseController
             $length = $end - $start + 1;
 
             $response = new StreamedResponse(function () use ($disk, $path, $start, $length) {
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+
                 $stream = $disk->readStream($path);
                 fseek($stream, $start);
                 $remaining = $length;
@@ -129,13 +133,18 @@ class B2bCatalogController extends BaseController
 
             $response->headers->set('Content-Type', $mimeType);
             $response->headers->set('Content-Range', "bytes $start-$end/$fileSize");
-            $response->headers->set('Content-Length', $length);
+            $response->headers->set('Content-Length', (string) $length);
             $response->headers->set('Accept-Ranges', 'bytes');
+            $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
 
             return $response;
         }
 
         $response = new StreamedResponse(function () use ($disk, $path) {
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+
             $stream = $disk->readStream($path);
             while (! feof($stream)) {
                 echo fread($stream, 8192);
@@ -146,8 +155,9 @@ class B2bCatalogController extends BaseController
 
         $response->headers->set('Content-Type', $mimeType);
         $response->headers->set('Content-Disposition', 'inline; filename="' . basename($path) . '"');
-        $response->headers->set('Content-Length', $fileSize);
+        $response->headers->set('Content-Length', (string) $fileSize);
         $response->headers->set('Accept-Ranges', 'bytes');
+        $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
 
         return $response;
     }

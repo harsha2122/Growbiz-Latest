@@ -29,6 +29,15 @@
                 </div>
 
                 <div class="mb-3">
+                    <label for="discount_percentage" class="form-label">{{ __('Discount %') }}</label>
+                    <input type="number" class="form-control @error('discount_percentage') is-invalid @enderror" id="discount_percentage" name="discount_percentage" value="{{ old('discount_percentage', $catalog->discount_percentage) }}" min="0" max="100" step="0.01" placeholder="e.g. 15">
+                    <small class="text-muted">{{ __('Leave empty for no discount tag.') }}</small>
+                    @error('discount_percentage')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
                     <label for="pdf_file" class="form-label">{{ __('PDF File') }}</label>
                     @if ($catalog->pdf_path)
                         <div class="mb-2">

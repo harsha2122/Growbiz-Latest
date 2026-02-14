@@ -18,6 +18,7 @@
                         <th>#</th>
                         <th>{{ __('Title') }}</th>
                         <th>{{ __('Description') }}</th>
+                        <th>{{ __('Discount') }}</th>
                         <th>{{ __('PDF') }}</th>
                         <th>{{ __('Created') }}</th>
                         <th>{{ __('Actions') }}</th>
@@ -29,6 +30,13 @@
                             <td>{{ $catalog->id }}</td>
                             <td>{{ $catalog->title }}</td>
                             <td>{{ Str::limit($catalog->description, 80) }}</td>
+                            <td>
+                                @if ($catalog->discount_percentage > 0)
+                                    <span class="badge bg-danger">{{ rtrim(rtrim(number_format($catalog->discount_percentage, 2), '0'), '.') }}% OFF</span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
                             <td>
                                 <a href="{{ route('marketplace.vendor.b2b-catalogs.view-pdf', $catalog->id) }}" class="btn btn-sm btn-outline-primary">
                                     <x-core::icon name="ti ti-eye" /> {{ __('View PDF') }}
