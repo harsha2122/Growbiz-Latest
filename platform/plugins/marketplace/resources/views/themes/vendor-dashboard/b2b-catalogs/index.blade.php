@@ -30,8 +30,8 @@
                             <td>{{ $catalog->title }}</td>
                             <td>{{ Str::limit($catalog->description, 80) }}</td>
                             <td>
-                                <a href="{{ Storage::disk('public')->url($catalog->pdf_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                    <x-core::icon name="ti ti-download" /> {{ __('View PDF') }}
+                                <a href="{{ route('marketplace.vendor.b2b-catalogs.view-pdf', $catalog->id) }}" class="btn btn-sm btn-outline-primary">
+                                    <x-core::icon name="ti ti-eye" /> {{ __('View PDF') }}
                                 </a>
                             </td>
                             <td>{{ $catalog->created_at->format('d M Y') }}</td>

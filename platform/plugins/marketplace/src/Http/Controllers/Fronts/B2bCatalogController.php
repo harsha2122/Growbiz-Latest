@@ -7,6 +7,7 @@ use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Models\B2bCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class B2bCatalogController extends BaseController
 {
@@ -89,6 +90,52 @@ class B2bCatalogController extends BaseController
             ->httpResponse()
             ->setNextUrl(route('marketplace.vendor.b2b-catalogs.index'))
             ->withUpdatedSuccessMessage();
+    }
+
+    public function viewPdf($id)
+    {
+        $catalog = B2bCatalog::query()->findOrFail($id);
+
+        abort_unless(
+            $catalog->pdf_path && Storage::disk('public')->exists($catalog->pdf_path),
+            404
+        );
+
+        return MarketplaceHelper::view('vendor-dashboard.b2b-catalogs.view-pdf', [
+            'catalog' => $catalog,
+            'streamUrl' => route('marketplace.vendor.b2b-catalogs.stream-pdf', $catalog->id),
+        ]);
+    }
+
+    public function streamPdf($id): StreamedResponse
+    {
+        $catalog = B2bCatalog::query()->findOrFail($id);
+
+        abort_unless(
+            $catalog->pdf_path && Storage::disk('public')->exists($catalog->pdf_path),
+            404
+        );
+
+        $disk = Storage::disk('public');
+        $path = $catalog->pdf_path;
+        $fileSize = $disk->size($path);
+        $mimeType = $disk->mimeType($path) ?: 'application/pdf';
+
+        $response = new StreamedResponse(function () use ($disk, $path) {
+            $stream = $disk->readStream($path);
+            while (! feof($stream)) {
+                echo fread($stream, 8192);
+                flush();
+            }
+            fclose($stream);
+        });
+
+        $response->headers->set('Content-Type', $mimeType);
+        $response->headers->set('Content-Disposition', 'inline; filename="' . basename($path) . '"');
+        $response->headers->set('Content-Length', $fileSize);
+        $response->headers->set('Accept-Ranges', 'bytes');
+
+        return $response;
     }
 
     public function destroy($id)

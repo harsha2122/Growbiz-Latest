@@ -32,8 +32,8 @@
                     <label for="pdf_file" class="form-label">{{ __('PDF File') }}</label>
                     @if ($catalog->pdf_path)
                         <div class="mb-2">
-                            <a href="{{ Storage::disk('public')->url($catalog->pdf_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <x-core::icon name="ti ti-download" /> {{ __('View Current PDF') }}
+                            <a href="{{ route('marketplace.vendor.b2b-catalogs.view-pdf', $catalog->id) }}" class="btn btn-sm btn-outline-primary">
+                                <x-core::icon name="ti ti-eye" /> {{ __('View Current PDF') }}
                             </a>
                         </div>
                     @endif

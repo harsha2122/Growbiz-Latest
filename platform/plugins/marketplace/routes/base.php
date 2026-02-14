@@ -196,6 +196,16 @@ AdminHelper::registerRoutes(function (): void {
             });
             Route::group(['prefix' => 'b2b-catalogs', 'as' => 'b2b-catalogs.'], function (): void {
                 Route::resource('', 'B2bCatalogController')->parameters(['' => 'b2b_catalog']);
+                Route::get('{b2b_catalog}/view-pdf', [
+                    'as' => 'view-pdf',
+                    'uses' => 'B2bCatalogController@viewPdf',
+                    'permission' => 'marketplace.b2b-catalogs.index',
+                ]);
+                Route::get('{b2b_catalog}/stream-pdf', [
+                    'as' => 'stream-pdf',
+                    'uses' => 'B2bCatalogController@streamPdf',
+                    'permission' => 'marketplace.b2b-catalogs.index',
+                ]);
             });
         });
 

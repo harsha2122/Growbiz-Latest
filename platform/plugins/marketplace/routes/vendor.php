@@ -314,6 +314,12 @@ Route::group([
     Route::group(['prefix' => 'b2b-catalogs', 'as' => 'b2b-catalogs.'], function (): void {
         Route::resource('', \Botble\Marketplace\Http\Controllers\Fronts\B2bCatalogController::class)
             ->parameters(['' => 'b2b_catalog']);
+        Route::get('{b2b_catalog}/view-pdf', [
+            \Botble\Marketplace\Http\Controllers\Fronts\B2bCatalogController::class, 'viewPdf',
+        ])->name('view-pdf');
+        Route::get('{b2b_catalog}/stream-pdf', [
+            \Botble\Marketplace\Http\Controllers\Fronts\B2bCatalogController::class, 'streamPdf',
+        ])->name('stream-pdf');
     });
 
     Route::get('settings/languages', [LanguageSettingController::class, 'index'])->name('language-settings.index');

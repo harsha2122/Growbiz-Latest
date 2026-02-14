@@ -9,6 +9,7 @@ use Botble\Marketplace\Http\Requests\B2bCatalogRequest;
 use Botble\Marketplace\Models\B2bCatalog;
 use Botble\Marketplace\Tables\B2bCatalogTable;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class B2bCatalogController extends BaseController
 {
@@ -76,6 +77,48 @@ class B2bCatalogController extends BaseController
             ->httpResponse()
             ->setNextUrl(route('marketplace.b2b-catalogs.index'))
             ->withUpdatedSuccessMessage();
+    }
+
+    public function viewPdf(B2bCatalog $b2b_catalog)
+    {
+        abort_unless(
+            $b2b_catalog->pdf_path && Storage::disk('public')->exists($b2b_catalog->pdf_path),
+            404
+        );
+
+        return view('plugins/marketplace::b2b-catalogs.view-pdf', [
+            'catalog' => $b2b_catalog,
+            'streamUrl' => route('marketplace.b2b-catalogs.stream-pdf', $b2b_catalog->id),
+        ]);
+    }
+
+    public function streamPdf(B2bCatalog $b2b_catalog): StreamedResponse
+    {
+        abort_unless(
+            $b2b_catalog->pdf_path && Storage::disk('public')->exists($b2b_catalog->pdf_path),
+            404
+        );
+
+        $disk = Storage::disk('public');
+        $path = $b2b_catalog->pdf_path;
+        $fileSize = $disk->size($path);
+        $mimeType = $disk->mimeType($path) ?: 'application/pdf';
+
+        $response = new StreamedResponse(function () use ($disk, $path) {
+            $stream = $disk->readStream($path);
+            while (! feof($stream)) {
+                echo fread($stream, 8192);
+                flush();
+            }
+            fclose($stream);
+        });
+
+        $response->headers->set('Content-Type', $mimeType);
+        $response->headers->set('Content-Disposition', 'inline; filename="' . basename($path) . '"');
+        $response->headers->set('Content-Length', $fileSize);
+        $response->headers->set('Accept-Ranges', 'bytes');
+
+        return $response;
     }
 
     public function destroy(B2bCatalog $b2b_catalog): DeleteResourceAction
