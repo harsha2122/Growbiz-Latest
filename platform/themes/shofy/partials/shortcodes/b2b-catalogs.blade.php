@@ -23,7 +23,12 @@
         <div class="row">
             @foreach ($catalogs as $catalog)
                 <div class="col-lg-4 col-md-6 mb-30">
-                    <div class="card h-100 border shadow-sm">
+                    <div class="card h-100 border shadow-sm" style="position: relative; overflow: hidden;">
+                        @if ($catalog->discount_percentage > 0)
+                            <span style="position: absolute; top: 12px; right: -30px; background: #e74c3c; color: #fff; font-size: 12px; font-weight: 700; padding: 4px 35px; transform: rotate(45deg); z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                {{ rtrim(rtrim(number_format($catalog->discount_percentage, 2), '0'), '.') }}% OFF
+                            </span>
+                        @endif
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="b2b-pdf-icon me-3" style="color: #e74c3c; font-size: 40px;">
