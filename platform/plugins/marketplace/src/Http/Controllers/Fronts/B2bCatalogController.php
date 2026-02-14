@@ -107,7 +107,7 @@ class B2bCatalogController extends BaseController
         ]);
     }
 
-    public function streamPdf($id): StreamedResponse
+    public function streamPdf($id, Request $request): StreamedResponse
     {
         $catalog = B2bCatalog::query()->findOrFail($id);
 
@@ -120,6 +120,36 @@ class B2bCatalogController extends BaseController
         $path = $catalog->pdf_path;
         $fileSize = $disk->size($path);
         $mimeType = $disk->mimeType($path) ?: 'application/pdf';
+
+        $rangeHeader = $request->header('Range');
+
+        if ($rangeHeader) {
+            preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches);
+            $start = (int) $matches[1];
+            $end = isset($matches[2]) && $matches[2] !== '' ? (int) $matches[2] : $fileSize - 1;
+            $end = min($end, $fileSize - 1);
+            $length = $end - $start + 1;
+
+            $response = new StreamedResponse(function () use ($disk, $path, $start, $length) {
+                $stream = $disk->readStream($path);
+                fseek($stream, $start);
+                $remaining = $length;
+                while ($remaining > 0 && ! feof($stream)) {
+                    $chunk = fread($stream, min(8192, $remaining));
+                    echo $chunk;
+                    flush();
+                    $remaining -= strlen($chunk);
+                }
+                fclose($stream);
+            }, 206);
+
+            $response->headers->set('Content-Type', $mimeType);
+            $response->headers->set('Content-Range', "bytes $start-$end/$fileSize");
+            $response->headers->set('Content-Length', $length);
+            $response->headers->set('Accept-Ranges', 'bytes');
+
+            return $response;
+        }
 
         $response = new StreamedResponse(function () use ($disk, $path) {
             $stream = $disk->readStream($path);

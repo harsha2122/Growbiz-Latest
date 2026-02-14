@@ -19,6 +19,9 @@
                         <span id="zoom-level">100%</span>
                         <button id="zoom-in" class="btn btn-sm btn-outline-secondary">+</button>
                     </span>
+                    <span id="page-loading" style="margin-left: 10px; color: #6c757d; display: none;">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                    </span>
                     <span id="loading-indicator" style="margin-left: 15px; color: #6c757d;">
                         <span class="spinner-border spinner-border-sm" role="status"></span> {{ __('Loading...') }}
                     </span>
@@ -41,10 +44,19 @@
                 let pdfDoc = null;
                 let pageNum = 1;
                 let scale = 1.5;
+                let pageRendering = false;
+                let pageNumPending = null;
                 const canvas = document.getElementById('pdf-canvas');
                 const ctx = canvas.getContext('2d');
 
                 function renderPage(num) {
+                    if (pageRendering) {
+                        pageNumPending = num;
+                        return;
+                    }
+                    pageRendering = true;
+                    document.getElementById('page-loading').style.display = 'inline';
+
                     pdfDoc.getPage(num).then(function (page) {
                         const viewport = page.getViewport({ scale: scale });
                         canvas.height = viewport.height;
@@ -55,18 +67,30 @@
                             viewport: viewport,
                         };
 
-                        page.render(renderContext);
-                        document.getElementById('page-num').textContent = num;
+                        page.render(renderContext).promise.then(function () {
+                            pageRendering = false;
+                            document.getElementById('page-loading').style.display = 'none';
+                            document.getElementById('page-num').textContent = num;
+                            if (pageNumPending !== null) {
+                                renderPage(pageNumPending);
+                                pageNumPending = null;
+                            }
+                        });
                     });
                 }
 
-                const loadingTask = pdfjsLib.getDocument(url);
+                const loadingTask = pdfjsLib.getDocument({
+                    url: url,
+                    rangeChunkSize: 65536,
+                    disableAutoFetch: true,
+                    disableStream: false,
+                });
 
                 loadingTask.onProgress = function (data) {
                     if (data.total > 0) {
                         const pct = Math.round((data.loaded / data.total) * 100);
                         document.getElementById('loading-indicator').innerHTML =
-                            '<span class="spinner-border spinner-border-sm" role="status"></span> ' + pct + '%';
+                            '<span class="spinner-border spinner-border-sm" role="status"></span> {{ __("Loading") }} ' + pct + '%';
                     }
                 };
 
@@ -86,7 +110,7 @@
                 });
 
                 document.getElementById('next-page').addEventListener('click', function () {
-                    if (pageNum >= pdfDoc.numPages) return;
+                    if (!pdfDoc || pageNum >= pdfDoc.numPages) return;
                     pageNum++;
                     renderPage(pageNum);
                 });
