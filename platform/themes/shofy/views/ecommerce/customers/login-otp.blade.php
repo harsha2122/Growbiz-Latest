@@ -51,24 +51,27 @@
                             </div>
                         </div>
 
-                        <div class="tp-login-bottom">
-                            <button type="submit" class="tp-login-btn w-100">
-                                {{ __('Verify & Login') }}
-                            </button>
+                        <div class="tp-login-bottom mt-25">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-auth-submit">
+                                    {{ __('Verify & Login') }}
+                                </button>
+                            </div>
                         </div>
                     </form>
 
-                    <div class="text-center mt-20">
-                        <form method="POST" action="{{ route('customer.login.otp.resend') }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-link p-0">
-                                {{ __('Resend OTP') }}
-                            </button>
-                        </form>
-                        <span class="mx-2">|</span>
-                        <a href="{{ route('customer.login') }}">
-                            {{ __('Back to Login') }}
-                        </a>
+                    <div class="tp-login-bottom mt-15">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <form method="POST" action="{{ route('customer.login.otp.resend') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                    {{ __('Resend OTP') }}
+                                </button>
+                            </form>
+                            <a href="{{ route('customer.login') }}" class="btn btn-outline-secondary btn-sm">
+                                {{ __('Back to Login') }}
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
