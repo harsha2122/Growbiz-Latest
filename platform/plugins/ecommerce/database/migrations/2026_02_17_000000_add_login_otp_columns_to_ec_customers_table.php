@@ -12,7 +12,7 @@ return new class () extends Migration {
         }
 
         Schema::table('ec_customers', function (Blueprint $table): void {
-            $table->string('login_otp', 6)->nullable();
+            $table->string('login_otp')->nullable();
             $table->timestamp('login_otp_expires_at')->nullable();
         });
     }
