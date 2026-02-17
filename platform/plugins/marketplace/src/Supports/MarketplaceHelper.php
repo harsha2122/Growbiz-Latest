@@ -262,6 +262,11 @@ class MarketplaceHelper
         return $allowedMimeTypes;
     }
 
+    public function isLoginOtpEnabled(): bool
+    {
+        return (bool) $this->getSetting('enable_login_otp', false);
+    }
+
     public function isEnabledVendorCategoriesFilter(): bool
     {
         return (bool) $this->getSetting('enable_vendor_categories_filter', true);

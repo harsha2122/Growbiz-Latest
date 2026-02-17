@@ -228,6 +228,8 @@ return [
         'b2b_contact_call_number_helper' => 'Phone number displayed on B2B catalog cards for direct calling (e.g. +919876543210).',
         'b2b_contact_whatsapp_number' => 'B2B Contact WhatsApp Number',
         'b2b_contact_whatsapp_number_helper' => 'WhatsApp number displayed on B2B catalog cards for messaging (e.g. 919876543210 without + or spaces).',
+        'enable_login_otp' => 'Require OTP verification for customer login',
+        'enable_login_otp_helper' => 'If enabled, customers must verify a 6-digit OTP sent to their email after entering correct credentials before being logged in.',
     ],
     'theme_options' => [
         'name' => 'Marketplace',

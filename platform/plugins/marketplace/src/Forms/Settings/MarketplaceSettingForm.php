@@ -286,6 +286,14 @@ class MarketplaceSettingForm extends SettingForm
                     ->label(trans('plugins/marketplace::marketplace.settings.b2b_contact_whatsapp_number'))
                     ->helperText(trans('plugins/marketplace::marketplace.settings.b2b_contact_whatsapp_number_helper'))
                     ->value(MarketplaceHelper::getSetting('b2b_contact_whatsapp_number', ''))
+            )
+            ->add(
+                'enable_login_otp',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/marketplace::marketplace.settings.enable_login_otp'))
+                    ->helperText(trans('plugins/marketplace::marketplace.settings.enable_login_otp_helper'))
+                    ->value(MarketplaceHelper::isLoginOtpEnabled())
             );
     }
 }

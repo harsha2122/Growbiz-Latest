@@ -53,17 +53,21 @@ class Customer extends BaseModel implements
         'phone',
         'status',
         'private_notes',
+        'login_otp',
+        'login_otp_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'login_otp',
     ];
 
     protected $casts = [
         'status' => CustomerStatusEnum::class,
         'dob' => 'date',
         'confirmed_at' => 'datetime',
+        'login_otp_expires_at' => 'datetime',
     ];
 
     public function sendPasswordResetNotification($token): void
