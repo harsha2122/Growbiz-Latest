@@ -39,4 +39,54 @@
         BotbleVariables.languages = BotbleVariables.languages || {};
         BotbleVariables.languages.reports = {!! json_encode(trans('plugins/ecommerce::reports.ranges'), JSON_HEX_APOS) !!}
     </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        'use strict';
+
+        function initStoreQRCode() {
+            var qrcodeEl = document.getElementById('store-qrcode');
+            if (!qrcodeEl || qrcodeEl.childNodes.length > 0) return;
+
+            var storeUrl = qrcodeEl.getAttribute('data-url');
+            if (!storeUrl) return;
+
+            new QRCode(qrcodeEl, {
+                text: storeUrl,
+                width: 180,
+                height: 180,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initStoreQRCode);
+
+        $(document).ajaxComplete(function() {
+            setTimeout(initStoreQRCode, 200);
+        });
+
+        $(document).on('click', '#download-qrcode', function() {
+            var canvas = document.querySelector('#store-qrcode canvas');
+            if (canvas) {
+                var link = document.createElement('a');
+                link.download = 'store-qrcode.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+        });
+
+        $(document).on('click', '#copy-store-link', function() {
+            var url = $(this).data('url');
+            var btn = $(this);
+            navigator.clipboard.writeText(url).then(function() {
+                var originalHtml = btn.html();
+                btn.html('<i class="ti ti-check"></i> {{ __("Copied!") }}');
+                setTimeout(function() {
+                    btn.html(originalHtml);
+                }, 2000);
+            });
+        });
+    </script>
 @endpush

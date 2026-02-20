@@ -180,6 +180,35 @@
                 </div>
             </x-core::card.body>
         </x-core::card>
+
+        @if($store->url)
+            <x-core::card class="mt-2">
+                <x-core::card.header>
+                    <x-core::card.title>
+                        <x-core::icon name="ti ti-qrcode" />
+                        {{ __('Store QR Code') }}
+                    </x-core::card.title>
+                </x-core::card.header>
+                <x-core::card.body class="text-center">
+                    <div id="store-qrcode" class="d-inline-block mb-3" data-url="{{ $store->url }}"></div>
+                    <div class="small text-muted mb-2 text-truncate px-2">
+                        <a href="{{ $store->url }}" target="_blank" class="text-decoration-none">
+                            {{ $store->url }}
+                        </a>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="download-qrcode">
+                            <x-core::icon name="ti ti-download" />
+                            {{ __('Download') }}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="copy-store-link" data-url="{{ $store->url }}">
+                            <x-core::icon name="ti ti-copy" />
+                            {{ __('Copy Link') }}
+                        </button>
+                    </div>
+                </x-core::card.body>
+            </x-core::card>
+        @endif
     </div>
 
     <div class="col-12 col-md-8 order-md-0">
