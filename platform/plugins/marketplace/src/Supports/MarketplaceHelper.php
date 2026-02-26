@@ -335,4 +335,34 @@ class MarketplaceHelper
             });
         });
     }
+
+    public function isMetaAdsEnabled(): bool
+    {
+        return (bool) $this->getSetting('meta_ads_enabled', false);
+    }
+
+    public function getMetaAppId(): string
+    {
+        return (string) $this->getSetting('meta_app_id', '');
+    }
+
+    public function getMetaAppSecret(): string
+    {
+        return (string) $this->getSetting('meta_app_secret', '');
+    }
+
+    public function getMetaApiVersion(): string
+    {
+        return (string) $this->getSetting('meta_api_version', 'v19.0');
+    }
+
+    public function getMetaAdsMinDailyBudget(): float
+    {
+        return (float) $this->getSetting('meta_ads_min_daily_budget', 1);
+    }
+
+    public function getMetaAdsDefaultCurrency(): string
+    {
+        return (string) $this->getSetting('meta_ads_default_currency', 'USD');
+    }
 }

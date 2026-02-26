@@ -241,6 +241,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-file-type-pdf',
                     'url' => fn () => route('marketplace.b2b-catalogs.index'),
                     'permissions' => ['marketplace.b2b-catalogs.index'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-marketplace-meta-ads-settings',
+                    'priority' => 12,
+                    'parent_id' => 'cms-plugins-marketplace',
+                    'name' => __('Meta Ads Settings'),
+                    'icon' => 'ti ti-ad',
+                    'url' => fn () => route('marketplace.meta-ads-settings'),
+                    'permissions' => ['marketplace.settings'],
                 ]);
         });
 
@@ -450,6 +459,16 @@ class MarketplaceServiceProvider extends ServiceProvider
                     ->withDescription(trans('plugins/ecommerce::setting.marketplace.description'))
                     ->withPriority(150)
                     ->withRoute('marketplace.settings'),
+            );
+
+            PanelSectionManager::default()->registerItem(
+                SettingEcommercePanelSection::class,
+                fn () => PanelSectionItem::make('settings.ecommerce.marketplace.meta-ads')
+                    ->setTitle(__('Meta Ads'))
+                    ->withIcon('ti ti-ad')
+                    ->withDescription(__('Configure Facebook / Meta Ads integration for vendors.'))
+                    ->withPriority(155)
+                    ->withRoute('marketplace.meta-ads-settings'),
             );
         });
 

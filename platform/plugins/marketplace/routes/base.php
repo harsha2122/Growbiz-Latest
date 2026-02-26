@@ -81,6 +81,18 @@ AdminHelper::registerRoutes(function (): void {
                 'permission' => 'marketplace.settings',
             ]);
 
+            Route::get('meta-ads-settings', [
+                'as' => 'meta-ads-settings',
+                'uses' => 'Settings\MetaAdsSettingController@edit',
+                'permission' => 'marketplace.settings',
+            ]);
+
+            Route::put('meta-ads-settings', [
+                'as' => 'meta-ads-settings.update',
+                'uses' => 'Settings\MetaAdsSettingController@update',
+                'permission' => 'marketplace.settings',
+            ]);
+
             Route::group(['prefix' => 'unverified-vendors', 'as' => 'unverified-vendors.'], function (): void {
                 Route::match(['GET', 'POST'], '/', [
                     'as' => 'index',
