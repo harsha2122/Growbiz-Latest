@@ -34,10 +34,22 @@ use Botble\Marketplace\Models\Store;
 use Botble\Marketplace\Models\VendorInfo;
 use Botble\Marketplace\Models\Withdrawal;
 use Botble\Marketplace\Observers\ProductObserver;
+use Botble\Marketplace\Models\MetaAd;
+use Botble\Marketplace\Models\MetaAdAccount;
+use Botble\Marketplace\Models\MetaAdSet;
+use Botble\Marketplace\Models\MetaCampaign;
+use Botble\Marketplace\Repositories\Eloquent\MetaAdAccountRepository;
+use Botble\Marketplace\Repositories\Eloquent\MetaAdRepository;
+use Botble\Marketplace\Repositories\Eloquent\MetaAdSetRepository;
+use Botble\Marketplace\Repositories\Eloquent\MetaCampaignRepository;
 use Botble\Marketplace\Repositories\Eloquent\RevenueRepository;
 use Botble\Marketplace\Repositories\Eloquent\StoreRepository;
 use Botble\Marketplace\Repositories\Eloquent\VendorInfoRepository;
 use Botble\Marketplace\Repositories\Eloquent\WithdrawalRepository;
+use Botble\Marketplace\Repositories\Interfaces\MetaAdAccountInterface;
+use Botble\Marketplace\Repositories\Interfaces\MetaAdInterface;
+use Botble\Marketplace\Repositories\Interfaces\MetaAdSetInterface;
+use Botble\Marketplace\Repositories\Interfaces\MetaCampaignInterface;
 use Botble\Marketplace\Repositories\Interfaces\RevenueInterface;
 use Botble\Marketplace\Repositories\Interfaces\StoreInterface;
 use Botble\Marketplace\Repositories\Interfaces\VendorInfoInterface;
@@ -76,6 +88,22 @@ class MarketplaceServiceProvider extends ServiceProvider
             return new VendorInfoRepository(new VendorInfo());
         });
 
+        $this->app->bind(MetaAdAccountInterface::class, function () {
+            return new MetaAdAccountRepository(new MetaAdAccount());
+        });
+
+        $this->app->bind(MetaCampaignInterface::class, function () {
+            return new MetaCampaignRepository(new MetaCampaign());
+        });
+
+        $this->app->bind(MetaAdSetInterface::class, function () {
+            return new MetaAdSetRepository(new MetaAdSet());
+        });
+
+        $this->app->bind(MetaAdInterface::class, function () {
+            return new MetaAdRepository(new MetaAd());
+        });
+
         Helper::autoload(__DIR__ . '/../../helpers');
 
         $this->app['router']->aliasMiddleware('vendor', RedirectIfNotVendor::class);
@@ -99,7 +127,7 @@ class MarketplaceServiceProvider extends ServiceProvider
             ->loadAndPublishTranslations()
             ->loadAndPublishViews()
             ->publishAssets()
-            ->loadRoutes(['base', 'fronts', 'vendor']);
+            ->loadRoutes(['base', 'fronts', 'vendor', 'vendor-meta-ads']);
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -294,6 +322,13 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'name' => __('Revenues'),
                     'url' => fn () => route('marketplace.vendor.revenues.index'),
                     'icon' => 'ti ti-wallet',
+                ])
+                ->registerItem([
+                    'id' => 'marketplace.vendor.meta-ads',
+                    'priority' => 25,
+                    'name' => __('Meta Ads'),
+                    'url' => fn () => route('marketplace.vendor.meta-ads.campaigns.index'),
+                    'icon' => 'ti ti-ad',
                 ])
                 ->registerItem([
                     'id' => 'marketplace.vendor.contact-admin',

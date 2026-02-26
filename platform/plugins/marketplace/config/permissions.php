@@ -108,6 +108,27 @@ return [
     ],
 
     [
+        'name' => 'Meta Ads',
+        'flag' => 'marketplace.meta-ads.index',
+        'parent_flag' => 'marketplace.index',
+    ],
+    [
+        'name' => 'Create',
+        'flag' => 'marketplace.meta-ads.create',
+        'parent_flag' => 'marketplace.meta-ads.index',
+    ],
+    [
+        'name' => 'Edit',
+        'flag' => 'marketplace.meta-ads.edit',
+        'parent_flag' => 'marketplace.meta-ads.index',
+    ],
+    [
+        'name' => 'Delete',
+        'flag' => 'marketplace.meta-ads.destroy',
+        'parent_flag' => 'marketplace.meta-ads.index',
+    ],
+
+    [
         'name' => 'Subscription Plans',
         'flag' => 'marketplace.subscription-plans.index',
         'parent_flag' => 'marketplace.index',
