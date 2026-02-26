@@ -127,7 +127,7 @@ class MarketplaceServiceProvider extends ServiceProvider
             ->loadAndPublishTranslations()
             ->loadAndPublishViews()
             ->publishAssets()
-            ->loadRoutes(['base', 'fronts', 'vendor', 'vendor-meta-ads']);
+            ->loadRoutes(['base', 'fronts', 'vendor']);
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -332,13 +332,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'url' => fn () => route('marketplace.vendor.revenues.index'),
                     'icon' => 'ti ti-wallet',
                 ])
-                ->registerItem([
-                    'id' => 'marketplace.vendor.meta-ads',
-                    'priority' => 25,
-                    'name' => __('Meta Ads'),
-                    'url' => fn () => route('marketplace.vendor.meta-ads.campaigns.index'),
-                    'icon' => 'ti ti-ad',
-                ])
+                ->when(MarketplaceHelper::isMetaAdsEnabled(), function (DashboardMenuSupport $dashboardMenu): void {
+                    $dashboardMenu->registerItem([
+                        'id' => 'marketplace.vendor.meta-ads',
+                        'priority' => 25,
+                        'name' => __('Meta Ads'),
+                        'url' => fn () => route('marketplace.vendor.meta-ads.campaigns.index'),
+                        'icon' => 'ti ti-ad',
+                    ]);
+                })
                 ->registerItem([
                     'id' => 'marketplace.vendor.contact-admin',
                     'priority' => 998,
