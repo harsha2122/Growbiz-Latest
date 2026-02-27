@@ -45,6 +45,12 @@ AdminHelper::registerRoutes(function (): void {
                     'permission' => 'marketplace.store.edit',
                 ])->wherePrimaryKey();
 
+                Route::post('assign-plan/{store}', [
+                    'as' => 'assign-plan',
+                    'uses' => 'StoreController@assignPlan',
+                    'permission' => 'marketplace.store.edit',
+                ]);
+
                 Route::group(['prefix' => 'revenues', 'as' => 'revenue.'], function (): void {
                     Route::match(['GET', 'POST'], 'list/{id}', [
                         'as' => 'index',

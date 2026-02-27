@@ -15,6 +15,7 @@
                 @if($store && $store->customer->is_vendor)
                     @include('plugins/marketplace::customers.tax-info-tab')
                     @include('plugins/marketplace::customers.payout-info-tab')
+                    @include('plugins/marketplace::customers.subscription-tab')
                     @if ($hasMoreThanOneLanguage)
                         <x-core::tab.item
                             id="tab_preferences"
@@ -35,6 +36,7 @@
                 @if($store && $store->customer->is_vendor)
                     @include('plugins/marketplace::customers.tax-form', ['model' => $store->customer])
                     @include('plugins/marketplace::customers.payout-form', ['model' => $store->customer])
+                    @include('plugins/marketplace::customers.subscription-pane', ['store' => $store])
 
                     @if ($hasMoreThanOneLanguage)
                         <x-core::tab.pane id="tab_preferences">

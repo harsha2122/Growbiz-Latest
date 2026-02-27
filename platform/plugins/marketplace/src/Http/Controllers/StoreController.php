@@ -16,6 +16,8 @@ use Botble\Marketplace\Http\Requests\PayoutInformationSettingRequest;
 use Botble\Marketplace\Http\Requests\StoreRequest;
 use Botble\Marketplace\Http\Requests\TaxInformationSettingRequest;
 use Botble\Marketplace\Models\Store;
+use Botble\Marketplace\Models\SubscriptionPlan;
+use Botble\Marketplace\Models\VendorSubscription;
 use Botble\Marketplace\Tables\StoreTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -154,6 +156,36 @@ class StoreController extends BaseController
             ->httpResponse()
             ->setPreviousUrl(route('marketplace.store.index'))
             ->withUpdatedSuccessMessage();
+    }
+
+    public function assignPlan(Store $store, Request $request)
+    {
+        $request->validate([
+            'plan_id'    => ['required', 'exists:mp_subscription_plans,id'],
+            'starts_at'  => ['nullable', 'date'],
+            'notes'      => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $plan     = SubscriptionPlan::query()->findOrFail($request->input('plan_id'));
+        $startsAt = $request->input('starts_at') ? Carbon::parse($request->input('starts_at')) : Carbon::now();
+        $expiresAt = $plan->duration_days > 0 ? $startsAt->copy()->addDays($plan->duration_days) : null;
+
+        VendorSubscription::query()->create([
+            'store_id'    => $store->id,
+            'plan_id'     => $plan->id,
+            'starts_at'   => $startsAt,
+            'expires_at'  => $expiresAt,
+            'status'      => VendorSubscription::STATUS_ACTIVE,
+            'assigned_by' => Auth::id(),
+            'notes'       => $request->input('notes') ?: __('Assigned by admin'),
+        ]);
+
+        return $this
+            ->httpResponse()
+            ->setMessage(__('Plan ":plan" assigned to :store successfully.', [
+                'plan'  => $plan->name,
+                'store' => $store->name,
+            ]));
     }
 
     public function destroy(Store $store)
