@@ -6,10 +6,13 @@ use Botble\Base\Http\Controllers\BaseController;
 use Botble\Marketplace\Http\Requests\Fronts\StoreMetaCampaignRequest;
 use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Models\MetaCampaign;
+use Botble\Marketplace\Services\MetaAdsService;
 use Botble\Marketplace\Tables\MetaCampaignTable;
 
 class MetaCampaignController extends BaseController
 {
+    public function __construct(private MetaAdsService $metaAdsService) {}
+
     public function index(MetaCampaignTable $table)
     {
         $this->pageTitle(__('Meta Ad Campaigns'));
@@ -46,16 +49,23 @@ class MetaCampaignController extends BaseController
                 ->setMessage(__('Please connect a Facebook Ad Account first.'));
         }
 
-        $campaign = MetaCampaign::query()->create([
+        $data = $request->validated();
+
+        $remoteId = $this->metaAdsService->safely(
+            fn () => $this->metaAdsService->createCampaign($adAccount, $data)
+        );
+
+        MetaCampaign::query()->create([
             'store_id' => $store->id,
             'ad_account_id' => $adAccount->id,
-            'name' => $request->input('name'),
-            'objective' => $request->input('objective'),
-            'daily_budget' => $request->input('daily_budget'),
-            'lifetime_budget' => $request->input('lifetime_budget'),
-            'start_date' => $request->input('start_date'),
-            'end_date' => $request->input('end_date'),
-            'status' => $request->input('status', 'PAUSED'),
+            'meta_remote_id' => $remoteId,
+            'name' => $data['name'],
+            'objective' => $data['objective'],
+            'daily_budget' => $data['daily_budget'] ?? null,
+            'lifetime_budget' => $data['lifetime_budget'] ?? null,
+            'start_date' => $data['start_date'] ?? null,
+            'end_date' => $data['end_date'] ?? null,
+            'status' => $data['status'] ?? 'PAUSED',
         ]);
 
         return $this->httpResponse()
@@ -86,17 +96,27 @@ class MetaCampaignController extends BaseController
             ->where('store_id', $store?->id)
             ->firstOrFail();
 
-        $campaign->fill([
-            'name' => $request->input('name'),
-            'objective' => $request->input('objective'),
-            'daily_budget' => $request->input('daily_budget'),
-            'lifetime_budget' => $request->input('lifetime_budget'),
-            'start_date' => $request->input('start_date'),
-            'end_date' => $request->input('end_date'),
-            'status' => $request->input('status', $campaign->status),
-        ]);
+        $data = $request->validated();
+        $newStatus = $data['status'] ?? $campaign->status;
 
-        $campaign->save();
+        if ($campaign->meta_remote_id && $newStatus !== $campaign->status) {
+            $adAccount = $campaign->adAccount;
+            if ($adAccount?->is_connected) {
+                $this->metaAdsService->safely(
+                    fn () => $this->metaAdsService->updateCampaignStatus($adAccount, $campaign->meta_remote_id, $newStatus)
+                );
+            }
+        }
+
+        $campaign->fill([
+            'name' => $data['name'],
+            'objective' => $data['objective'],
+            'daily_budget' => $data['daily_budget'] ?? null,
+            'lifetime_budget' => $data['lifetime_budget'] ?? null,
+            'start_date' => $data['start_date'] ?? null,
+            'end_date' => $data['end_date'] ?? null,
+            'status' => $newStatus,
+        ])->save();
 
         return $this->httpResponse()
             ->setPreviousUrl(route('marketplace.vendor.meta-ads.campaigns.index'))
@@ -111,6 +131,15 @@ class MetaCampaignController extends BaseController
             ->where('id', $id)
             ->where('store_id', $store?->id)
             ->firstOrFail();
+
+        if ($campaign->meta_remote_id) {
+            $adAccount = $campaign->adAccount;
+            if ($adAccount?->is_connected) {
+                $this->metaAdsService->safely(
+                    fn () => $this->metaAdsService->deleteCampaign($adAccount, $campaign->meta_remote_id)
+                );
+            }
+        }
 
         $campaign->delete();
 
@@ -127,6 +156,15 @@ class MetaCampaignController extends BaseController
             ->where('store_id', $store?->id)
             ->firstOrFail();
 
+        if ($campaign->meta_remote_id) {
+            $adAccount = $campaign->adAccount;
+            if ($adAccount?->is_connected) {
+                $this->metaAdsService->safely(
+                    fn () => $this->metaAdsService->updateCampaignStatus($adAccount, $campaign->meta_remote_id, 'PAUSED')
+                );
+            }
+        }
+
         $campaign->update(['status' => 'PAUSED']);
 
         return $this->httpResponse()
@@ -141,6 +179,15 @@ class MetaCampaignController extends BaseController
             ->where('id', $id)
             ->where('store_id', $store?->id)
             ->firstOrFail();
+
+        if ($campaign->meta_remote_id) {
+            $adAccount = $campaign->adAccount;
+            if ($adAccount?->is_connected) {
+                $this->metaAdsService->safely(
+                    fn () => $this->metaAdsService->updateCampaignStatus($adAccount, $campaign->meta_remote_id, 'ACTIVE')
+                );
+            }
+        }
 
         $campaign->update(['status' => 'ACTIVE']);
 

@@ -14,6 +14,7 @@ use Botble\Marketplace\Http\Controllers\Fronts\MetaAdController;
 use Botble\Marketplace\Http\Controllers\Fronts\MetaAdReportController;
 use Botble\Marketplace\Http\Controllers\Fronts\MetaAdSetController;
 use Botble\Marketplace\Http\Controllers\Fronts\MetaCampaignController;
+use Botble\Marketplace\Http\Controllers\Fronts\MetaOAuthController;
 use Botble\Marketplace\Http\Controllers\Fronts\SpecificationAttributeController;
 use Botble\Marketplace\Http\Controllers\Fronts\SpecificationGroupController;
 use Botble\Marketplace\Http\Controllers\Fronts\SpecificationTableController;
@@ -344,6 +345,10 @@ Route::group([
 
     // Meta Ads
     Route::group(['prefix' => 'meta-ads', 'as' => 'meta-ads.'], function (): void {
+        // OAuth
+        Route::get('oauth/redirect', [MetaOAuthController::class, 'redirect'])->name('oauth.redirect');
+        Route::get('oauth/callback', [MetaOAuthController::class, 'callback'])->name('oauth.callback');
+
         // Ad Account
         Route::get('accounts', [MetaAdAccountController::class, 'index'])->name('accounts.index');
         Route::get('accounts/connect', [MetaAdAccountController::class, 'connect'])->name('accounts.connect');

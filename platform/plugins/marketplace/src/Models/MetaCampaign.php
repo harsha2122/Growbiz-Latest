@@ -13,6 +13,7 @@ class MetaCampaign extends BaseModel
     protected $fillable = [
         'store_id',
         'ad_account_id',
+        'meta_remote_id',
         'name',
         'objective',
         'status',

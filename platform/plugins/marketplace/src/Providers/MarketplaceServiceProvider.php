@@ -54,6 +54,8 @@ use Botble\Marketplace\Repositories\Interfaces\RevenueInterface;
 use Botble\Marketplace\Repositories\Interfaces\StoreInterface;
 use Botble\Marketplace\Repositories\Interfaces\VendorInfoInterface;
 use Botble\Marketplace\Repositories\Interfaces\WithdrawalInterface;
+use Botble\Marketplace\Services\MetaApiClient;
+use Botble\Marketplace\Services\MetaAdsService;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Slug\Facades\SlugHelper;
 use Botble\Theme\Facades\SiteMapManager;
@@ -103,6 +105,9 @@ class MarketplaceServiceProvider extends ServiceProvider
         $this->app->bind(MetaAdInterface::class, function () {
             return new MetaAdRepository(new MetaAd());
         });
+
+        $this->app->singleton(MetaApiClient::class);
+        $this->app->singleton(MetaAdsService::class);
 
         Helper::autoload(__DIR__ . '/../../helpers');
 

@@ -14,6 +14,7 @@ class MetaAd extends BaseModel
         'ad_set_id',
         'store_id',
         'campaign_id',
+        'meta_remote_id',
         'name',
         'status',
         'format',

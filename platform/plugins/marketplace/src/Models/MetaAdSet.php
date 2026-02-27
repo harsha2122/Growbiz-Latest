@@ -13,6 +13,7 @@ class MetaAdSet extends BaseModel
     protected $fillable = [
         'campaign_id',
         'store_id',
+        'meta_remote_id',
         'name',
         'status',
         'daily_budget',

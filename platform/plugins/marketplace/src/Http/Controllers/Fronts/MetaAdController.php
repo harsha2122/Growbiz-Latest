@@ -3,14 +3,17 @@
 namespace Botble\Marketplace\Http\Controllers\Fronts;
 
 use Botble\Base\Http\Controllers\BaseController;
+use Botble\Ecommerce\Models\Product;
 use Botble\Marketplace\Http\Requests\Fronts\StoreMetaAdRequest;
 use Botble\Marketplace\Models\MetaAd;
 use Botble\Marketplace\Models\MetaAdSet;
+use Botble\Marketplace\Services\MetaAdsService;
 use Botble\Marketplace\Tables\MetaAdTable;
-use Botble\Ecommerce\Models\Product;
 
 class MetaAdController extends BaseController
 {
+    public function __construct(private MetaAdsService $metaAdsService) {}
+
     public function index(MetaAdTable $table)
     {
         $this->pageTitle(__('Meta Ads'));
@@ -26,7 +29,7 @@ class MetaAdController extends BaseController
         $adSets = MetaAdSet::query()
             ->where('store_id', $store?->id)
             ->orderBy('name')
-            ->get(['id', 'name', 'campaign_id']);
+            ->get(['id', 'name', 'campaign_id', 'meta_remote_id']);
 
         $products = Product::query()
             ->where('store_id', $store?->id)
@@ -45,20 +48,33 @@ class MetaAdController extends BaseController
             ->where('store_id', $store?->id)
             ->firstOrFail();
 
+        $data = $request->validated();
+
+        $remoteId = null;
+        if ($adSet->meta_remote_id) {
+            $adAccount = $adSet->campaign?->adAccount;
+            if ($adAccount?->is_connected) {
+                $remoteId = $this->metaAdsService->safely(
+                    fn () => $this->metaAdsService->createAd($adAccount, $adSet->meta_remote_id, $data)
+                );
+            }
+        }
+
         MetaAd::query()->create([
             'store_id' => $store->id,
             'ad_set_id' => $adSet->id,
             'campaign_id' => $adSet->campaign_id,
-            'name' => $request->input('name'),
-            'status' => $request->input('status', 'IN_REVIEW'),
-            'format' => $request->input('format', 'SINGLE_IMAGE'),
-            'primary_text' => $request->input('primary_text'),
-            'headline' => $request->input('headline'),
-            'description' => $request->input('description'),
-            'cta_button' => $request->input('cta_button', 'LEARN_MORE'),
-            'destination_url' => $request->input('destination_url'),
-            'image_url' => $request->input('image_url'),
-            'product_id' => $request->input('product_id'),
+            'meta_remote_id' => $remoteId,
+            'name' => $data['name'],
+            'status' => $data['status'] ?? 'IN_REVIEW',
+            'format' => $data['format'] ?? 'SINGLE_IMAGE',
+            'primary_text' => $data['primary_text'] ?? null,
+            'headline' => $data['headline'] ?? null,
+            'description' => $data['description'] ?? null,
+            'cta_button' => $data['cta_button'] ?? 'LEARN_MORE',
+            'destination_url' => $data['destination_url'] ?? null,
+            'image_url' => $data['image_url'] ?? null,
+            'product_id' => $data['product_id'] ?? null,
         ]);
 
         return $this->httpResponse()
@@ -80,7 +96,7 @@ class MetaAdController extends BaseController
         $adSets = MetaAdSet::query()
             ->where('store_id', $store?->id)
             ->orderBy('name')
-            ->get(['id', 'name', 'campaign_id']);
+            ->get(['id', 'name', 'campaign_id', 'meta_remote_id']);
 
         $products = Product::query()
             ->where('store_id', $store?->id)
@@ -104,22 +120,31 @@ class MetaAdController extends BaseController
             ->where('store_id', $store?->id)
             ->firstOrFail();
 
+        $data = $request->validated();
+
+        if ($ad->meta_remote_id) {
+            $adAccount = $adSet->campaign?->adAccount;
+            if ($adAccount?->is_connected) {
+                $this->metaAdsService->safely(
+                    fn () => $this->metaAdsService->updateAd($adAccount, $ad->meta_remote_id, $data)
+                );
+            }
+        }
+
         $ad->fill([
             'ad_set_id' => $adSet->id,
             'campaign_id' => $adSet->campaign_id,
-            'name' => $request->input('name'),
-            'status' => $request->input('status', $ad->status),
-            'format' => $request->input('format', 'SINGLE_IMAGE'),
-            'primary_text' => $request->input('primary_text'),
-            'headline' => $request->input('headline'),
-            'description' => $request->input('description'),
-            'cta_button' => $request->input('cta_button', 'LEARN_MORE'),
-            'destination_url' => $request->input('destination_url'),
-            'image_url' => $request->input('image_url'),
-            'product_id' => $request->input('product_id'),
-        ]);
-
-        $ad->save();
+            'name' => $data['name'],
+            'status' => $data['status'] ?? $ad->status,
+            'format' => $data['format'] ?? 'SINGLE_IMAGE',
+            'primary_text' => $data['primary_text'] ?? null,
+            'headline' => $data['headline'] ?? null,
+            'description' => $data['description'] ?? null,
+            'cta_button' => $data['cta_button'] ?? 'LEARN_MORE',
+            'destination_url' => $data['destination_url'] ?? null,
+            'image_url' => $data['image_url'] ?? null,
+            'product_id' => $data['product_id'] ?? null,
+        ])->save();
 
         return $this->httpResponse()
             ->setPreviousUrl(route('marketplace.vendor.meta-ads.ads.index'))
@@ -134,6 +159,15 @@ class MetaAdController extends BaseController
             ->where('id', $id)
             ->where('store_id', $store?->id)
             ->firstOrFail();
+
+        if ($ad->meta_remote_id) {
+            $adAccount = $ad->adSet?->campaign?->adAccount;
+            if ($adAccount?->is_connected) {
+                $this->metaAdsService->safely(
+                    fn () => $this->metaAdsService->deleteAd($adAccount, $ad->meta_remote_id)
+                );
+            }
+        }
 
         $ad->delete();
 
