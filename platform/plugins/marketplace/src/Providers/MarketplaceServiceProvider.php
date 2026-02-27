@@ -25,6 +25,7 @@ use Botble\Ecommerce\Models\SpecificationTable;
 use Botble\Ecommerce\PanelSections\SettingEcommercePanelSection;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Botble\Marketplace\Commands\DiagnoseVendorDocuments;
+use Botble\Marketplace\Commands\SyncMetaAdsInsights;
 use Botble\Marketplace\Commands\SyncVendorDocuments;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Http\Middleware\RedirectIfNotVendor;
@@ -138,8 +139,15 @@ class MarketplaceServiceProvider extends ServiceProvider
             $this->commands([
                 SyncVendorDocuments::class,
                 DiagnoseVendorDocuments::class,
+                SyncMetaAdsInsights::class,
             ]);
         }
+
+        $this->callAfterResolving('schedule', function ($schedule): void {
+            if (MarketplaceHelper::isMetaAdsEnabled()) {
+                $schedule->command('marketplace:sync-meta-ads-insights')->dailyAt('04:00');
+            }
+        });
 
         if (defined('LANGUAGE_MODULE_SCREEN_NAME') && defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME')) {
             LanguageAdvancedManager::registerModule(Store::class, [
@@ -255,7 +263,43 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-ad',
                     'url' => fn () => route('marketplace.meta-ads-settings'),
                     'permissions' => ['marketplace.settings'],
-                ]);
+                ])
+                ->when(MarketplaceHelper::isMetaAdsEnabled(), function (DashboardMenuSupport $dashboardMenu): void {
+                    $dashboardMenu
+                        ->registerItem([
+                            'id' => 'cms-plugins-marketplace-meta-ads',
+                            'priority' => 13,
+                            'parent_id' => 'cms-plugins-marketplace',
+                            'name' => __('Meta Ads Overview'),
+                            'icon' => 'ti ti-brand-meta',
+                            'url' => fn () => route('marketplace.meta-ads.index'),
+                            'permissions' => ['marketplace.meta-ads.index'],
+                        ])
+                        ->registerItem([
+                            'id' => 'cms-plugins-marketplace-meta-ads-campaigns',
+                            'priority' => 1,
+                            'parent_id' => 'cms-plugins-marketplace-meta-ads',
+                            'name' => __('Campaigns'),
+                            'url' => fn () => route('marketplace.meta-ads.index'),
+                            'permissions' => ['marketplace.meta-ads.index'],
+                        ])
+                        ->registerItem([
+                            'id' => 'cms-plugins-marketplace-meta-ads-accounts',
+                            'priority' => 2,
+                            'parent_id' => 'cms-plugins-marketplace-meta-ads',
+                            'name' => __('Ad Accounts'),
+                            'url' => fn () => route('marketplace.meta-ads.accounts'),
+                            'permissions' => ['marketplace.meta-ads.index'],
+                        ])
+                        ->registerItem([
+                            'id' => 'cms-plugins-marketplace-meta-ads-summary',
+                            'priority' => 3,
+                            'parent_id' => 'cms-plugins-marketplace-meta-ads',
+                            'name' => __('Summary'),
+                            'url' => fn () => route('marketplace.meta-ads.summary'),
+                            'permissions' => ['marketplace.meta-ads.index'],
+                        ]);
+                });
         });
 
         DashboardMenu::for('vendor')->beforeRetrieving(function (): void {

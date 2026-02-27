@@ -1,6 +1,7 @@
 <?php
 
 use Botble\Base\Facades\AdminHelper;
+use Botble\Marketplace\Http\Controllers\MetaAdsController;
 use Botble\Marketplace\Http\Controllers\VendorBlockedController;
 use Botble\Marketplace\Http\Controllers\WithdrawalInvoiceController;
 use Illuminate\Support\Facades\Route;
@@ -92,6 +93,13 @@ AdminHelper::registerRoutes(function (): void {
                 'uses' => 'Settings\MetaAdsSettingController@update',
                 'permission' => 'marketplace.settings',
             ]);
+
+            // Meta Ads admin overview
+            Route::group(['prefix' => 'meta-ads', 'as' => 'meta-ads.'], function (): void {
+                Route::get('/', [MetaAdsController::class, 'index'])->name('index');
+                Route::get('accounts', [MetaAdsController::class, 'accounts'])->name('accounts');
+                Route::get('summary', [MetaAdsController::class, 'summary'])->name('summary');
+            });
 
             Route::group(['prefix' => 'unverified-vendors', 'as' => 'unverified-vendors.'], function (): void {
                 Route::match(['GET', 'POST'], '/', [
