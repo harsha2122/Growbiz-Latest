@@ -355,9 +355,9 @@ Route::group([
         Route::delete('accounts/{id}', [MetaAdAccountController::class, 'disconnect'])->name('accounts.disconnect');
 
         // Campaigns
-        Route::get('campaigns', [MetaCampaignController::class, 'index'])->name('campaigns.index');
+        Route::match(['get', 'post'], 'campaigns', [MetaCampaignController::class, 'index'])->name('campaigns.index');
         Route::get('campaigns/create', [MetaCampaignController::class, 'create'])->name('campaigns.create');
-        Route::post('campaigns', [MetaCampaignController::class, 'store'])->name('campaigns.store');
+        Route::post('campaigns/save', [MetaCampaignController::class, 'store'])->name('campaigns.store');
         Route::get('campaigns/{id}/edit', [MetaCampaignController::class, 'edit'])->name('campaigns.edit');
         Route::put('campaigns/{id}', [MetaCampaignController::class, 'update'])->name('campaigns.update');
         Route::delete('campaigns/{id}', [MetaCampaignController::class, 'destroy'])->name('campaigns.destroy');
@@ -365,17 +365,17 @@ Route::group([
         Route::post('campaigns/{id}/resume', [MetaCampaignController::class, 'resume'])->name('campaigns.resume');
 
         // Ad Sets
-        Route::get('ad-sets', [MetaAdSetController::class, 'index'])->name('ad-sets.index');
+        Route::match(['get', 'post'], 'ad-sets', [MetaAdSetController::class, 'index'])->name('ad-sets.index');
         Route::get('ad-sets/create', [MetaAdSetController::class, 'create'])->name('ad-sets.create');
-        Route::post('ad-sets', [MetaAdSetController::class, 'store'])->name('ad-sets.store');
+        Route::post('ad-sets/save', [MetaAdSetController::class, 'store'])->name('ad-sets.store');
         Route::get('ad-sets/{id}/edit', [MetaAdSetController::class, 'edit'])->name('ad-sets.edit');
         Route::put('ad-sets/{id}', [MetaAdSetController::class, 'update'])->name('ad-sets.update');
         Route::delete('ad-sets/{id}', [MetaAdSetController::class, 'destroy'])->name('ad-sets.destroy');
 
         // Ads
-        Route::get('ads', [MetaAdController::class, 'index'])->name('ads.index');
+        Route::match(['get', 'post'], 'ads', [MetaAdController::class, 'index'])->name('ads.index');
         Route::get('ads/create', [MetaAdController::class, 'create'])->name('ads.create');
-        Route::post('ads', [MetaAdController::class, 'store'])->name('ads.store');
+        Route::post('ads/save', [MetaAdController::class, 'store'])->name('ads.store');
         Route::get('ads/{id}/edit', [MetaAdController::class, 'edit'])->name('ads.edit');
         Route::put('ads/{id}', [MetaAdController::class, 'update'])->name('ads.update');
         Route::delete('ads/{id}', [MetaAdController::class, 'destroy'])->name('ads.destroy');

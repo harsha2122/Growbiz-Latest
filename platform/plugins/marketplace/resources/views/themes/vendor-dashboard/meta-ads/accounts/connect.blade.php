@@ -22,9 +22,16 @@
                 <li>{{ __('Select the Ad Account you want to use.') }}</li>
             </ol>
 
-            <a href="#" class="btn btn-primary" id="fb-connect-btn">
-                <x-core::icon name="ti ti-brand-facebook" /> {{ __('Login with Facebook') }}
-            </a>
+            @if (MarketplaceHelper::getMetaAppId())
+                <a href="{{ route('marketplace.vendor.meta-ads.oauth.redirect') }}" class="btn btn-primary" id="fb-connect-btn">
+                    <x-core::icon name="ti ti-brand-facebook" /> {{ __('Login with Facebook') }}
+                </a>
+            @else
+                <div class="alert alert-warning mt-3">
+                    <x-core::icon name="ti ti-alert-triangle" />
+                    {{ __('Meta Ads is not configured. Please ask the administrator to set up the Facebook App ID and Secret in settings.') }}
+                </div>
+            @endif
         </div>
     </div>
 @endsection
