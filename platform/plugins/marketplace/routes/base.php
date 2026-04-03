@@ -197,6 +197,18 @@ AdminHelper::registerRoutes(function (): void {
             Route::group(['prefix' => 'b2b-catalogs', 'as' => 'b2b-catalogs.'], function (): void {
                 Route::resource('', 'B2bCatalogController')->parameters(['' => 'b2b_catalog']);
             });
+
+            Route::get('meta-ads-settings', [
+                'as' => 'meta-ads-settings',
+                'uses' => 'Settings\MetaAdsSettingController@edit',
+                'permission' => 'marketplace.settings',
+            ]);
+
+            Route::put('meta-ads-settings', [
+                'as' => 'meta-ads-settings.update',
+                'uses' => 'Settings\MetaAdsSettingController@update',
+                'permission' => 'marketplace.settings',
+            ]);
         });
 
         Route::group(['prefix' => 'ecommerce/products', 'as' => 'products.'], function (): void {

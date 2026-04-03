@@ -44,6 +44,51 @@ class MarketplaceHelper
         return config('plugins.marketplace.general.prefix') . $key;
     }
 
+    public function isMetaAdsEnabled(): bool
+    {
+        return (bool) $this->getSetting('meta_ads_enabled', false);
+    }
+
+    public function getMetaAdsSetting(string $key, $default = null)
+    {
+        return $this->getSetting('meta_ads_' . $key, $default);
+    }
+
+    public function getMetaAdsAuthAppId(): string
+    {
+        return (string) $this->getSetting('meta_ads_fb_auth_app_id', '');
+    }
+
+    public function getMetaAdsAuthAppSecret(): string
+    {
+        return (string) $this->getSetting('meta_ads_fb_auth_app_secret', '');
+    }
+
+    public function getMetaAdsMarketingAppId(): string
+    {
+        return (string) $this->getSetting('meta_ads_marketing_app_id', '');
+    }
+
+    public function getMetaAdsMarketingAppSecret(): string
+    {
+        return (string) $this->getSetting('meta_ads_marketing_app_secret', '');
+    }
+
+    public function getMetaAdsDeveloperToken(): string
+    {
+        return (string) $this->getSetting('meta_ads_marketing_developer_token', '');
+    }
+
+    public function getMetaAdsApiVersion(): string
+    {
+        return (string) $this->getSetting('meta_ads_api_version', 'v21.0');
+    }
+
+    public function isMetaAdsSandboxMode(): bool
+    {
+        return (bool) $this->getSetting('meta_ads_sandbox_mode', true);
+    }
+
     public function discountTypes(): array
     {
         return Arr::except(DiscountTypeOptionEnum::labels(), [DiscountTypeOptionEnum::SAME_PRICE, DiscountTypeOptionEnum::SHIPPING]);

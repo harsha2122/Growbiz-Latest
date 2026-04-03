@@ -416,6 +416,16 @@ class MarketplaceServiceProvider extends ServiceProvider
                     ->withPriority(150)
                     ->withRoute('marketplace.settings'),
             );
+
+            PanelSectionManager::default()->registerItem(
+                SettingEcommercePanelSection::class,
+                fn () => PanelSectionItem::make('settings.ecommerce.meta-ads')
+                    ->setTitle('Meta Ads Integration')
+                    ->withIcon('ti ti-brand-meta')
+                    ->withDescription('Configure Facebook Authentication & Marketing API credentials for vendor ad management')
+                    ->withPriority(160)
+                    ->withRoute('marketplace.meta-ads-settings'),
+            );
         });
 
         SlugHelper::registering(function (): void {
