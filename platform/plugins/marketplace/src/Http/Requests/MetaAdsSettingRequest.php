@@ -11,11 +11,14 @@ class MetaAdsSettingRequest extends Request
     {
         return [
             'meta_ads_enabled' => [new OnOffRule()],
-            'meta_app_id' => ['nullable', 'string', 'max:255'],
-            'meta_app_secret' => ['nullable', 'string', 'max:255'],
-            'meta_api_version' => ['nullable', 'string', 'max:20'],
-            'meta_ads_min_daily_budget' => ['nullable', 'numeric', 'min:0'],
-            'meta_ads_default_currency' => ['nullable', 'string', 'max:10'],
+            'meta_ads_fb_auth_app_id' => ['nullable', 'string', 'max:255'],
+            'meta_ads_fb_auth_app_secret' => ['nullable', 'string', 'max:255'],
+            'meta_ads_fb_auth_redirect_uri' => ['nullable', 'string', 'url', 'max:500'],
+            'meta_ads_marketing_app_id' => ['nullable', 'string', 'max:255'],
+            'meta_ads_marketing_app_secret' => ['nullable', 'string', 'max:255'],
+            'meta_ads_marketing_developer_token' => ['nullable', 'string', 'max:500'],
+            'meta_ads_sandbox_mode' => [new OnOffRule()],
+            'meta_ads_api_version' => ['nullable', 'string', 'max:10'],
         ];
     }
 }

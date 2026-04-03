@@ -514,11 +514,11 @@ class MarketplaceServiceProvider extends ServiceProvider
 
             PanelSectionManager::default()->registerItem(
                 SettingEcommercePanelSection::class,
-                fn () => PanelSectionItem::make('settings.ecommerce.marketplace.meta-ads')
-                    ->setTitle(__('Meta Ads'))
-                    ->withIcon('ti ti-ad')
-                    ->withDescription(__('Configure Facebook / Meta Ads integration for vendors.'))
-                    ->withPriority(155)
+                fn () => PanelSectionItem::make('settings.ecommerce.meta-ads')
+                    ->setTitle('Meta Ads Integration')
+                    ->withIcon('ti ti-brand-meta')
+                    ->withDescription('Configure Facebook Authentication & Marketing API credentials for vendor ad management')
+                    ->withPriority(160)
                     ->withRoute('marketplace.meta-ads-settings'),
             );
         });

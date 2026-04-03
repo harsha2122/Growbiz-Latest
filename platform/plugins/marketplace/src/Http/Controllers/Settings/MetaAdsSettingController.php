@@ -9,23 +9,16 @@ class MetaAdsSettingController extends SettingController
 {
     public function edit()
     {
-        $this->pageTitle(__('Meta Ads Settings'));
+        $this->pageTitle('Meta Ads Integration');
 
-        return view('plugins/marketplace::settings.meta-ads', [
-            'form' => MetaAdsSettingForm::create(),
-        ]);
+        $form = MetaAdsSettingForm::create();
+
+        return view('plugins/marketplace::settings.meta-ads', compact('form'));
     }
 
     public function update(MetaAdsSettingRequest $request)
     {
-        $data = $request->validated();
-
-        // Never overwrite the app secret with a blank value
-        if (empty($data['meta_app_secret'])) {
-            unset($data['meta_app_secret']);
-        }
-
-        $this->saveSettings($data);
+        $this->saveSettings($request->validated());
 
         return $this
             ->httpResponse()
