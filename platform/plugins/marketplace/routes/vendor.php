@@ -328,6 +328,27 @@ Route::group([
         ])->name('stream-pdf');
     });
 
+    // Meta Ads
+    Route::group(['prefix' => 'meta-ads', 'as' => 'meta-ads.'], function (): void {
+        Route::get('dashboard', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('connection', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'index'])->name('connection');
+        Route::get('connection/redirect', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'redirect'])->name('connection.redirect');
+        Route::get('callback', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'callback'])->name('callback');
+        Route::post('connection/disconnect', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'disconnect'])->name('connection.disconnect');
+        Route::post('connection/update-ad-account', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'updateAdAccount'])->name('connection.update-ad-account');
+
+        Route::resource('campaigns', \Botble\Marketplace\Http\Controllers\Fronts\MetaCampaignController::class)->parameters(['campaigns' => 'campaign']);
+        Route::post('campaigns/{campaign}/toggle-status', [\Botble\Marketplace\Http\Controllers\Fronts\MetaCampaignController::class, 'toggleStatus'])->name('campaigns.toggle-status');
+
+        Route::resource('campaigns.ad-sets', \Botble\Marketplace\Http\Controllers\Fronts\MetaAdSetController::class)->parameters(['ad-sets' => 'ad_set'])->shallow();
+        Route::post('ad-sets/{ad_set}/toggle-status', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdSetController::class, 'toggleStatus'])->name('ad-sets.toggle-status');
+
+        Route::resource('ad-sets.ads', \Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class)->parameters(['ads' => 'ad'])->shallow();
+        Route::post('ads/{ad}/toggle-status', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'toggleStatus'])->name('ads.toggle-status');
+        Route::get('ads/{ad}/preview', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'preview'])->name('ads.preview');
+    });
+
     Route::get('settings/languages', [LanguageSettingController::class, 'index'])->name('language-settings.index');
     Route::put('settings/languages', [LanguageSettingController::class, 'update'])->name('language-settings.update');
 

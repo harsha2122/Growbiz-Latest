@@ -1,100 +1,86 @@
 @extends(MarketplaceHelper::viewPath('vendor-dashboard.layouts.master'))
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">{{ __('Edit Campaign') }}</h4>
-        <a href="{{ route('marketplace.vendor.meta-ads.campaigns.index') }}" class="btn btn-secondary btn-sm">
-            {{ __('Back') }}
-        </a>
-    </div>
+    @include(MarketplaceHelper::viewPath('vendor-dashboard.meta-ads.partials.breadcrumb'), ['items' => [
+        ['label' => 'Campaigns', 'url' => route('marketplace.vendor.meta-ads.campaigns.index')],
+        ['label' => 'Edit: ' . $campaign->name],
+    ]])
+
+    <h4 class="mb-3">{{ __('Edit Campaign') }}</h4>
 
     <form action="{{ route('marketplace.vendor.meta-ads.campaigns.update', $campaign->id) }}" method="POST">
         @csrf
         @method('PUT')
-        <div class="card">
+
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="mb-0">{{ __('Campaign Details') }}</h6></div>
             <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">{{ __('Campaign Name') }} <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                            value="{{ old('name', $campaign->name) }}" required>
-                        @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">{{ __('Objective') }} <span class="text-danger">*</span></label>
-                        <select name="objective" class="form-select @error('objective') is-invalid @enderror" required>
-                            @foreach (['TRAFFIC' => __('Traffic'), 'CONVERSIONS' => __('Conversions'), 'BRAND_AWARENESS' => __('Brand Awareness'), 'REACH' => __('Reach'), 'ENGAGEMENT' => __('Engagement'), 'LEAD_GENERATION' => __('Lead Generation')] as $value => $label)
-                                <option value="{{ $value }}" {{ old('objective', $campaign->objective) == $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('objective') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">{{ __('Daily Budget ($)') }}</label>
-                        <input type="number" name="daily_budget" class="form-control @error('daily_budget') is-invalid @enderror"
-                            value="{{ old('daily_budget', $campaign->daily_budget) }}" min="1" step="0.01">
-                        @error('daily_budget') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">{{ __('Lifetime Budget ($)') }}</label>
-                        <input type="number" name="lifetime_budget" class="form-control @error('lifetime_budget') is-invalid @enderror"
-                            value="{{ old('lifetime_budget', $campaign->lifetime_budget) }}" min="1" step="0.01">
-                        @error('lifetime_budget') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">{{ __('Start Date') }}</label>
-                        <input type="date" name="start_date" class="form-control @error('start_date') is-invalid @enderror"
-                            value="{{ old('start_date', $campaign->start_date?->format('Y-m-d')) }}">
-                        @error('start_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">{{ __('End Date') }}</label>
-                        <input type="date" name="end_date" class="form-control @error('end_date') is-invalid @enderror"
-                            value="{{ old('end_date', $campaign->end_date?->format('Y-m-d')) }}">
-                        @error('end_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">{{ __('Status') }}</label>
-                        <select name="status" class="form-select">
-                            <option value="PAUSED" {{ old('status', $campaign->status) == 'PAUSED' ? 'selected' : '' }}>{{ __('Paused') }}</option>
-                            <option value="ACTIVE" {{ old('status', $campaign->status) == 'ACTIVE' ? 'selected' : '' }}>{{ __('Active') }}</option>
-                        </select>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ __('Campaign Name') }} <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $campaign->name) }}" required>
+                    @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
-                <div class="mt-4 pt-3 border-top">
-                    <h6 class="text-muted">{{ __('Performance') }}</h6>
-                    <div class="row g-3">
-                        <div class="col-4 col-md-3">
-                            <div class="text-center">
-                                <div class="fs-4 fw-bold">{{ number_format($campaign->impressions) }}</div>
-                                <small class="text-muted">{{ __('Impressions') }}</small>
+                <div class="mb-3">
+                    <label class="form-label">{{ __('Campaign Objective') }} <span class="text-danger">*</span></label>
+                    <div class="row g-2">
+                        @foreach ([
+                            'OUTCOME_TRAFFIC' => ['icon' => 'ti ti-click', 'label' => 'Traffic', 'desc' => 'Send people to your website'],
+                            'OUTCOME_AWARENESS' => ['icon' => 'ti ti-eye', 'label' => 'Awareness', 'desc' => 'Reach people likely to remember your ad'],
+                            'OUTCOME_ENGAGEMENT' => ['icon' => 'ti ti-message-circle', 'label' => 'Engagement', 'desc' => 'Get more messages, likes, comments'],
+                            'OUTCOME_SALES' => ['icon' => 'ti ti-shopping-cart', 'label' => 'Sales', 'desc' => 'Find people likely to purchase'],
+                        ] as $value => $info)
+                            <div class="col-md-3 col-6">
+                                <label class="card h-100 text-center p-3 border-2 objective-card" style="cursor: pointer;">
+                                    <input type="radio" name="objective" value="{{ $value }}" class="d-none objective-radio" {{ old('objective', $campaign->objective) === $value ? 'checked' : '' }}>
+                                    <x-core::icon :name="$info['icon']" style="font-size: 28px; color: #1877F2;" />
+                                    <strong class="d-block mt-2">{{ $info['label'] }}</strong>
+                                    <small class="text-muted">{{ $info['desc'] }}</small>
+                                </label>
                             </div>
-                        </div>
-                        <div class="col-4 col-md-3">
-                            <div class="text-center">
-                                <div class="fs-4 fw-bold">{{ number_format($campaign->clicks) }}</div>
-                                <small class="text-muted">{{ __('Clicks') }}</small>
-                            </div>
-                        </div>
-                        <div class="col-4 col-md-3">
-                            <div class="text-center">
-                                <div class="fs-4 fw-bold">${{ number_format($campaign->spend, 2) }}</div>
-                                <small class="text-muted">{{ __('Spend') }}</small>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
-            </div>
-            <div class="card-footer">
-                <button type="submit" class="btn btn-primary">{{ __('Update Campaign') }}</button>
             </div>
         </div>
+
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="mb-0">{{ __('Budget & Schedule') }}</h6></div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ __('Daily Budget (₹)') }}</label>
+                        <input type="number" name="daily_budget" class="form-control" value="{{ old('daily_budget', $campaign->daily_budget) }}" min="1" step="0.01">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ __('Lifetime Budget (₹)') }}</label>
+                        <input type="number" name="lifetime_budget" class="form-control" value="{{ old('lifetime_budget', $campaign->lifetime_budget) }}" min="1" step="0.01">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ __('Start Date') }}</label>
+                        <input type="date" name="start_date" class="form-control" value="{{ old('start_date', $campaign->start_date?->format('Y-m-d')) }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ __('End Date') }}</label>
+                        <input type="date" name="end_date" class="form-control" value="{{ old('end_date', $campaign->end_date?->format('Y-m-d')) }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><x-core::icon name="ti ti-check" /> {{ __('Update Campaign') }}</button>
+            <a href="{{ route('marketplace.vendor.meta-ads.campaigns.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
+        </div>
     </form>
-@endsection
+@stop
+
+@push('footer')
+    <style>
+        .objective-card { transition: all 0.2s; }
+        .objective-card:has(.objective-radio:checked) { border-color: #1877F2 !important; background: #f0f7ff; }
+        .objective-card:hover { border-color: #90c0f0 !important; }
+    </style>
+@endpush

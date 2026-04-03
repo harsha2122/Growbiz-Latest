@@ -13,7 +13,6 @@ class MetaAdSet extends BaseModel
     protected $fillable = [
         'campaign_id',
         'store_id',
-        'meta_remote_id',
         'name',
         'status',
         'daily_budget',
@@ -24,17 +23,18 @@ class MetaAdSet extends BaseModel
         'targeting_interests',
         'placements',
         'optimization_goal',
+        'meta_adset_id',
         'impressions',
         'clicks',
         'spend',
     ];
 
     protected $casts = [
+        'daily_budget' => 'decimal:2',
+        'spend' => 'decimal:2',
         'targeting_locations' => 'array',
         'targeting_interests' => 'array',
         'placements' => 'array',
-        'daily_budget' => 'decimal:2',
-        'spend' => 'decimal:2',
     ];
 
     public function campaign(): BelongsTo
@@ -50,5 +50,10 @@ class MetaAdSet extends BaseModel
     public function ads(): HasMany
     {
         return $this->hasMany(MetaAd::class, 'ad_set_id');
+    }
+
+    public function getCtrAttribute(): float
+    {
+        return $this->impressions > 0 ? round(($this->clicks / $this->impressions) * 100, 2) : 0;
     }
 }

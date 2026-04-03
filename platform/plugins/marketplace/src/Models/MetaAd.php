@@ -12,9 +12,8 @@ class MetaAd extends BaseModel
 
     protected $fillable = [
         'ad_set_id',
-        'store_id',
         'campaign_id',
-        'meta_remote_id',
+        'store_id',
         'name',
         'status',
         'format',
@@ -25,6 +24,7 @@ class MetaAd extends BaseModel
         'destination_url',
         'image_url',
         'product_id',
+        'meta_ad_id',
         'impressions',
         'clicks',
         'spend',
@@ -55,6 +55,6 @@ class MetaAd extends BaseModel
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->belongsTo(Product::class);
     }
 }

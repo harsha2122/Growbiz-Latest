@@ -4,174 +4,154 @@ namespace Botble\Marketplace\Http\Controllers\Fronts;
 
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Ecommerce\Models\Product;
-use Botble\Marketplace\Http\Requests\Fronts\StoreMetaAdRequest;
+use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Models\MetaAd;
 use Botble\Marketplace\Models\MetaAdSet;
-use Botble\Marketplace\Services\MetaAdsService;
-use Botble\Marketplace\Tables\MetaAdTable;
+use Illuminate\Http\Request;
 
 class MetaAdController extends BaseController
 {
-    public function __construct(private MetaAdsService $metaAdsService) {}
+    protected int $storeId;
 
-    public function index(MetaAdTable $table)
+    public function __construct()
     {
-        $this->pageTitle(__('Meta Ads'));
+        abort_unless(MarketplaceHelper::isMetaAdsEnabled(), 403);
+        abort_unless(auth('customer')->check(), 403);
 
-        return $table->renderTable();
+        $this->storeId = auth('customer')->user()->store?->id ?? 0;
+        abort_unless($this->storeId, 403);
     }
 
-    public function create()
+    public function create($adSetId)
     {
-        $this->pageTitle(__('Create Ad'));
+        $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->with('campaign')->findOrFail($adSetId);
 
-        $store = auth('customer')->user()->store;
-        $adSets = MetaAdSet::query()
-            ->where('store_id', $store?->id)
-            ->orderBy('name')
-            ->get(['id', 'name', 'campaign_id', 'meta_remote_id']);
+        $this->pageTitle(__('Create Ad — :adset', ['adset' => $adSet->name]));
 
         $products = Product::query()
-            ->where('store_id', $store?->id)
-            ->orderBy('name')
-            ->get(['id', 'name']);
+            ->where('store_id', $this->storeId)
+            ->where('is_variation', 0)
+            ->wherePublished()
+            ->select('id', 'name', 'image', 'price')
+            ->get();
 
-        return view('plugins/marketplace::themes.vendor-dashboard.meta-ads.ads.create', compact('adSets', 'products'));
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.create', compact('adSet', 'products'));
     }
 
-    public function store(StoreMetaAdRequest $request)
+    public function store(Request $request, $adSetId)
     {
-        $store = auth('customer')->user()->store;
+        $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($adSetId);
 
-        $adSet = MetaAdSet::query()
-            ->where('id', $request->input('ad_set_id'))
-            ->where('store_id', $store?->id)
-            ->firstOrFail();
-
-        $data = $request->validated();
-
-        $remoteId = null;
-        if ($adSet->meta_remote_id) {
-            $adAccount = $adSet->campaign?->adAccount;
-            if ($adAccount?->is_connected) {
-                $remoteId = $this->metaAdsService->safely(
-                    fn () => $this->metaAdsService->createAd($adAccount, $adSet->meta_remote_id, $data)
-                );
-            }
-        }
-
-        MetaAd::query()->create([
-            'store_id' => $store->id,
-            'ad_set_id' => $adSet->id,
-            'campaign_id' => $adSet->campaign_id,
-            'meta_remote_id' => $remoteId,
-            'name' => $data['name'],
-            'status' => $data['status'] ?? 'IN_REVIEW',
-            'format' => $data['format'] ?? 'SINGLE_IMAGE',
-            'primary_text' => $data['primary_text'] ?? null,
-            'headline' => $data['headline'] ?? null,
-            'description' => $data['description'] ?? null,
-            'cta_button' => $data['cta_button'] ?? 'LEARN_MORE',
-            'destination_url' => $data['destination_url'] ?? null,
-            'image_url' => $data['image_url'] ?? null,
-            'product_id' => $data['product_id'] ?? null,
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'format' => ['required', 'in:SINGLE_IMAGE,CAROUSEL,VIDEO'],
+            'primary_text' => ['required', 'string', 'max:500'],
+            'headline' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'cta_button' => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
+            'destination_url' => ['required', 'url', 'max:500'],
+            'image_url' => ['nullable', 'string', 'max:500'],
+            'product_id' => ['nullable', 'integer', 'exists:ec_products,id'],
         ]);
 
-        return $this->httpResponse()
-            ->setNextUrl(route('marketplace.vendor.meta-ads.ads.index'))
-            ->setMessage(__('Ad created successfully.'));
+        $validated['ad_set_id'] = $adSet->id;
+        $validated['campaign_id'] = $adSet->campaign_id;
+        $validated['store_id'] = $this->storeId;
+        $validated['status'] = 'IN_REVIEW';
+
+        MetaAd::query()->create($validated);
+
+        return $this
+            ->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $adSet->id))
+            ->withCreatedSuccessMessage();
     }
 
-    public function edit(int|string $id)
+    public function show($id)
     {
-        $store = auth('customer')->user()->store;
-
         $ad = MetaAd::query()
-            ->where('id', $id)
-            ->where('store_id', $store?->id)
-            ->firstOrFail();
+            ->where('store_id', $this->storeId)
+            ->with(['adSet.campaign', 'product'])
+            ->findOrFail($id);
+
+        $this->pageTitle($ad->name);
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.show', compact('ad'));
+    }
+
+    public function edit($id)
+    {
+        $ad = MetaAd::query()->where('store_id', $this->storeId)->with('adSet.campaign')->findOrFail($id);
 
         $this->pageTitle(__('Edit Ad: :name', ['name' => $ad->name]));
 
-        $adSets = MetaAdSet::query()
-            ->where('store_id', $store?->id)
-            ->orderBy('name')
-            ->get(['id', 'name', 'campaign_id', 'meta_remote_id']);
-
         $products = Product::query()
-            ->where('store_id', $store?->id)
-            ->orderBy('name')
-            ->get(['id', 'name']);
+            ->where('store_id', $this->storeId)
+            ->where('is_variation', 0)
+            ->wherePublished()
+            ->select('id', 'name', 'image', 'price')
+            ->get();
 
-        return view('plugins/marketplace::themes.vendor-dashboard.meta-ads.ads.edit', compact('ad', 'adSets', 'products'));
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.edit', compact('ad', 'products'));
     }
 
-    public function update(int|string $id, StoreMetaAdRequest $request)
+    public function update(Request $request, $id)
     {
-        $store = auth('customer')->user()->store;
+        $ad = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
 
-        $ad = MetaAd::query()
-            ->where('id', $id)
-            ->where('store_id', $store?->id)
-            ->firstOrFail();
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'format' => ['required', 'in:SINGLE_IMAGE,CAROUSEL,VIDEO'],
+            'primary_text' => ['required', 'string', 'max:500'],
+            'headline' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'cta_button' => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
+            'destination_url' => ['required', 'url', 'max:500'],
+            'image_url' => ['nullable', 'string', 'max:500'],
+            'product_id' => ['nullable', 'integer', 'exists:ec_products,id'],
+        ]);
 
-        $adSet = MetaAdSet::query()
-            ->where('id', $request->input('ad_set_id'))
-            ->where('store_id', $store?->id)
-            ->firstOrFail();
+        $ad->update($validated);
 
-        $data = $request->validated();
-
-        if ($ad->meta_remote_id) {
-            $adAccount = $adSet->campaign?->adAccount;
-            if ($adAccount?->is_connected) {
-                $this->metaAdsService->safely(
-                    fn () => $this->metaAdsService->updateAd($adAccount, $ad->meta_remote_id, $data)
-                );
-            }
-        }
-
-        $ad->fill([
-            'ad_set_id' => $adSet->id,
-            'campaign_id' => $adSet->campaign_id,
-            'name' => $data['name'],
-            'status' => $data['status'] ?? $ad->status,
-            'format' => $data['format'] ?? 'SINGLE_IMAGE',
-            'primary_text' => $data['primary_text'] ?? null,
-            'headline' => $data['headline'] ?? null,
-            'description' => $data['description'] ?? null,
-            'cta_button' => $data['cta_button'] ?? 'LEARN_MORE',
-            'destination_url' => $data['destination_url'] ?? null,
-            'image_url' => $data['image_url'] ?? null,
-            'product_id' => $data['product_id'] ?? null,
-        ])->save();
-
-        return $this->httpResponse()
-            ->setPreviousUrl(route('marketplace.vendor.meta-ads.ads.index'))
+        return $this
+            ->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $ad->ad_set_id))
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy(int|string $id)
+    public function destroy($id)
     {
-        $store = auth('customer')->user()->store;
+        $ad = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $adSetId = $ad->ad_set_id;
+        $ad->update(['status' => 'DELETED']);
 
+        return $this
+            ->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $adSetId))
+            ->setMessage(__('Ad deleted.'));
+    }
+
+    public function toggleStatus($id)
+    {
+        $ad = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
+
+        $newStatus = $ad->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+        $ad->update(['status' => $newStatus]);
+
+        return $this
+            ->httpResponse()
+            ->setMessage(__('Ad status changed to :status.', ['status' => $newStatus]));
+    }
+
+    public function preview($id)
+    {
         $ad = MetaAd::query()
-            ->where('id', $id)
-            ->where('store_id', $store?->id)
-            ->firstOrFail();
+            ->where('store_id', $this->storeId)
+            ->with(['adSet.campaign', 'product'])
+            ->findOrFail($id);
 
-        if ($ad->meta_remote_id) {
-            $adAccount = $ad->adSet?->campaign?->adAccount;
-            if ($adAccount?->is_connected) {
-                $this->metaAdsService->safely(
-                    fn () => $this->metaAdsService->deleteAd($adAccount, $ad->meta_remote_id)
-                );
-            }
-        }
+        $storeName = auth('customer')->user()->store?->name ?? 'Your Store';
 
-        $ad->delete();
-
-        return $this->httpResponse()
-            ->setMessage(__('Ad deleted successfully.'));
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.preview', compact('ad', 'storeName'));
     }
 }

@@ -3,195 +3,145 @@
 namespace Botble\Marketplace\Http\Controllers\Fronts;
 
 use Botble\Base\Http\Controllers\BaseController;
-use Botble\Marketplace\Http\Requests\Fronts\StoreMetaCampaignRequest;
+use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Models\MetaCampaign;
-use Botble\Marketplace\Services\MetaAdsService;
-use Botble\Marketplace\Tables\MetaCampaignTable;
+use Illuminate\Http\Request;
 
 class MetaCampaignController extends BaseController
 {
-    public function __construct(private MetaAdsService $metaAdsService) {}
+    protected int $storeId;
 
-    public function index(MetaCampaignTable $table)
+    public function __construct()
     {
-        $this->pageTitle(__('Meta Ad Campaigns'));
+        abort_unless(MarketplaceHelper::isMetaAdsEnabled(), 403);
+        abort_unless(auth('customer')->check(), 403);
 
-        return $table->renderTable();
+        $this->storeId = auth('customer')->user()->store?->id ?? 0;
+        abort_unless($this->storeId, 403);
+    }
+
+    public function index()
+    {
+        $this->pageTitle(__('Meta Ads — Campaigns'));
+
+        $campaigns = MetaCampaign::query()
+            ->where('store_id', $this->storeId)
+            ->where('status', '!=', 'DELETED')
+            ->withCount('adSets')
+            ->latest()
+            ->paginate(20);
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.index', compact('campaigns'));
     }
 
     public function create()
     {
         $this->pageTitle(__('Create Campaign'));
 
-        $store = auth('customer')->user()->store;
         $adAccount = MetaAdAccount::query()
-            ->where('store_id', $store?->id)
-            ->where('is_connected', true)
-            ->first();
-
-        return view('plugins/marketplace::themes.vendor-dashboard.meta-ads.campaigns.create', compact('adAccount'));
-    }
-
-    public function store(StoreMetaCampaignRequest $request)
-    {
-        $store = auth('customer')->user()->store;
-
-        $adAccount = MetaAdAccount::query()
-            ->where('store_id', $store?->id)
+            ->where('store_id', $this->storeId)
             ->where('is_connected', true)
             ->first();
 
         if (! $adAccount) {
-            return $this->httpResponse()
-                ->setError()
-                ->setNextUrl(route('marketplace.vendor.meta-ads.accounts.index'))
-                ->setMessage(__('Please connect a Facebook Ad Account first.'));
+            return redirect()
+                ->route('marketplace.vendor.meta-ads.connection')
+                ->with('error', __('Please connect your Facebook account first.'));
         }
 
-        $data = $request->validated();
-
-        $remoteId = $this->metaAdsService->safely(
-            fn () => $this->metaAdsService->createCampaign($adAccount, $data)
-        );
-
-        MetaCampaign::query()->create([
-            'store_id' => $store->id,
-            'ad_account_id' => $adAccount->id,
-            'meta_remote_id' => $remoteId,
-            'name' => $data['name'],
-            'objective' => $data['objective'],
-            'daily_budget' => $data['daily_budget'] ?? null,
-            'lifetime_budget' => $data['lifetime_budget'] ?? null,
-            'start_date' => $data['start_date'] ?? null,
-            'end_date' => $data['end_date'] ?? null,
-            'status' => $data['status'] ?? 'PAUSED',
-        ]);
-
-        return $this->httpResponse()
-            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.index'))
-            ->setMessage(__('Campaign created successfully.'));
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.create');
     }
 
-    public function edit(int|string $id)
+    public function store(Request $request)
     {
-        $store = auth('customer')->user()->store;
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'objective' => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES'],
+            'daily_budget' => ['nullable', 'numeric', 'min:1'],
+            'lifetime_budget' => ['nullable', 'numeric', 'min:1'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ]);
 
-        $campaign = MetaCampaign::query()
-            ->where('id', $id)
-            ->where('store_id', $store?->id)
+        $adAccount = MetaAdAccount::query()
+            ->where('store_id', $this->storeId)
+            ->where('is_connected', true)
             ->firstOrFail();
+
+        $validated['store_id'] = $this->storeId;
+        $validated['ad_account_id'] = $adAccount->id;
+        $validated['status'] = 'PAUSED';
+
+        MetaCampaign::query()->create($validated);
+
+        return $this
+            ->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.index'))
+            ->withCreatedSuccessMessage();
+    }
+
+    public function show($id)
+    {
+        $campaign = MetaCampaign::query()
+            ->where('store_id', $this->storeId)
+            ->with(['adSets' => fn ($q) => $q->where('status', '!=', 'DELETED')->withCount('ads')])
+            ->findOrFail($id);
+
+        $this->pageTitle($campaign->name);
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.show', compact('campaign'));
+    }
+
+    public function edit($id)
+    {
+        $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
 
         $this->pageTitle(__('Edit Campaign: :name', ['name' => $campaign->name]));
 
-        return view('plugins/marketplace::themes.vendor-dashboard.meta-ads.campaigns.edit', compact('campaign'));
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.edit', compact('campaign'));
     }
 
-    public function update(int|string $id, StoreMetaCampaignRequest $request)
+    public function update(Request $request, $id)
     {
-        $store = auth('customer')->user()->store;
+        $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
 
-        $campaign = MetaCampaign::query()
-            ->where('id', $id)
-            ->where('store_id', $store?->id)
-            ->firstOrFail();
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'objective' => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES'],
+            'daily_budget' => ['nullable', 'numeric', 'min:1'],
+            'lifetime_budget' => ['nullable', 'numeric', 'min:1'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ]);
 
-        $data = $request->validated();
-        $newStatus = $data['status'] ?? $campaign->status;
+        $campaign->update($validated);
 
-        if ($campaign->meta_remote_id && $newStatus !== $campaign->status) {
-            $adAccount = $campaign->adAccount;
-            if ($adAccount?->is_connected) {
-                $this->metaAdsService->safely(
-                    fn () => $this->metaAdsService->updateCampaignStatus($adAccount, $campaign->meta_remote_id, $newStatus)
-                );
-            }
-        }
-
-        $campaign->fill([
-            'name' => $data['name'],
-            'objective' => $data['objective'],
-            'daily_budget' => $data['daily_budget'] ?? null,
-            'lifetime_budget' => $data['lifetime_budget'] ?? null,
-            'start_date' => $data['start_date'] ?? null,
-            'end_date' => $data['end_date'] ?? null,
-            'status' => $newStatus,
-        ])->save();
-
-        return $this->httpResponse()
-            ->setPreviousUrl(route('marketplace.vendor.meta-ads.campaigns.index'))
+        return $this
+            ->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.index'))
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy(int|string $id)
+    public function destroy($id)
     {
-        $store = auth('customer')->user()->store;
+        $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $campaign->update(['status' => 'DELETED']);
 
-        $campaign = MetaCampaign::query()
-            ->where('id', $id)
-            ->where('store_id', $store?->id)
-            ->firstOrFail();
-
-        if ($campaign->meta_remote_id) {
-            $adAccount = $campaign->adAccount;
-            if ($adAccount?->is_connected) {
-                $this->metaAdsService->safely(
-                    fn () => $this->metaAdsService->deleteCampaign($adAccount, $campaign->meta_remote_id)
-                );
-            }
-        }
-
-        $campaign->delete();
-
-        return $this->httpResponse()
-            ->setMessage(__('Campaign deleted successfully.'));
+        return $this
+            ->httpResponse()
+            ->setMessage(__('Campaign deleted.'));
     }
 
-    public function pause(int|string $id)
+    public function toggleStatus($id)
     {
-        $store = auth('customer')->user()->store;
+        $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
 
-        $campaign = MetaCampaign::query()
-            ->where('id', $id)
-            ->where('store_id', $store?->id)
-            ->firstOrFail();
+        $newStatus = $campaign->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+        $campaign->update(['status' => $newStatus]);
 
-        if ($campaign->meta_remote_id) {
-            $adAccount = $campaign->adAccount;
-            if ($adAccount?->is_connected) {
-                $this->metaAdsService->safely(
-                    fn () => $this->metaAdsService->updateCampaignStatus($adAccount, $campaign->meta_remote_id, 'PAUSED')
-                );
-            }
-        }
-
-        $campaign->update(['status' => 'PAUSED']);
-
-        return $this->httpResponse()
-            ->setMessage(__('Campaign paused successfully.'));
-    }
-
-    public function resume(int|string $id)
-    {
-        $store = auth('customer')->user()->store;
-
-        $campaign = MetaCampaign::query()
-            ->where('id', $id)
-            ->where('store_id', $store?->id)
-            ->firstOrFail();
-
-        if ($campaign->meta_remote_id) {
-            $adAccount = $campaign->adAccount;
-            if ($adAccount?->is_connected) {
-                $this->metaAdsService->safely(
-                    fn () => $this->metaAdsService->updateCampaignStatus($adAccount, $campaign->meta_remote_id, 'ACTIVE')
-                );
-            }
-        }
-
-        $campaign->update(['status' => 'ACTIVE']);
-
-        return $this->httpResponse()
-            ->setMessage(__('Campaign resumed successfully.'));
+        return $this
+            ->httpResponse()
+            ->setMessage(__('Campaign status changed to :status.', ['status' => $newStatus]));
     }
 }
