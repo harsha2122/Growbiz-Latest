@@ -353,7 +353,43 @@ class MarketplaceServiceProvider extends ServiceProvider
                         'url' => fn () => route('marketplace.vendor.b2b-catalogs.index'),
                         'icon' => 'ti ti-file-type-pdf',
                     ]);
-                });
+                })
+                ->when(
+                    MarketplaceHelper::isMetaAdsEnabled() && auth('customer')->check(),
+                    function (DashboardMenuSupport $dashboardMenu): void {
+                        $dashboardMenu
+                            ->registerItem([
+                                'id' => 'marketplace.vendor.meta-ads',
+                                'priority' => 7,
+                                'name' => __('Meta Ads'),
+                                'icon' => 'ti ti-brand-meta',
+                            ])
+                            ->registerItem([
+                                'id' => 'marketplace.vendor.meta-ads.dashboard',
+                                'parent_id' => 'marketplace.vendor.meta-ads',
+                                'priority' => 0,
+                                'name' => __('Dashboard'),
+                                'url' => fn () => route('marketplace.vendor.meta-ads.dashboard'),
+                                'icon' => 'ti ti-chart-bar',
+                            ])
+                            ->registerItem([
+                                'id' => 'marketplace.vendor.meta-ads.campaigns',
+                                'parent_id' => 'marketplace.vendor.meta-ads',
+                                'priority' => 1,
+                                'name' => __('Campaigns'),
+                                'url' => fn () => route('marketplace.vendor.meta-ads.campaigns.index'),
+                                'icon' => 'ti ti-speakerphone',
+                            ])
+                            ->registerItem([
+                                'id' => 'marketplace.vendor.meta-ads.connection',
+                                'parent_id' => 'marketplace.vendor.meta-ads',
+                                'priority' => 5,
+                                'name' => __('Connection'),
+                                'url' => fn () => route('marketplace.vendor.meta-ads.connection'),
+                                'icon' => 'ti ti-plug-connected',
+                            ]);
+                    }
+                );
         });
 
         DashboardMenu::for('customer')->beforeRetrieving(function (): void {
