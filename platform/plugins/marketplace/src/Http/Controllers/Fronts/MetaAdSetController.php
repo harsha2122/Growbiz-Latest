@@ -21,6 +21,21 @@ class MetaAdSetController extends BaseController
         abort_unless($this->storeId, 403);
     }
 
+    public function index()
+    {
+        $this->pageTitle(__('Meta Ads — Ad Sets'));
+
+        $adSets = MetaAdSet::query()
+            ->where('store_id', $this->storeId)
+            ->where('status', '!=', 'DELETED')
+            ->with('campaign')
+            ->withCount('ads')
+            ->latest()
+            ->paginate(20);
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.index', compact('adSets'));
+    }
+
     public function create($campaignId)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($campaignId);

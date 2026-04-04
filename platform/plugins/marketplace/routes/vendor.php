@@ -359,26 +359,30 @@ Route::group([
         Route::delete('campaigns/{id}', [MetaCampaignController::class, 'destroy'])->name('campaigns.destroy');
         Route::post('campaigns/{id}/toggle-status', [MetaCampaignController::class, 'toggleStatus'])->name('campaigns.toggle-status');
 
-        // Ad Sets
-        Route::match(['get', 'post'], 'ad-sets', [MetaAdSetController::class, 'index'])->name('ad-sets.index');
-        Route::get('ad-sets/create', [MetaAdSetController::class, 'create'])->name('ad-sets.create');
-        Route::post('ad-sets/save', [MetaAdSetController::class, 'store'])->name('ad-sets.store');
+        // Ad Sets (standalone list)
+        Route::get('ad-sets', [MetaAdSetController::class, 'index'])->name('ad-sets.index');
         Route::get('ad-sets/{id}', [MetaAdSetController::class, 'show'])->name('ad-sets.show');
         Route::get('ad-sets/{id}/edit', [MetaAdSetController::class, 'edit'])->name('ad-sets.edit');
         Route::put('ad-sets/{id}', [MetaAdSetController::class, 'update'])->name('ad-sets.update');
         Route::delete('ad-sets/{id}', [MetaAdSetController::class, 'destroy'])->name('ad-sets.destroy');
         Route::post('ad-sets/{id}/toggle-status', [MetaAdSetController::class, 'toggleStatus'])->name('ad-sets.toggle-status');
 
-        // Ads
-        Route::match(['get', 'post'], 'ads', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'index'])->name('ads.index');
-        Route::get('ads/create', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'create'])->name('ads.create');
-        Route::post('ads/save', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'store'])->name('ads.store');
+        // Ad Sets nested under campaign (create/store)
+        Route::get('campaigns/{campaignId}/ad-sets/create', [MetaAdSetController::class, 'create'])->name('campaigns.ad-sets.create');
+        Route::post('campaigns/{campaignId}/ad-sets/save', [MetaAdSetController::class, 'store'])->name('campaigns.ad-sets.store');
+
+        // Ads (standalone list)
+        Route::get('ads', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'index'])->name('ads.index');
         Route::get('ads/{id}', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'show'])->name('ads.show');
         Route::get('ads/{id}/edit', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'edit'])->name('ads.edit');
         Route::put('ads/{id}', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'update'])->name('ads.update');
         Route::delete('ads/{id}', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'destroy'])->name('ads.destroy');
         Route::post('ads/{id}/toggle-status', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'toggleStatus'])->name('ads.toggle-status');
         Route::get('ads/{id}/preview', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'preview'])->name('ads.preview');
+
+        // Ads nested under ad-set (create/store)
+        Route::get('ad-sets/{adSetId}/ads/create', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'create'])->name('ad-sets.ads.create');
+        Route::post('ad-sets/{adSetId}/ads/save', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'store'])->name('ad-sets.ads.store');
 
         // Reports
         Route::get('reports', [MetaAdReportController::class, 'index'])->name('reports.index');
