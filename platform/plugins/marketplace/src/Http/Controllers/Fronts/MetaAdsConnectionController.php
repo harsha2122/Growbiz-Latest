@@ -14,7 +14,7 @@ class MetaAdsConnectionController extends BaseController
 
     public function __construct()
     {
-        abort_unless(MarketplaceHelper::isMetaAdsEnabled(), 403);
+        if (! MarketplaceHelper::isMetaAdsEnabled()) { abort(404); }
         abort_unless(auth('customer')->check(), 403);
 
         $this->storeId = auth('customer')->user()->store?->id ?? 0;
