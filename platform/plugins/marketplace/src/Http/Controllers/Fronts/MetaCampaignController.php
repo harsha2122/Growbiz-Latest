@@ -4,8 +4,11 @@ namespace Botble\Marketplace\Http\Controllers\Fronts;
 
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Marketplace\Facades\MarketplaceHelper;
+use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Models\MetaCampaign;
+use Botble\Marketplace\Services\MetaApiClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MetaCampaignController extends BaseController
 {
@@ -23,6 +26,7 @@ class MetaCampaignController extends BaseController
                 return redirect()->route('marketplace.vendor.dashboard')
                     ->with('error', 'No store found for your account.');
             }
+
             return $next($request);
         });
     }
@@ -47,21 +51,50 @@ class MetaCampaignController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MetaApiClient $metaClient)
     {
         $validated = $request->validate([
-            'name'             => ['required', 'string', 'max:255'],
-            'objective'        => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES'],
-            'daily_budget'     => ['nullable', 'numeric', 'min:1'],
-            'lifetime_budget'  => ['nullable', 'numeric', 'min:1'],
-            'start_date'       => ['nullable', 'date'],
-            'end_date'         => ['nullable', 'date', 'after_or_equal:start_date'],
+            'name'            => ['required', 'string', 'max:255'],
+            'objective'       => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES,OUTCOME_LEADS'],
+            'daily_budget'    => ['nullable', 'numeric', 'min:1'],
+            'lifetime_budget' => ['nullable', 'numeric', 'min:1'],
+            'start_date'      => ['nullable', 'date'],
+            'end_date'        => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
         $validated['store_id'] = $this->storeId;
-        $validated['status'] = 'PAUSED';
+        $validated['status']   = 'PAUSED';
 
-        MetaCampaign::query()->create($validated);
+        $campaign = MetaCampaign::query()->create($validated);
+
+        // Push to Meta API
+        $adAccount = $this->getConnectedAccount();
+        if ($adAccount) {
+            try {
+                $payload = [
+                    'name'                  => $campaign->name,
+                    'objective'             => $campaign->objective,
+                    'status'                => 'PAUSED',
+                    'special_ad_categories' => [],
+                ];
+
+                if ($campaign->daily_budget) {
+                    $payload['daily_budget'] = (int) ($campaign->daily_budget * 100); // cents
+                } elseif ($campaign->lifetime_budget) {
+                    $payload['lifetime_budget'] = (int) ($campaign->lifetime_budget * 100);
+                }
+
+                $result = $metaClient->createCampaign($adAccount->access_token, $adAccount->ad_account_id, $payload);
+
+                if (! empty($result['id'])) {
+                    $campaign->update(['meta_campaign_id' => $result['id']]);
+                } elseif (! empty($result['error'])) {
+                    Log::warning('Meta campaign create API error', ['error' => $result['error']]);
+                }
+            } catch (\Throwable $e) {
+                Log::error('Meta campaign push failed', ['error' => $e->getMessage()]);
+            }
+        }
 
         return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.index'))
@@ -89,13 +122,13 @@ class MetaCampaignController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.edit', compact('campaign'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id, MetaApiClient $metaClient)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
 
         $validated = $request->validate([
             'name'            => ['required', 'string', 'max:255'],
-            'objective'       => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES'],
+            'objective'       => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES,OUTCOME_LEADS'],
             'daily_budget'    => ['nullable', 'numeric', 'min:1'],
             'lifetime_budget' => ['nullable', 'numeric', 'min:1'],
             'start_date'      => ['nullable', 'date'],
@@ -104,14 +137,41 @@ class MetaCampaignController extends BaseController
 
         $campaign->update($validated);
 
+        // Sync update to Meta API
+        if ($campaign->meta_campaign_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $metaClient->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
+                        'name'   => $campaign->name,
+                        'status' => $campaign->status,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Meta campaign update API failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
         return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.index'))
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id, MetaApiClient $metaClient)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
+
+        if ($campaign->meta_campaign_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $metaClient->deleteCampaign($adAccount->access_token, $campaign->meta_campaign_id);
+                } catch (\Throwable $e) {
+                    Log::error('Meta campaign delete API failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
         $campaign->delete();
 
         return $this->httpResponse()
@@ -119,11 +179,35 @@ class MetaCampaignController extends BaseController
             ->setMessage('Campaign deleted.');
     }
 
-    public function toggleStatus(int $id)
+    public function toggleStatus(int $id, MetaApiClient $metaClient)
     {
-        $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
-        $campaign->update(['status' => $campaign->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE']);
+        $campaign  = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $newStatus = $campaign->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+        $campaign->update(['status' => $newStatus]);
+
+        if ($campaign->meta_campaign_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $metaClient->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
+                        'status' => $newStatus,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Meta campaign toggleStatus API failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
 
         return $this->httpResponse()->setMessage('Campaign status updated.');
+    }
+
+    private function getConnectedAccount(): ?MetaAdAccount
+    {
+        return MetaAdAccount::query()
+            ->where('store_id', $this->storeId)
+            ->where('is_connected', true)
+            ->whereNotNull('access_token')
+            ->whereNotNull('ad_account_id')
+            ->first();
     }
 }

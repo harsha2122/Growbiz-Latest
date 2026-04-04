@@ -6,8 +6,11 @@ use Botble\Base\Http\Controllers\BaseController;
 use Botble\Ecommerce\Models\Product;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Models\MetaAd;
+use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Models\MetaAdSet;
+use Botble\Marketplace\Services\MetaApiClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MetaAdController extends BaseController
 {
@@ -25,6 +28,7 @@ class MetaAdController extends BaseController
                 return redirect()->route('marketplace.vendor.dashboard')
                     ->with('error', 'No store found for your account.');
             }
+
             return $next($request);
         });
     }
@@ -45,7 +49,7 @@ class MetaAdController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.create', compact('adSet', 'products'));
     }
 
-    public function store(Request $request, int $adSetId)
+    public function store(Request $request, int $adSetId, MetaApiClient $metaClient)
     {
         $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($adSetId);
 
@@ -61,12 +65,77 @@ class MetaAdController extends BaseController
             'product_id'      => ['nullable', 'integer'],
         ]);
 
-        $validated['ad_set_id'] = $adSet->id;
+        $validated['ad_set_id']   = $adSet->id;
         $validated['campaign_id'] = $adSet->campaign_id;
-        $validated['store_id'] = $this->storeId;
-        $validated['status'] = 'IN_REVIEW';
+        $validated['store_id']    = $this->storeId;
+        $validated['status']      = 'IN_REVIEW';
 
-        MetaAd::query()->create($validated);
+        $ad = MetaAd::query()->create($validated);
+
+        // Push to Meta API (creative + ad)
+        if ($adSet->meta_adset_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount && $adAccount->fb_page_id) {
+                try {
+                    $imageUrl = $ad->image_url;
+
+                    // If product selected and no image_url, use product image
+                    if (! $imageUrl && $ad->product_id) {
+                        $product  = Product::find($ad->product_id);
+                        $imageUrl = $product?->image ? asset('storage/' . $product->image) : null;
+                    }
+
+                    // Step 1: Create AdCreative
+                    $creativePayload = [
+                        'name'               => $ad->name . ' Creative',
+                        'object_story_spec'  => [
+                            'page_id'   => $adAccount->fb_page_id,
+                            'link_data' => array_filter([
+                                'link'         => $ad->destination_url,
+                                'message'      => $ad->primary_text,
+                                'name'         => $ad->headline,
+                                'description'  => $ad->description,
+                                'image_url'    => $imageUrl,
+                                'call_to_action' => [
+                                    'type'  => $ad->cta_button,
+                                    'value' => ['link' => $ad->destination_url],
+                                ],
+                            ]),
+                        ],
+                    ];
+
+                    $creativeResult = $metaClient->createAdCreative(
+                        $adAccount->access_token,
+                        $adAccount->ad_account_id,
+                        $creativePayload
+                    );
+
+                    if (! empty($creativeResult['id'])) {
+                        // Step 2: Create Ad
+                        $adResult = $metaClient->createAd($adAccount->access_token, $adAccount->ad_account_id, [
+                            'name'      => $ad->name,
+                            'adset_id'  => $adSet->meta_adset_id,
+                            'creative'  => ['creative_id' => $creativeResult['id']],
+                            'status'    => 'PAUSED',
+                        ]);
+
+                        if (! empty($adResult['id'])) {
+                            $ad->update([
+                                'meta_ad_id'       => $adResult['id'],
+                                'meta_creative_id' => $creativeResult['id'],
+                                'status'           => 'PAUSED',
+                            ]);
+                        } elseif (! empty($adResult['error'])) {
+                            Log::warning('Meta ad create API error', ['error' => $adResult['error']]);
+                        }
+                    } elseif (! empty($creativeResult['error'])) {
+                        Log::warning('Meta ad creative create API error', ['error' => $creativeResult['error']]);
+                    }
+                } catch (\Throwable $e) {
+                    Log::error('Meta ad push failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
 
         return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $adSet->id))
@@ -101,7 +170,7 @@ class MetaAdController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.edit', compact('ad', 'products'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id, MetaApiClient $metaClient)
     {
         $ad = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
 
@@ -119,15 +188,42 @@ class MetaAdController extends BaseController
 
         $ad->update($validated);
 
+        // Sync status to Meta API
+        if ($ad->meta_ad_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $metaClient->updateAd($adAccount->access_token, $ad->meta_ad_id, [
+                        'status' => $ad->status,
+                        'name'   => $ad->name,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Meta ad update API failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
         return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $ad->ad_set_id))
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id, MetaApiClient $metaClient)
     {
-        $ad = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $ad      = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
         $adSetId = $ad->ad_set_id;
+
+        if ($ad->meta_ad_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $metaClient->deleteAd($adAccount->access_token, $ad->meta_ad_id);
+                } catch (\Throwable $e) {
+                    Log::error('Meta ad delete API failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
         $ad->delete();
 
         return $this->httpResponse()
@@ -135,10 +231,24 @@ class MetaAdController extends BaseController
             ->setMessage('Ad deleted.');
     }
 
-    public function toggleStatus(int $id)
+    public function toggleStatus(int $id, MetaApiClient $metaClient)
     {
-        $ad = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
-        $ad->update(['status' => $ad->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE']);
+        $ad        = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $newStatus = $ad->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+        $ad->update(['status' => $newStatus]);
+
+        if ($ad->meta_ad_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $metaClient->updateAd($adAccount->access_token, $ad->meta_ad_id, [
+                        'status' => $newStatus,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Meta ad toggleStatus API failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
 
         return $this->httpResponse()->setMessage('Ad status updated.');
     }
@@ -153,5 +263,15 @@ class MetaAdController extends BaseController
         $storeName = auth('customer')->user()->store?->name ?? 'Your Store';
 
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.preview', compact('ad', 'storeName'));
+    }
+
+    private function getConnectedAccount(): ?MetaAdAccount
+    {
+        return MetaAdAccount::query()
+            ->where('store_id', $this->storeId)
+            ->where('is_connected', true)
+            ->whereNotNull('access_token')
+            ->whereNotNull('ad_account_id')
+            ->first();
     }
 }

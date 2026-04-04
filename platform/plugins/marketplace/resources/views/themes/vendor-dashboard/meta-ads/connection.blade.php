@@ -23,7 +23,15 @@
                     </div>
                 </div>
                 @if($adAccount->ad_account_name)
-                    <p>Ad Account: <strong>{{ $adAccount->ad_account_name }}</strong> ({{ $adAccount->ad_account_id }})</p>
+                    <p class="mb-1">Ad Account: <strong>{{ $adAccount->ad_account_name }}</strong>
+                        <span class="text-muted">({{ $adAccount->ad_account_id }})</span></p>
+                @endif
+                @if($adAccount->fb_page_name)
+                    <p class="mb-1">Facebook Page: <strong>{{ $adAccount->fb_page_name }}</strong>
+                        <span class="text-muted">({{ $adAccount->fb_page_id }})</span></p>
+                @endif
+                @if($adAccount->token_expires_at)
+                    <p class="mb-1 text-muted small">Token expires: {{ $adAccount->token_expires_at->format('M d, Y') }}</p>
                 @endif
                 @if($adAccount->connected_at)
                     <p class="text-muted small">Connected {{ $adAccount->connected_at->diffForHumans() }}</p>

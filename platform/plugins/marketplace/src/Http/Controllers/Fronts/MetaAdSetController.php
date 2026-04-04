@@ -4,9 +4,12 @@ namespace Botble\Marketplace\Http\Controllers\Fronts;
 
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Marketplace\Facades\MarketplaceHelper;
+use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Models\MetaAdSet;
 use Botble\Marketplace\Models\MetaCampaign;
+use Botble\Marketplace\Services\MetaApiClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MetaAdSetController extends BaseController
 {
@@ -24,6 +27,7 @@ class MetaAdSetController extends BaseController
                 return redirect()->route('marketplace.vendor.dashboard')
                     ->with('error', 'No store found for your account.');
             }
+
             return $next($request);
         });
     }
@@ -37,7 +41,7 @@ class MetaAdSetController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.create', compact('campaign'));
     }
 
-    public function store(Request $request, int $campaignId)
+    public function store(Request $request, int $campaignId, MetaApiClient $metaClient)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($campaignId);
 
@@ -54,14 +58,48 @@ class MetaAdSetController extends BaseController
         ]);
 
         $validated['campaign_id'] = $campaign->id;
-        $validated['store_id'] = $this->storeId;
-        $validated['status'] = 'PAUSED';
+        $validated['store_id']    = $this->storeId;
+        $validated['status']      = 'PAUSED';
+
         $validated['targeting_locations'] = $validated['targeting_locations']
             ? array_map('trim', explode(',', $validated['targeting_locations'])) : [];
         $validated['targeting_interests'] = $validated['targeting_interests']
             ? array_map('trim', explode(',', $validated['targeting_interests'])) : [];
 
-        MetaAdSet::query()->create($validated);
+        $adSet = MetaAdSet::query()->create($validated);
+
+        // Push to Meta API
+        if ($campaign->meta_campaign_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $targeting = $metaClient->buildTargeting([
+                        'targeting_age_min'   => $adSet->targeting_age_min,
+                        'targeting_age_max'   => $adSet->targeting_age_max,
+                        'targeting_genders'   => $adSet->targeting_genders,
+                        'targeting_locations' => $adSet->targeting_locations,
+                    ]);
+
+                    $result = $metaClient->createAdSet($adAccount->access_token, $adAccount->ad_account_id, [
+                        'name'              => $adSet->name,
+                        'campaign_id'       => $campaign->meta_campaign_id,
+                        'daily_budget'      => (int) ($adSet->daily_budget * 100),
+                        'billing_event'     => 'IMPRESSIONS',
+                        'optimization_goal' => $adSet->optimization_goal,
+                        'targeting'         => $targeting,
+                        'status'            => 'PAUSED',
+                    ]);
+
+                    if (! empty($result['id'])) {
+                        $adSet->update(['meta_adset_id' => $result['id']]);
+                    } elseif (! empty($result['error'])) {
+                        Log::warning('Meta ad set create API error', ['error' => $result['error']]);
+                    }
+                } catch (\Throwable $e) {
+                    Log::error('Meta ad set push failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
 
         return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id))
@@ -89,7 +127,7 @@ class MetaAdSetController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.edit', compact('adSet'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id, MetaApiClient $metaClient)
     {
         $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
 
@@ -112,15 +150,50 @@ class MetaAdSetController extends BaseController
 
         $adSet->update($validated);
 
+        if ($adSet->meta_adset_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $targeting = $metaClient->buildTargeting([
+                        'targeting_age_min'   => $adSet->targeting_age_min,
+                        'targeting_age_max'   => $adSet->targeting_age_max,
+                        'targeting_genders'   => $adSet->targeting_genders,
+                        'targeting_locations' => $adSet->targeting_locations,
+                    ]);
+
+                    $metaClient->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, [
+                        'name'         => $adSet->name,
+                        'daily_budget' => (int) ($adSet->daily_budget * 100),
+                        'targeting'    => $targeting,
+                        'status'       => $adSet->status,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Meta ad set update API failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
         return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $adSet->campaign_id))
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy(int $id)
+    public function destroy(int $id, MetaApiClient $metaClient)
     {
-        $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $adSet     = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
         $campaignId = $adSet->campaign_id;
+
+        if ($adSet->meta_adset_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $metaClient->deleteAdSet($adAccount->access_token, $adSet->meta_adset_id);
+                } catch (\Throwable $e) {
+                    Log::error('Meta ad set delete API failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
         $adSet->delete();
 
         return $this->httpResponse()
@@ -128,11 +201,35 @@ class MetaAdSetController extends BaseController
             ->setMessage('Ad set deleted.');
     }
 
-    public function toggleStatus(int $id)
+    public function toggleStatus(int $id, MetaApiClient $metaClient)
     {
-        $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
-        $adSet->update(['status' => $adSet->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE']);
+        $adSet     = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $newStatus = $adSet->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+        $adSet->update(['status' => $newStatus]);
+
+        if ($adSet->meta_adset_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                try {
+                    $metaClient->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, [
+                        'status' => $newStatus,
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Meta ad set toggleStatus API failed', ['error' => $e->getMessage()]);
+                }
+            }
+        }
 
         return $this->httpResponse()->setMessage('Ad set status updated.');
+    }
+
+    private function getConnectedAccount(): ?MetaAdAccount
+    {
+        return MetaAdAccount::query()
+            ->where('store_id', $this->storeId)
+            ->where('is_connected', true)
+            ->whereNotNull('access_token')
+            ->whereNotNull('ad_account_id')
+            ->first();
     }
 }

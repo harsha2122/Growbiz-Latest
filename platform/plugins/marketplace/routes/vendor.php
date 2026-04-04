@@ -333,6 +333,7 @@ Route::group([
 
         Route::get('connection', [MetaAdsConnectionController::class, 'index'])->name('connection');
         Route::get('callback', [MetaAdsConnectionController::class, 'callback'])->name('callback');
+        Route::post('connection/select-account', [MetaAdsConnectionController::class, 'selectAccount'])->name('connection.select-account');
         Route::post('connection/disconnect', [MetaAdsConnectionController::class, 'disconnect'])->name('connection.disconnect');
 
         Route::get('campaigns', [MetaCampaignController::class, 'index'])->name('campaigns.index');

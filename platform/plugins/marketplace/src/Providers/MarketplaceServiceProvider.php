@@ -25,7 +25,9 @@ use Botble\Ecommerce\Models\SpecificationTable;
 use Botble\Ecommerce\PanelSections\SettingEcommercePanelSection;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Botble\Marketplace\Commands\DiagnoseVendorDocuments;
+use Botble\Marketplace\Commands\SyncMetaInsightsCommand;
 use Botble\Marketplace\Commands\SyncVendorDocuments;
+use Botble\Marketplace\Services\MetaApiClient;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Http\Middleware\RedirectIfNotVendor;
 use Botble\Marketplace\Models\Revenue;
@@ -81,6 +83,10 @@ class MarketplaceServiceProvider extends ServiceProvider
         $this->app['router']->aliasMiddleware('vendor', RedirectIfNotVendor::class);
 
         AliasLoader::getInstance()->alias('MarketplaceHelper', MarketplaceHelper::class);
+
+        $this->app->singleton(MetaApiClient::class, function () {
+            return new MetaApiClient(MarketplaceHelper::getMetaAdsApiVersion() ?: 'v21.0');
+        });
     }
 
     public function boot(): void
@@ -105,8 +111,13 @@ class MarketplaceServiceProvider extends ServiceProvider
             $this->commands([
                 SyncVendorDocuments::class,
                 DiagnoseVendorDocuments::class,
+                SyncMetaInsightsCommand::class,
             ]);
         }
+
+        $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+            $schedule->command('meta-ads:sync-insights')->dailyAt('03:00');
+        });
 
         if (defined('LANGUAGE_MODULE_SCREEN_NAME') && defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME')) {
             LanguageAdvancedManager::registerModule(Store::class, [

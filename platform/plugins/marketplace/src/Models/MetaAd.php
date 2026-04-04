@@ -11,7 +11,7 @@ class MetaAd extends Model
     protected $fillable = [
         'ad_set_id', 'campaign_id', 'store_id', 'name', 'status', 'format',
         'primary_text', 'headline', 'description', 'cta_button',
-        'destination_url', 'image_url', 'product_id', 'meta_ad_id',
+        'destination_url', 'image_url', 'product_id', 'meta_ad_id', 'meta_creative_id',
         'impressions', 'clicks', 'spend', 'ctr', 'cpc',
     ];
 
