@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class () extends Migration {
     public function up(): void
     {
-        Schema::create('meta_ad_accounts', function (Blueprint $table) {
+        Schema::createIfNotExists('meta_ad_accounts', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('store_id');
             $table->string('fb_user_id')->nullable();
@@ -24,7 +24,7 @@ return new class () extends Migration {
             $table->index('store_id');
         });
 
-        Schema::create('meta_campaigns', function (Blueprint $table) {
+        Schema::createIfNotExists('meta_campaigns', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('store_id');
             $table->unsignedBigInteger('ad_account_id');
@@ -46,7 +46,7 @@ return new class () extends Migration {
             $table->index(['store_id', 'status']);
         });
 
-        Schema::create('meta_ad_sets', function (Blueprint $table) {
+        Schema::createIfNotExists('meta_ad_sets', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('campaign_id');
             $table->unsignedBigInteger('store_id');
@@ -71,7 +71,7 @@ return new class () extends Migration {
             $table->index(['campaign_id', 'status']);
         });
 
-        Schema::create('meta_ads', function (Blueprint $table) {
+        Schema::createIfNotExists('meta_ads', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('ad_set_id');
             $table->unsignedBigInteger('campaign_id');
