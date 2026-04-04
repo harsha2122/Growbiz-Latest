@@ -9,12 +9,11 @@ use Botble\Ecommerce\Http\Middleware\CheckProductSpecificationEnabledMiddleware;
 use Botble\Marketplace\Http\Controllers\Fronts\ExportProductController;
 use Botble\Marketplace\Http\Controllers\Fronts\ImportProductController;
 use Botble\Marketplace\Http\Controllers\Fronts\MessageController;
-use Botble\Marketplace\Http\Controllers\Fronts\MetaAdAccountController;
 use Botble\Marketplace\Http\Controllers\Fronts\MetaAdController;
-use Botble\Marketplace\Http\Controllers\Fronts\MetaAdReportController;
 use Botble\Marketplace\Http\Controllers\Fronts\MetaAdSetController;
+use Botble\Marketplace\Http\Controllers\Fronts\MetaAdsDashboardController;
+use Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController;
 use Botble\Marketplace\Http\Controllers\Fronts\MetaCampaignController;
-use Botble\Marketplace\Http\Controllers\Fronts\MetaOAuthController;
 use Botble\Marketplace\Http\Controllers\Fronts\SpecificationAttributeController;
 use Botble\Marketplace\Http\Controllers\Fronts\SpecificationGroupController;
 use Botble\Marketplace\Http\Controllers\Fronts\SpecificationTableController;
@@ -330,62 +329,37 @@ Route::group([
 
     // Meta Ads
     Route::group(['prefix' => 'meta-ads', 'as' => 'meta-ads.'], function (): void {
-        // Dashboard
-        Route::get('dashboard', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsDashboardController::class, 'index'])->name('dashboard');
+        Route::get('dashboard', [MetaAdsDashboardController::class, 'index'])->name('dashboard');
 
-        // Facebook OAuth (MetaOAuthController)
-        Route::get('oauth/redirect', [MetaOAuthController::class, 'redirect'])->name('oauth.redirect');
-        Route::get('oauth/callback', [MetaOAuthController::class, 'callback'])->name('oauth.callback');
+        Route::get('connection', [MetaAdsConnectionController::class, 'index'])->name('connection');
+        Route::get('callback', [MetaAdsConnectionController::class, 'callback'])->name('callback');
+        Route::post('connection/disconnect', [MetaAdsConnectionController::class, 'disconnect'])->name('connection.disconnect');
 
-        // Connection page (MetaAdsConnectionController)
-        Route::get('connection', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'index'])->name('connection');
-        Route::get('connection/redirect', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'redirect'])->name('connection.redirect');
-        Route::get('callback', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'callback'])->name('callback');
-        Route::post('connection/disconnect', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'disconnect'])->name('connection.disconnect');
-        Route::post('connection/update-ad-account', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdsConnectionController::class, 'updateAdAccount'])->name('connection.update-ad-account');
-
-        // Ad Accounts
-        Route::get('accounts', [MetaAdAccountController::class, 'index'])->name('accounts.index');
-        Route::get('accounts/connect', [MetaAdAccountController::class, 'connect'])->name('accounts.connect');
-        Route::delete('accounts/{id}', [MetaAdAccountController::class, 'disconnect'])->name('accounts.disconnect');
-
-        // Campaigns
-        Route::match(['get', 'post'], 'campaigns', [MetaCampaignController::class, 'index'])->name('campaigns.index');
+        Route::get('campaigns', [MetaCampaignController::class, 'index'])->name('campaigns.index');
         Route::get('campaigns/create', [MetaCampaignController::class, 'create'])->name('campaigns.create');
-        Route::post('campaigns/save', [MetaCampaignController::class, 'store'])->name('campaigns.store');
+        Route::post('campaigns', [MetaCampaignController::class, 'store'])->name('campaigns.store');
         Route::get('campaigns/{id}', [MetaCampaignController::class, 'show'])->name('campaigns.show');
         Route::get('campaigns/{id}/edit', [MetaCampaignController::class, 'edit'])->name('campaigns.edit');
         Route::put('campaigns/{id}', [MetaCampaignController::class, 'update'])->name('campaigns.update');
         Route::delete('campaigns/{id}', [MetaCampaignController::class, 'destroy'])->name('campaigns.destroy');
         Route::post('campaigns/{id}/toggle-status', [MetaCampaignController::class, 'toggleStatus'])->name('campaigns.toggle-status');
 
-        // Ad Sets (standalone list)
-        Route::get('ad-sets', [MetaAdSetController::class, 'index'])->name('ad-sets.index');
+        Route::get('campaigns/{campaignId}/ad-sets/create', [MetaAdSetController::class, 'create'])->name('campaigns.ad-sets.create');
+        Route::post('campaigns/{campaignId}/ad-sets', [MetaAdSetController::class, 'store'])->name('campaigns.ad-sets.store');
         Route::get('ad-sets/{id}', [MetaAdSetController::class, 'show'])->name('ad-sets.show');
         Route::get('ad-sets/{id}/edit', [MetaAdSetController::class, 'edit'])->name('ad-sets.edit');
         Route::put('ad-sets/{id}', [MetaAdSetController::class, 'update'])->name('ad-sets.update');
         Route::delete('ad-sets/{id}', [MetaAdSetController::class, 'destroy'])->name('ad-sets.destroy');
         Route::post('ad-sets/{id}/toggle-status', [MetaAdSetController::class, 'toggleStatus'])->name('ad-sets.toggle-status');
 
-        // Ad Sets nested under campaign (create/store)
-        Route::get('campaigns/{campaignId}/ad-sets/create', [MetaAdSetController::class, 'create'])->name('campaigns.ad-sets.create');
-        Route::post('campaigns/{campaignId}/ad-sets/save', [MetaAdSetController::class, 'store'])->name('campaigns.ad-sets.store');
-
-        // Ads (standalone list)
-        Route::get('ads', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'index'])->name('ads.index');
-        Route::get('ads/{id}', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'show'])->name('ads.show');
-        Route::get('ads/{id}/edit', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'edit'])->name('ads.edit');
-        Route::put('ads/{id}', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'update'])->name('ads.update');
-        Route::delete('ads/{id}', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'destroy'])->name('ads.destroy');
-        Route::post('ads/{id}/toggle-status', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'toggleStatus'])->name('ads.toggle-status');
-        Route::get('ads/{id}/preview', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'preview'])->name('ads.preview');
-
-        // Ads nested under ad-set (create/store)
-        Route::get('ad-sets/{adSetId}/ads/create', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'create'])->name('ad-sets.ads.create');
-        Route::post('ad-sets/{adSetId}/ads/save', [\Botble\Marketplace\Http\Controllers\Fronts\MetaAdController::class, 'store'])->name('ad-sets.ads.store');
-
-        // Reports
-        Route::get('reports', [MetaAdReportController::class, 'index'])->name('reports.index');
+        Route::get('ad-sets/{adSetId}/ads/create', [MetaAdController::class, 'create'])->name('ad-sets.ads.create');
+        Route::post('ad-sets/{adSetId}/ads', [MetaAdController::class, 'store'])->name('ad-sets.ads.store');
+        Route::get('ads/{id}', [MetaAdController::class, 'show'])->name('ads.show');
+        Route::get('ads/{id}/edit', [MetaAdController::class, 'edit'])->name('ads.edit');
+        Route::put('ads/{id}', [MetaAdController::class, 'update'])->name('ads.update');
+        Route::delete('ads/{id}', [MetaAdController::class, 'destroy'])->name('ads.destroy');
+        Route::post('ads/{id}/toggle-status', [MetaAdController::class, 'toggleStatus'])->name('ads.toggle-status');
+        Route::get('ads/{id}/preview', [MetaAdController::class, 'preview'])->name('ads.preview');
     });
 
     Route::get('settings/languages', [LanguageSettingController::class, 'index'])->name('language-settings.index');

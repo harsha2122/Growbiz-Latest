@@ -25,7 +25,6 @@ use Botble\Ecommerce\Models\SpecificationTable;
 use Botble\Ecommerce\PanelSections\SettingEcommercePanelSection;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Botble\Marketplace\Commands\DiagnoseVendorDocuments;
-use Botble\Marketplace\Commands\SyncMetaAdsInsights;
 use Botble\Marketplace\Commands\SyncVendorDocuments;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Http\Middleware\RedirectIfNotVendor;
@@ -35,28 +34,14 @@ use Botble\Marketplace\Models\Store;
 use Botble\Marketplace\Models\VendorInfo;
 use Botble\Marketplace\Models\Withdrawal;
 use Botble\Marketplace\Observers\ProductObserver;
-use Botble\Marketplace\Models\MetaAd;
-use Botble\Marketplace\Models\MetaAdAccount;
-use Botble\Marketplace\Models\MetaAdSet;
-use Botble\Marketplace\Models\MetaCampaign;
-use Botble\Marketplace\Repositories\Eloquent\MetaAdAccountRepository;
-use Botble\Marketplace\Repositories\Eloquent\MetaAdRepository;
-use Botble\Marketplace\Repositories\Eloquent\MetaAdSetRepository;
-use Botble\Marketplace\Repositories\Eloquent\MetaCampaignRepository;
 use Botble\Marketplace\Repositories\Eloquent\RevenueRepository;
 use Botble\Marketplace\Repositories\Eloquent\StoreRepository;
 use Botble\Marketplace\Repositories\Eloquent\VendorInfoRepository;
 use Botble\Marketplace\Repositories\Eloquent\WithdrawalRepository;
-use Botble\Marketplace\Repositories\Interfaces\MetaAdAccountInterface;
-use Botble\Marketplace\Repositories\Interfaces\MetaAdInterface;
-use Botble\Marketplace\Repositories\Interfaces\MetaAdSetInterface;
-use Botble\Marketplace\Repositories\Interfaces\MetaCampaignInterface;
 use Botble\Marketplace\Repositories\Interfaces\RevenueInterface;
 use Botble\Marketplace\Repositories\Interfaces\StoreInterface;
 use Botble\Marketplace\Repositories\Interfaces\VendorInfoInterface;
 use Botble\Marketplace\Repositories\Interfaces\WithdrawalInterface;
-use Botble\Marketplace\Services\MetaApiClient;
-use Botble\Marketplace\Services\MetaAdsService;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Slug\Facades\SlugHelper;
 use Botble\Theme\Facades\SiteMapManager;
@@ -91,25 +76,6 @@ class MarketplaceServiceProvider extends ServiceProvider
             return new VendorInfoRepository(new VendorInfo());
         });
 
-        $this->app->bind(MetaAdAccountInterface::class, function () {
-            return new MetaAdAccountRepository(new MetaAdAccount());
-        });
-
-        $this->app->bind(MetaCampaignInterface::class, function () {
-            return new MetaCampaignRepository(new MetaCampaign());
-        });
-
-        $this->app->bind(MetaAdSetInterface::class, function () {
-            return new MetaAdSetRepository(new MetaAdSet());
-        });
-
-        $this->app->bind(MetaAdInterface::class, function () {
-            return new MetaAdRepository(new MetaAd());
-        });
-
-        $this->app->singleton(MetaApiClient::class);
-        $this->app->singleton(MetaAdsService::class);
-
         Helper::autoload(__DIR__ . '/../../helpers');
 
         $this->app['router']->aliasMiddleware('vendor', RedirectIfNotVendor::class);
@@ -139,15 +105,8 @@ class MarketplaceServiceProvider extends ServiceProvider
             $this->commands([
                 SyncVendorDocuments::class,
                 DiagnoseVendorDocuments::class,
-                SyncMetaAdsInsights::class,
             ]);
         }
-
-        $this->callAfterResolving('schedule', function ($schedule): void {
-            if (MarketplaceHelper::isMetaAdsEnabled()) {
-                $schedule->command('marketplace:sync-meta-ads-insights')->dailyAt('04:00');
-            }
-        });
 
         if (defined('LANGUAGE_MODULE_SCREEN_NAME') && defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME')) {
             LanguageAdvancedManager::registerModule(Store::class, [
@@ -263,43 +222,7 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-ad',
                     'url' => fn () => route('marketplace.meta-ads-settings'),
                     'permissions' => ['marketplace.settings'],
-                ])
-                ->when(MarketplaceHelper::isMetaAdsEnabled(), function (DashboardMenuSupport $dashboardMenu): void {
-                    $dashboardMenu
-                        ->registerItem([
-                            'id' => 'cms-plugins-marketplace-meta-ads',
-                            'priority' => 13,
-                            'parent_id' => 'cms-plugins-marketplace',
-                            'name' => __('Meta Ads Overview'),
-                            'icon' => 'ti ti-brand-meta',
-                            'url' => fn () => route('marketplace.meta-ads.index'),
-                            'permissions' => ['marketplace.meta-ads.index'],
-                        ])
-                        ->registerItem([
-                            'id' => 'cms-plugins-marketplace-meta-ads-campaigns',
-                            'priority' => 1,
-                            'parent_id' => 'cms-plugins-marketplace-meta-ads',
-                            'name' => __('Campaigns'),
-                            'url' => fn () => route('marketplace.meta-ads.index'),
-                            'permissions' => ['marketplace.meta-ads.index'],
-                        ])
-                        ->registerItem([
-                            'id' => 'cms-plugins-marketplace-meta-ads-accounts',
-                            'priority' => 2,
-                            'parent_id' => 'cms-plugins-marketplace-meta-ads',
-                            'name' => __('Ad Accounts'),
-                            'url' => fn () => route('marketplace.meta-ads.accounts'),
-                            'permissions' => ['marketplace.meta-ads.index'],
-                        ])
-                        ->registerItem([
-                            'id' => 'cms-plugins-marketplace-meta-ads-summary',
-                            'priority' => 3,
-                            'parent_id' => 'cms-plugins-marketplace-meta-ads',
-                            'name' => __('Summary'),
-                            'url' => fn () => route('marketplace.meta-ads.summary'),
-                            'permissions' => ['marketplace.meta-ads.index'],
-                        ]);
-                });
+                ]);
         });
 
         DashboardMenu::for('vendor')->beforeRetrieving(function (): void {
@@ -381,15 +304,6 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'url' => fn () => route('marketplace.vendor.revenues.index'),
                     'icon' => 'ti ti-wallet',
                 ])
-                ->when(MarketplaceHelper::isMetaAdsEnabled(), function (DashboardMenuSupport $dashboardMenu): void {
-                    $dashboardMenu->registerItem([
-                        'id' => 'marketplace.vendor.meta-ads',
-                        'priority' => 25,
-                        'name' => __('Meta Ads'),
-                        'url' => fn () => route('marketplace.vendor.meta-ads.campaigns.index'),
-                        'icon' => 'ti ti-ad',
-                    ]);
-                })
                 ->registerItem([
                     'id' => 'marketplace.vendor.contact-admin',
                     'priority' => 998,

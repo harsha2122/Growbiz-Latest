@@ -20,8 +20,6 @@ return new class () extends Migration {
                 $table->boolean('is_connected')->default(false);
                 $table->timestamp('connected_at')->nullable();
                 $table->timestamps();
-
-                $table->foreign('store_id')->references('id')->on('mp_stores')->onDelete('cascade');
                 $table->index('store_id');
             });
         }
@@ -30,7 +28,7 @@ return new class () extends Migration {
             Schema::create('meta_campaigns', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('store_id');
-                $table->unsignedBigInteger('ad_account_id');
+                $table->unsignedBigInteger('ad_account_id')->default(0);
                 $table->string('name');
                 $table->string('objective')->default('OUTCOME_TRAFFIC');
                 $table->string('status')->default('PAUSED');
@@ -43,10 +41,7 @@ return new class () extends Migration {
                 $table->unsignedBigInteger('clicks')->default(0);
                 $table->decimal('spend', 10, 2)->default(0);
                 $table->timestamps();
-
-                $table->foreign('store_id')->references('id')->on('mp_stores')->onDelete('cascade');
-                $table->foreign('ad_account_id')->references('id')->on('meta_ad_accounts')->onDelete('cascade');
-                $table->index(['store_id', 'status']);
+                $table->index('store_id');
             });
         }
 
@@ -70,10 +65,7 @@ return new class () extends Migration {
                 $table->unsignedBigInteger('clicks')->default(0);
                 $table->decimal('spend', 10, 2)->default(0);
                 $table->timestamps();
-
-                $table->foreign('campaign_id')->references('id')->on('meta_campaigns')->onDelete('cascade');
-                $table->foreign('store_id')->references('id')->on('mp_stores')->onDelete('cascade');
-                $table->index(['campaign_id', 'status']);
+                $table->index('campaign_id');
             });
         }
 
@@ -100,11 +92,7 @@ return new class () extends Migration {
                 $table->decimal('ctr', 5, 2)->default(0);
                 $table->decimal('cpc', 10, 2)->default(0);
                 $table->timestamps();
-
-                $table->foreign('ad_set_id')->references('id')->on('meta_ad_sets')->onDelete('cascade');
-                $table->foreign('campaign_id')->references('id')->on('meta_campaigns')->onDelete('cascade');
-                $table->foreign('store_id')->references('id')->on('mp_stores')->onDelete('cascade');
-                $table->index(['ad_set_id', 'status']);
+                $table->index('ad_set_id');
             });
         }
     }

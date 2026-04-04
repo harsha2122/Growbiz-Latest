@@ -1,115 +1,98 @@
 @extends(MarketplaceHelper::viewPath('vendor-dashboard.layouts.master'))
 
 @section('content')
-    @include(MarketplaceHelper::viewPath('vendor-dashboard.meta-ads.partials.breadcrumb'), ['items' => [['label' => 'Dashboard']]])
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Meta Ads — Dashboard</h4>
+        <a href="{{ route('marketplace.vendor.meta-ads.campaigns.create') }}" class="btn btn-primary">
+            <i class="ti ti-plus"></i> New Campaign
+        </a>
+    </div>
 
-    @if (! $adAccount || ! $adAccount->is_connected)
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    @if(!$adAccount || !$adAccount->is_connected)
         <div class="alert alert-warning">
-            <x-core::icon name="ti ti-alert-triangle" class="me-1" />
-            {{ __('Your Facebook account is not connected.') }}
-            <a href="{{ route('marketplace.vendor.meta-ads.connection') }}">{{ __('Connect now') }}</a>
+            Your Facebook account is not connected.
+            <a href="{{ route('marketplace.vendor.meta-ads.connection') }}" class="alert-link">Connect now →</a>
+        </div>
+    @else
+        <div class="alert alert-success">
+            Connected as <strong>{{ $adAccount->fb_user_name }}</strong>
+            @if($adAccount->ad_account_name)
+                · Ad Account: <strong>{{ $adAccount->ad_account_name }}</strong>
+            @endif
         </div>
     @endif
 
-    {{-- Metric Cards --}}
     <div class="row g-3 mb-4">
-        <div class="col-md-4 col-lg-2">
-            <div class="card text-center">
-                <div class="card-body py-3">
-                    <div class="text-muted small">{{ __('Campaigns') }}</div>
-                    <h4 class="mb-0">{{ $totalCampaigns }}</h4>
-                    <small class="text-success">{{ $activeCampaigns }} {{ __('active') }}</small>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-muted mb-1">Total Campaigns</div>
+                    <h3 class="mb-0">{{ $totalCampaigns }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-lg-2">
-            <div class="card text-center">
-                <div class="card-body py-3">
-                    <div class="text-muted small">{{ __('Active Ads') }}</div>
-                    <h4 class="mb-0">{{ $activeAds }}</h4>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-muted mb-1">Active Campaigns</div>
+                    <h3 class="mb-0 text-success">{{ $activeCampaigns }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-lg-2">
-            <div class="card text-center">
-                <div class="card-body py-3">
-                    <div class="text-muted small">{{ __('Total Spend') }}</div>
-                    <h4 class="mb-0">₹{{ number_format($totalSpend, 2) }}</h4>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-muted mb-1">Total Spend</div>
+                    <h3 class="mb-0">${{ number_format($totalSpend, 2) }}</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-lg-2">
-            <div class="card text-center">
-                <div class="card-body py-3">
-                    <div class="text-muted small">{{ __('Impressions') }}</div>
-                    <h4 class="mb-0">{{ number_format($totalImpressions) }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 col-lg-2">
-            <div class="card text-center">
-                <div class="card-body py-3">
-                    <div class="text-muted small">{{ __('Clicks') }}</div>
-                    <h4 class="mb-0">{{ number_format($totalClicks) }}</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 col-lg-2">
-            <div class="card text-center">
-                <div class="card-body py-3">
-                    <div class="text-muted small">{{ __('Avg CTR') }}</div>
-                    <h4 class="mb-0">{{ $avgCtr }}%</h4>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-muted mb-1">Avg CTR</div>
+                    <h3 class="mb-0">{{ $avgCtr }}%</h3>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Chart --}}
-    <div class="card mb-4">
-        <div class="card-header">
-            <h6 class="mb-0">{{ __('Last 7 Days Performance') }}</h6>
-        </div>
-        <div class="card-body">
-            <canvas id="performanceChart" height="80"></canvas>
-        </div>
-    </div>
-
-    {{-- Recent Campaigns --}}
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0">{{ __('Recent Campaigns') }}</h6>
-            <a href="{{ route('marketplace.vendor.meta-ads.campaigns.index') }}" class="btn btn-sm btn-outline-primary">{{ __('View All') }}</a>
+        <div class="card-header d-flex justify-content-between">
+            <h5 class="mb-0">Recent Campaigns</h5>
+            <a href="{{ route('marketplace.vendor.meta-ads.campaigns.index') }}">View all →</a>
         </div>
         <div class="card-body p-0">
-            @if ($recentCampaigns->isEmpty())
-                <div class="text-center py-4 text-muted">
-                    {{ __('No campaigns yet.') }}
-                    <a href="{{ route('marketplace.vendor.meta-ads.campaigns.create') }}">{{ __('Create your first campaign') }}</a>
+            @if($recentCampaigns->isEmpty())
+                <div class="p-4 text-center text-muted">No campaigns yet.
+                    <a href="{{ route('marketplace.vendor.meta-ads.campaigns.create') }}">Create one →</a>
                 </div>
             @else
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>{{ __('Campaign') }}</th>
-                                <th>{{ __('Status') }}</th>
-                                <th>{{ __('Objective') }}</th>
-                                <th>{{ __('Budget') }}</th>
-                                <th>{{ __('Impressions') }}</th>
-                                <th>{{ __('Clicks') }}</th>
-                                <th>{{ __('Spend') }}</th>
-                            </tr>
-                        </thead>
+                        <thead><tr>
+                            <th>Name</th><th>Objective</th><th>Status</th><th>Spend</th><th>Impressions</th><th>Clicks</th>
+                        </tr></thead>
                         <tbody>
-                            @foreach ($recentCampaigns as $campaign)
+                            @foreach($recentCampaigns as $campaign)
                                 <tr>
                                     <td><a href="{{ route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id) }}">{{ $campaign->name }}</a></td>
-                                    <td>@include(MarketplaceHelper::viewPath('vendor-dashboard.meta-ads.partials.status-badge'), ['status' => $campaign->status])</td>
-                                    <td>{{ str_replace('OUTCOME_', '', $campaign->objective) }}</td>
-                                    <td>₹{{ number_format($campaign->daily_budget ?? $campaign->lifetime_budget ?? 0, 2) }}</td>
+                                    <td>{{ $campaign->objective }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ $campaign->status === 'ACTIVE' ? 'success' : 'secondary' }}">
+                                            {{ $campaign->status }}
+                                        </span>
+                                    </td>
+                                    <td>${{ number_format($campaign->spend, 2) }}</td>
                                     <td>{{ number_format($campaign->impressions) }}</td>
                                     <td>{{ number_format($campaign->clicks) }}</td>
-                                    <td>₹{{ number_format($campaign->spend, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -118,46 +101,4 @@
             @endif
         </div>
     </div>
-@stop
-
-@push('footer')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var ctx = document.getElementById('performanceChart').getContext('2d');
-            var chartData = @json($chartData);
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartData.map(d => d.date),
-                    datasets: [
-                        {
-                            label: 'Impressions',
-                            data: chartData.map(d => d.impressions),
-                            borderColor: '#1877F2',
-                            backgroundColor: 'rgba(24, 119, 242, 0.1)',
-                            fill: true,
-                            tension: 0.3,
-                        },
-                        {
-                            label: 'Clicks',
-                            data: chartData.map(d => d.clicks),
-                            borderColor: '#28a745',
-                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                            fill: true,
-                            tension: 0.3,
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'top' } },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        });
-    </script>
-@endpush
+@endsection

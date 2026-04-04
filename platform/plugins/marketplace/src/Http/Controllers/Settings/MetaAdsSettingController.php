@@ -11,17 +11,16 @@ class MetaAdsSettingController extends SettingController
     {
         $this->pageTitle('Meta Ads Integration');
 
-        $form = MetaAdsSettingForm::create();
-
-        return view('plugins/marketplace::settings.meta-ads', compact('form'));
+        return view('plugins/marketplace::settings.meta-ads', [
+            'form' => MetaAdsSettingForm::create(),
+        ]);
     }
 
     public function update(MetaAdsSettingRequest $request)
     {
         $this->saveSettings($request->validated());
 
-        return $this
-            ->httpResponse()
+        return $this->httpResponse()
             ->setNextUrl(route('marketplace.meta-ads-settings'))
             ->withUpdatedSuccessMessage();
     }

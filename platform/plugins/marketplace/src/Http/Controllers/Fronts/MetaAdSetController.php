@@ -10,83 +10,69 @@ use Illuminate\Http\Request;
 
 class MetaAdSetController extends BaseController
 {
-    protected int $storeId;
+    protected int $storeId = 0;
 
     public function __construct()
     {
-        if (! MarketplaceHelper::isMetaAdsEnabled()) { abort(404); }
-        abort_unless(auth('customer')->check(), 403);
-
-        $this->storeId = auth('customer')->user()->store?->id ?? 0;
-        abort_unless($this->storeId, 403);
+        $this->middleware(function ($request, $next) {
+            if (! MarketplaceHelper::isMetaAdsEnabled()) {
+                return redirect()->route('marketplace.vendor.dashboard')
+                    ->with('error', 'Meta Ads is not enabled.');
+            }
+            $this->storeId = auth('customer')->user()?->store?->id ?? 0;
+            if (! $this->storeId) {
+                return redirect()->route('marketplace.vendor.dashboard')
+                    ->with('error', 'No store found for your account.');
+            }
+            return $next($request);
+        });
     }
 
-    public function index()
-    {
-        $this->pageTitle(__('Meta Ads — Ad Sets'));
-
-        $adSets = MetaAdSet::query()
-            ->where('store_id', $this->storeId)
-            ->where('status', '!=', 'DELETED')
-            ->with('campaign')
-            ->withCount('ads')
-            ->latest()
-            ->paginate(20);
-
-        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.index', compact('adSets'));
-    }
-
-    public function create($campaignId)
+    public function create(int $campaignId)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($campaignId);
 
-        $this->pageTitle(__('Create Ad Set — :campaign', ['campaign' => $campaign->name]));
+        $this->pageTitle('Create Ad Set');
 
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.create', compact('campaign'));
     }
 
-    public function store(Request $request, $campaignId)
+    public function store(Request $request, int $campaignId)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($campaignId);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'daily_budget' => ['required', 'numeric', 'min:1'],
+            'name'                => ['required', 'string', 'max:255'],
+            'daily_budget'        => ['required', 'numeric', 'min:1'],
+            'targeting_age_min'   => ['required', 'integer', 'min:13', 'max:65'],
+            'targeting_age_max'   => ['required', 'integer', 'min:13', 'max:65'],
+            'targeting_genders'   => ['required', 'in:all,male,female'],
+            'optimization_goal'   => ['required', 'in:LINK_CLICKS,IMPRESSIONS,REACH'],
             'targeting_locations' => ['nullable', 'string'],
-            'targeting_age_min' => ['required', 'integer', 'min:13', 'max:65'],
-            'targeting_age_max' => ['required', 'integer', 'min:13', 'max:65', 'gte:targeting_age_min'],
-            'targeting_genders' => ['required', 'in:all,male,female'],
             'targeting_interests' => ['nullable', 'string'],
-            'placements' => ['nullable', 'array'],
-            'placements.*' => ['string', 'in:facebook_feed,instagram_feed,instagram_stories,instagram_reels,audience_network,messenger'],
-            'optimization_goal' => ['required', 'in:LINK_CLICKS,IMPRESSIONS,CONVERSIONS,REACH'],
+            'placements'          => ['nullable', 'array'],
         ]);
 
         $validated['campaign_id'] = $campaign->id;
         $validated['store_id'] = $this->storeId;
         $validated['status'] = 'PAUSED';
-
-        // Convert comma-separated strings to arrays
         $validated['targeting_locations'] = $validated['targeting_locations']
-            ? array_map('trim', explode(',', $validated['targeting_locations']))
-            : [];
+            ? array_map('trim', explode(',', $validated['targeting_locations'])) : [];
         $validated['targeting_interests'] = $validated['targeting_interests']
-            ? array_map('trim', explode(',', $validated['targeting_interests']))
-            : [];
+            ? array_map('trim', explode(',', $validated['targeting_interests'])) : [];
 
         MetaAdSet::query()->create($validated);
 
-        return $this
-            ->httpResponse()
+        return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id))
             ->withCreatedSuccessMessage();
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $adSet = MetaAdSet::query()
             ->where('store_id', $this->storeId)
-            ->with(['campaign', 'ads' => fn ($q) => $q->where('status', '!=', 'DELETED')])
+            ->with(['campaign', 'ads'])
             ->findOrFail($id);
 
         $this->pageTitle($adSet->name);
@@ -94,68 +80,59 @@ class MetaAdSetController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.show', compact('adSet'));
     }
 
-    public function edit($id)
+    public function edit(int $id)
     {
         $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->with('campaign')->findOrFail($id);
 
-        $this->pageTitle(__('Edit Ad Set: :name', ['name' => $adSet->name]));
+        $this->pageTitle('Edit: ' . $adSet->name);
 
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.edit', compact('adSet'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'daily_budget' => ['required', 'numeric', 'min:1'],
+            'name'                => ['required', 'string', 'max:255'],
+            'daily_budget'        => ['required', 'numeric', 'min:1'],
+            'targeting_age_min'   => ['required', 'integer', 'min:13', 'max:65'],
+            'targeting_age_max'   => ['required', 'integer', 'min:13', 'max:65'],
+            'targeting_genders'   => ['required', 'in:all,male,female'],
+            'optimization_goal'   => ['required', 'in:LINK_CLICKS,IMPRESSIONS,REACH'],
             'targeting_locations' => ['nullable', 'string'],
-            'targeting_age_min' => ['required', 'integer', 'min:13', 'max:65'],
-            'targeting_age_max' => ['required', 'integer', 'min:13', 'max:65', 'gte:targeting_age_min'],
-            'targeting_genders' => ['required', 'in:all,male,female'],
             'targeting_interests' => ['nullable', 'string'],
-            'placements' => ['nullable', 'array'],
-            'placements.*' => ['string'],
-            'optimization_goal' => ['required', 'in:LINK_CLICKS,IMPRESSIONS,CONVERSIONS,REACH'],
+            'placements'          => ['nullable', 'array'],
         ]);
 
         $validated['targeting_locations'] = $validated['targeting_locations']
-            ? array_map('trim', explode(',', $validated['targeting_locations']))
-            : [];
+            ? array_map('trim', explode(',', $validated['targeting_locations'])) : [];
         $validated['targeting_interests'] = $validated['targeting_interests']
-            ? array_map('trim', explode(',', $validated['targeting_interests']))
-            : [];
+            ? array_map('trim', explode(',', $validated['targeting_interests'])) : [];
 
         $adSet->update($validated);
 
-        return $this
-            ->httpResponse()
+        return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $adSet->campaign_id))
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
         $campaignId = $adSet->campaign_id;
-        $adSet->update(['status' => 'DELETED']);
+        $adSet->delete();
 
-        return $this
-            ->httpResponse()
+        return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $campaignId))
-            ->setMessage(__('Ad set deleted.'));
+            ->setMessage('Ad set deleted.');
     }
 
-    public function toggleStatus($id)
+    public function toggleStatus(int $id)
     {
         $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $adSet->update(['status' => $adSet->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE']);
 
-        $newStatus = $adSet->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-        $adSet->update(['status' => $newStatus]);
-
-        return $this
-            ->httpResponse()
-            ->setMessage(__('Ad set status changed to :status.', ['status' => $newStatus]));
+        return $this->httpResponse()->setMessage('Ad set status updated.');
     }
 }

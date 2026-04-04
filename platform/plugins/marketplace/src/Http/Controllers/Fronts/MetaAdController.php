@@ -11,36 +11,29 @@ use Illuminate\Http\Request;
 
 class MetaAdController extends BaseController
 {
-    protected int $storeId;
+    protected int $storeId = 0;
 
     public function __construct()
     {
-        if (! MarketplaceHelper::isMetaAdsEnabled()) { abort(404); }
-        abort_unless(auth('customer')->check(), 403);
-
-        $this->storeId = auth('customer')->user()->store?->id ?? 0;
-        abort_unless($this->storeId, 403);
+        $this->middleware(function ($request, $next) {
+            if (! MarketplaceHelper::isMetaAdsEnabled()) {
+                return redirect()->route('marketplace.vendor.dashboard')
+                    ->with('error', 'Meta Ads is not enabled.');
+            }
+            $this->storeId = auth('customer')->user()?->store?->id ?? 0;
+            if (! $this->storeId) {
+                return redirect()->route('marketplace.vendor.dashboard')
+                    ->with('error', 'No store found for your account.');
+            }
+            return $next($request);
+        });
     }
 
-    public function index()
-    {
-        $this->pageTitle(__('Meta Ads — Ads'));
-
-        $ads = MetaAd::query()
-            ->where('store_id', $this->storeId)
-            ->where('status', '!=', 'DELETED')
-            ->with(['adSet.campaign'])
-            ->latest()
-            ->paginate(20);
-
-        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.index', compact('ads'));
-    }
-
-    public function create($adSetId)
+    public function create(int $adSetId)
     {
         $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->with('campaign')->findOrFail($adSetId);
 
-        $this->pageTitle(__('Create Ad — :adset', ['adset' => $adSet->name]));
+        $this->pageTitle('Create Ad');
 
         $products = Product::query()
             ->where('store_id', $this->storeId)
@@ -52,20 +45,20 @@ class MetaAdController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.create', compact('adSet', 'products'));
     }
 
-    public function store(Request $request, $adSetId)
+    public function store(Request $request, int $adSetId)
     {
         $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($adSetId);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'format' => ['required', 'in:SINGLE_IMAGE,CAROUSEL,VIDEO'],
-            'primary_text' => ['required', 'string', 'max:500'],
-            'headline' => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string', 'max:500'],
-            'cta_button' => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
+            'name'            => ['required', 'string', 'max:255'],
+            'format'          => ['required', 'in:SINGLE_IMAGE,CAROUSEL,VIDEO'],
+            'primary_text'    => ['required', 'string', 'max:500'],
+            'headline'        => ['required', 'string', 'max:100'],
+            'description'     => ['nullable', 'string', 'max:500'],
+            'cta_button'      => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
             'destination_url' => ['required', 'url', 'max:500'],
-            'image_url' => ['nullable', 'string', 'max:500'],
-            'product_id' => ['nullable', 'integer', 'exists:ec_products,id'],
+            'image_url'       => ['nullable', 'string', 'max:500'],
+            'product_id'      => ['nullable', 'integer'],
         ]);
 
         $validated['ad_set_id'] = $adSet->id;
@@ -75,13 +68,12 @@ class MetaAdController extends BaseController
 
         MetaAd::query()->create($validated);
 
-        return $this
-            ->httpResponse()
+        return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $adSet->id))
             ->withCreatedSuccessMessage();
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $ad = MetaAd::query()
             ->where('store_id', $this->storeId)
@@ -93,11 +85,11 @@ class MetaAdController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.show', compact('ad'));
     }
 
-    public function edit($id)
+    public function edit(int $id)
     {
-        $ad = MetaAd::query()->where('store_id', $this->storeId)->with('adSet.campaign')->findOrFail($id);
+        $ad = MetaAd::query()->where('store_id', $this->storeId)->with('adSet')->findOrFail($id);
 
-        $this->pageTitle(__('Edit Ad: :name', ['name' => $ad->name]));
+        $this->pageTitle('Edit: ' . $ad->name);
 
         $products = Product::query()
             ->where('store_id', $this->storeId)
@@ -109,55 +101,49 @@ class MetaAdController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.edit', compact('ad', 'products'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $ad = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'format' => ['required', 'in:SINGLE_IMAGE,CAROUSEL,VIDEO'],
-            'primary_text' => ['required', 'string', 'max:500'],
-            'headline' => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string', 'max:500'],
-            'cta_button' => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
+            'name'            => ['required', 'string', 'max:255'],
+            'format'          => ['required', 'in:SINGLE_IMAGE,CAROUSEL,VIDEO'],
+            'primary_text'    => ['required', 'string', 'max:500'],
+            'headline'        => ['required', 'string', 'max:100'],
+            'description'     => ['nullable', 'string', 'max:500'],
+            'cta_button'      => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
             'destination_url' => ['required', 'url', 'max:500'],
-            'image_url' => ['nullable', 'string', 'max:500'],
-            'product_id' => ['nullable', 'integer', 'exists:ec_products,id'],
+            'image_url'       => ['nullable', 'string', 'max:500'],
+            'product_id'      => ['nullable', 'integer'],
         ]);
 
         $ad->update($validated);
 
-        return $this
-            ->httpResponse()
+        return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $ad->ad_set_id))
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $ad = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
         $adSetId = $ad->ad_set_id;
-        $ad->update(['status' => 'DELETED']);
+        $ad->delete();
 
-        return $this
-            ->httpResponse()
+        return $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $adSetId))
-            ->setMessage(__('Ad deleted.'));
+            ->setMessage('Ad deleted.');
     }
 
-    public function toggleStatus($id)
+    public function toggleStatus(int $id)
     {
         $ad = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $ad->update(['status' => $ad->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE']);
 
-        $newStatus = $ad->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-        $ad->update(['status' => $newStatus]);
-
-        return $this
-            ->httpResponse()
-            ->setMessage(__('Ad status changed to :status.', ['status' => $newStatus]));
+        return $this->httpResponse()->setMessage('Ad status updated.');
     }
 
-    public function preview($id)
+    public function preview(int $id)
     {
         $ad = MetaAd::query()
             ->where('store_id', $this->storeId)
