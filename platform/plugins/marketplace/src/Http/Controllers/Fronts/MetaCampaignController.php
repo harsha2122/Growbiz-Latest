@@ -51,7 +51,7 @@ class MetaCampaignController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.create');
     }
 
-    public function store(Request $request, MetaApiClient $metaClient)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'name'            => ['required', 'string', 'max:255'],
@@ -71,6 +71,7 @@ class MetaCampaignController extends BaseController
         $adAccount = $this->getConnectedAccount();
         if ($adAccount) {
             try {
+                $metaClient = app(MetaApiClient::class);
                 $payload = [
                     'name'                            => $campaign->name,
                     'objective'                       => $campaign->objective,
@@ -80,7 +81,7 @@ class MetaCampaignController extends BaseController
                 ];
 
                 if ($campaign->daily_budget) {
-                    $payload['daily_budget'] = (int) ($campaign->daily_budget * 100); // cents
+                    $payload['daily_budget'] = (int) ($campaign->daily_budget * 100);
                 } elseif ($campaign->lifetime_budget) {
                     $payload['lifetime_budget'] = (int) ($campaign->lifetime_budget * 100);
                 }
@@ -123,7 +124,7 @@ class MetaCampaignController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.edit', compact('campaign'));
     }
 
-    public function update(Request $request, int $id, MetaApiClient $metaClient)
+    public function update(Request $request, int $id)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
 
@@ -138,12 +139,11 @@ class MetaCampaignController extends BaseController
 
         $campaign->update($validated);
 
-        // Sync update to Meta API
         if ($campaign->meta_campaign_id) {
             $adAccount = $this->getConnectedAccount();
             if ($adAccount) {
                 try {
-                    $metaClient->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
+                    app(MetaApiClient::class)->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
                         'name'   => $campaign->name,
                         'status' => $campaign->status,
                     ]);
@@ -158,7 +158,7 @@ class MetaCampaignController extends BaseController
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy(int $id, MetaApiClient $metaClient)
+    public function destroy(int $id)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
 
@@ -166,7 +166,7 @@ class MetaCampaignController extends BaseController
             $adAccount = $this->getConnectedAccount();
             if ($adAccount) {
                 try {
-                    $metaClient->deleteCampaign($adAccount->access_token, $campaign->meta_campaign_id);
+                    app(MetaApiClient::class)->deleteCampaign($adAccount->access_token, $campaign->meta_campaign_id);
                 } catch (\Throwable $e) {
                     Log::error('Meta campaign delete API failed', ['error' => $e->getMessage()]);
                 }
@@ -180,7 +180,7 @@ class MetaCampaignController extends BaseController
             ->setMessage('Campaign deleted.');
     }
 
-    public function toggleStatus(int $id, MetaApiClient $metaClient)
+    public function toggleStatus(int $id)
     {
         $campaign  = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
         $newStatus = $campaign->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
@@ -190,7 +190,7 @@ class MetaCampaignController extends BaseController
             $adAccount = $this->getConnectedAccount();
             if ($adAccount) {
                 try {
-                    $metaClient->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
+                    app(MetaApiClient::class)->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
                         'status' => $newStatus,
                     ]);
                 } catch (\Throwable $e) {

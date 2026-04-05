@@ -41,7 +41,7 @@ class MetaAdSetController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.create', compact('campaign'));
     }
 
-    public function store(Request $request, int $campaignId, MetaApiClient $metaClient)
+    public function store(Request $request, int $campaignId)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($campaignId);
 
@@ -68,12 +68,12 @@ class MetaAdSetController extends BaseController
 
         $adSet = MetaAdSet::query()->create($validated);
 
-        // Push to Meta API
         if ($campaign->meta_campaign_id) {
             $adAccount = $this->getConnectedAccount();
             if ($adAccount) {
                 try {
-                    $targeting = $metaClient->buildTargeting([
+                    $metaClient = app(MetaApiClient::class);
+                    $targeting  = $metaClient->buildTargeting([
                         'targeting_age_min'   => $adSet->targeting_age_min,
                         'targeting_age_max'   => $adSet->targeting_age_max,
                         'targeting_genders'   => $adSet->targeting_genders,
@@ -127,7 +127,7 @@ class MetaAdSetController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.edit', compact('adSet'));
     }
 
-    public function update(Request $request, int $id, MetaApiClient $metaClient)
+    public function update(Request $request, int $id)
     {
         $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
 
@@ -154,7 +154,8 @@ class MetaAdSetController extends BaseController
             $adAccount = $this->getConnectedAccount();
             if ($adAccount) {
                 try {
-                    $targeting = $metaClient->buildTargeting([
+                    $metaClient = app(MetaApiClient::class);
+                    $targeting  = $metaClient->buildTargeting([
                         'targeting_age_min'   => $adSet->targeting_age_min,
                         'targeting_age_max'   => $adSet->targeting_age_max,
                         'targeting_genders'   => $adSet->targeting_genders,
@@ -178,16 +179,16 @@ class MetaAdSetController extends BaseController
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy(int $id, MetaApiClient $metaClient)
+    public function destroy(int $id)
     {
-        $adSet     = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $adSet      = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
         $campaignId = $adSet->campaign_id;
 
         if ($adSet->meta_adset_id) {
             $adAccount = $this->getConnectedAccount();
             if ($adAccount) {
                 try {
-                    $metaClient->deleteAdSet($adAccount->access_token, $adSet->meta_adset_id);
+                    app(MetaApiClient::class)->deleteAdSet($adAccount->access_token, $adSet->meta_adset_id);
                 } catch (\Throwable $e) {
                     Log::error('Meta ad set delete API failed', ['error' => $e->getMessage()]);
                 }
@@ -201,7 +202,7 @@ class MetaAdSetController extends BaseController
             ->setMessage('Ad set deleted.');
     }
 
-    public function toggleStatus(int $id, MetaApiClient $metaClient)
+    public function toggleStatus(int $id)
     {
         $adSet     = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
         $newStatus = $adSet->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
@@ -211,7 +212,7 @@ class MetaAdSetController extends BaseController
             $adAccount = $this->getConnectedAccount();
             if ($adAccount) {
                 try {
-                    $metaClient->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, [
+                    app(MetaApiClient::class)->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, [
                         'status' => $newStatus,
                     ]);
                 } catch (\Throwable $e) {
