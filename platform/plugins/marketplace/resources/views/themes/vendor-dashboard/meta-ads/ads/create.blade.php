@@ -19,12 +19,10 @@
                 @if($products->isNotEmpty())
                     <div class="mb-3">
                         <label class="form-label">Link to Product (optional)</label>
-                        <select name="product_id" class="form-select" id="productSelect">
+                        <select name="product_id" class="form-select">
                             <option value="">— Select a product —</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->id }}"
-                                    data-url="{{ $product->url ?? '' }}"
-                                    {{ old('product_id') == $product->id ? 'selected' : '' }}>
+                                <option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>
                                     {{ $product->name }}
                                 </option>
                             @endforeach
@@ -79,12 +77,4 @@
         </div>
     </div>
 
-    @if($products->isNotEmpty())
-    <script>
-        document.getElementById('productSelect')?.addEventListener('change', function() {
-            const url = this.options[this.selectedIndex].dataset.url;
-            if (url) document.getElementById('destinationUrl').value = url;
-        });
-    </script>
-    @endif
 @endsection
