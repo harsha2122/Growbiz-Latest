@@ -9,6 +9,7 @@ use Botble\Marketplace\Models\MetaAd;
 use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Models\MetaAdSet;
 use Botble\Marketplace\Services\MetaApiClient;
+use Botble\Media\Facades\RvMedia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -61,27 +62,45 @@ class MetaAdController extends BaseController
             'description'     => ['nullable', 'string', 'max:500'],
             'cta_button'      => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
             'destination_url' => ['required', 'url', 'max:500'],
-            'image_url'       => ['nullable', 'string', 'max:500'],
+            'creative_file'   => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi', 'max:102400'],
             'product_id'      => ['nullable', 'integer'],
         ]);
+
+        // Handle file upload
+        $imageUrl = null;
+        if ($request->hasFile('creative_file') && $request->file('creative_file')->isValid()) {
+            $customer     = auth('customer')->user();
+            $uploadFolder = $customer->upload_folder ?? 'meta-ads';
+            $result       = RvMedia::handleUpload($request->file('creative_file'), 0, $uploadFolder);
+
+            if (! $result['error']) {
+                $imageUrl = $result['data']->url;
+            } else {
+                return back()->withErrors(['creative_file' => 'Upload failed: ' . $result['message']])->withInput();
+            }
+        }
 
         $validated['ad_set_id']   = $adSet->id;
         $validated['campaign_id'] = $adSet->campaign_id;
         $validated['store_id']    = $this->storeId;
         $validated['status']      = 'IN_REVIEW';
+        $validated['image_url']   = $imageUrl;
+        unset($validated['creative_file']);
 
         $ad = MetaAd::query()->create($validated);
 
+        // Push to Meta API
         if ($adSet->meta_adset_id) {
             $adAccount = $this->getConnectedAccount();
             if ($adAccount && $adAccount->fb_page_id) {
                 try {
                     $metaClient = app(MetaApiClient::class);
-                    $imageUrl   = $ad->image_url;
 
-                    if (! $imageUrl && $ad->product_id) {
-                        $product  = Product::find($ad->product_id);
-                        $imageUrl = $product?->image ? asset('storage/' . $product->image) : null;
+                    // Use uploaded file URL or fallback to product image
+                    $creativeUrl = $ad->image_url;
+                    if (! $creativeUrl && $ad->product_id) {
+                        $product     = Product::find($ad->product_id);
+                        $creativeUrl = $product?->image ? RvMedia::getImageUrl($product->image) : null;
                     }
 
                     $creativeResult = $metaClient->createAdCreative(
@@ -96,7 +115,7 @@ class MetaAdController extends BaseController
                                     'message'        => $ad->primary_text,
                                     'name'           => $ad->headline,
                                     'description'    => $ad->description,
-                                    'image_url'      => $imageUrl,
+                                    'image_url'      => $creativeUrl,
                                     'call_to_action' => [
                                         'type'  => $ad->cta_button,
                                         'value' => ['link' => $ad->destination_url],
@@ -177,10 +196,24 @@ class MetaAdController extends BaseController
             'description'     => ['nullable', 'string', 'max:500'],
             'cta_button'      => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
             'destination_url' => ['required', 'url', 'max:500'],
-            'image_url'       => ['nullable', 'string', 'max:500'],
+            'creative_file'   => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi', 'max:102400'],
             'product_id'      => ['nullable', 'integer'],
         ]);
 
+        // Handle file upload on edit
+        if ($request->hasFile('creative_file') && $request->file('creative_file')->isValid()) {
+            $customer     = auth('customer')->user();
+            $uploadFolder = $customer->upload_folder ?? 'meta-ads';
+            $result       = RvMedia::handleUpload($request->file('creative_file'), 0, $uploadFolder);
+
+            if (! $result['error']) {
+                $validated['image_url'] = $result['data']->url;
+            } else {
+                return back()->withErrors(['creative_file' => 'Upload failed: ' . $result['message']])->withInput();
+            }
+        }
+
+        unset($validated['creative_file']);
         $ad->update($validated);
 
         if ($ad->meta_ad_id) {
