@@ -10,18 +10,21 @@ return new class () extends Migration {
         if (Schema::hasTable('meta_ad_accounts')) {
             Schema::table('meta_ad_accounts', function (Blueprint $table) {
                 if (! Schema::hasColumn('meta_ad_accounts', 'fb_page_id')) {
-                    $table->string('fb_page_id')->nullable()->after('ad_account_name');
+                    $table->string('fb_page_id')->nullable();
                 }
                 if (! Schema::hasColumn('meta_ad_accounts', 'fb_page_name')) {
-                    $table->string('fb_page_name')->nullable()->after('fb_page_id');
+                    $table->string('fb_page_name')->nullable();
                 }
             });
         }
 
         if (Schema::hasTable('meta_ads')) {
             Schema::table('meta_ads', function (Blueprint $table) {
+                if (! Schema::hasColumn('meta_ads', 'meta_ad_id')) {
+                    $table->string('meta_ad_id')->nullable();
+                }
                 if (! Schema::hasColumn('meta_ads', 'meta_creative_id')) {
-                    $table->string('meta_creative_id')->nullable()->after('meta_ad_id');
+                    $table->string('meta_creative_id')->nullable();
                 }
             });
         }
