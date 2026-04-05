@@ -43,7 +43,7 @@ class MetaAdController extends BaseController
             ->where('store_id', $this->storeId)
             ->where('is_variation', 0)
             ->wherePublished()
-            ->select('id', 'name', 'image', 'price')
+            ->select('id', 'name', 'image', 'price', 'slug')
             ->get();
 
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.create', compact('adSet', 'products'));
@@ -159,7 +159,7 @@ class MetaAdController extends BaseController
             ->where('store_id', $this->storeId)
             ->where('is_variation', 0)
             ->wherePublished()
-            ->select('id', 'name', 'image', 'price')
+            ->select('id', 'name', 'image', 'price', 'slug')
             ->get();
 
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.edit', compact('ad', 'products'));
