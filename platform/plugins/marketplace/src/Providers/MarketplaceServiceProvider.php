@@ -25,6 +25,7 @@ use Botble\Ecommerce\Models\SpecificationTable;
 use Botble\Ecommerce\PanelSections\SettingEcommercePanelSection;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Botble\Marketplace\Commands\DiagnoseVendorDocuments;
+use Botble\Marketplace\Commands\RefreshMetaTokensCommand;
 use Botble\Marketplace\Commands\SyncMetaInsightsCommand;
 use Botble\Marketplace\Commands\SyncVendorDocuments;
 use Botble\Marketplace\Services\MetaApiClient;
@@ -112,11 +113,14 @@ class MarketplaceServiceProvider extends ServiceProvider
                 SyncVendorDocuments::class,
                 DiagnoseVendorDocuments::class,
                 SyncMetaInsightsCommand::class,
+                RefreshMetaTokensCommand::class,
             ]);
         }
 
         $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
             $schedule->command('meta-ads:sync-insights')->dailyAt('03:00');
+            // FIX #3: Refresh tokens every 30 days (catches expiring tokens 15 days early)
+            $schedule->command('meta-ads:refresh-tokens')->monthlyOn(1, '02:00');
         });
 
         if (defined('LANGUAGE_MODULE_SCREEN_NAME') && defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME')) {

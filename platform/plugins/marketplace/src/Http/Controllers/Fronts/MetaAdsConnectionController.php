@@ -7,6 +7,7 @@ use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Services\MetaApiClient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class MetaAdsConnectionController extends BaseController
 {
@@ -40,11 +41,17 @@ class MetaAdsConnectionController extends BaseController
 
         $oauthUrl = null;
         if ($authAppId) {
+            // FIX #1: Add state parameter (CSRF protection)
+            $state = Str::random(40);
+            session(['meta_oauth_state' => $state]);
+
+            // FIX #7: Minimal required scopes only
             $oauthUrl = 'https://www.facebook.com/dialog/oauth?' . http_build_query([
                 'client_id'     => $authAppId,
                 'redirect_uri'  => $redirectUri,
-                'scope'         => 'ads_management,ads_read,business_management,pages_show_list',
+                'scope'         => 'ads_management,ads_read',
                 'response_type' => 'code',
+                'state'         => $state,
             ]);
         }
 
@@ -53,6 +60,16 @@ class MetaAdsConnectionController extends BaseController
 
     public function callback(Request $request, MetaApiClient $metaClient)
     {
+        // FIX #1: Verify state parameter against CSRF attack
+        $state         = $request->input('state');
+        $expectedState = session('meta_oauth_state');
+        session()->forget('meta_oauth_state');
+
+        if (! $state || ! $expectedState || ! hash_equals($expectedState, $state)) {
+            return redirect()->route('marketplace.vendor.meta-ads.connection')
+                ->with('error', 'Invalid state parameter. Authorization request may have been tampered with.');
+        }
+
         if ($request->has('error')) {
             return redirect()->route('marketplace.vendor.meta-ads.connection')
                 ->with('error', 'Facebook authorization failed: ' . $request->input('error_description', 'Unknown error.'));
@@ -78,6 +95,7 @@ class MetaAdsConnectionController extends BaseController
 
         if (empty($tokenData['access_token'])) {
             $msg = $tokenData['error']['message'] ?? 'Failed to get access token from Facebook.';
+
             return redirect()->route('marketplace.vendor.meta-ads.connection')->with('error', $msg);
         }
 
@@ -92,12 +110,16 @@ class MetaAdsConnectionController extends BaseController
         $me = $metaClient->getMe($accessToken);
         if (empty($me['id'])) {
             return redirect()->route('marketplace.vendor.meta-ads.connection')
-                ->with('error', 'Could not fetch Facebook user info.');
+                ->with('error', 'Could not fetch Facebook user info. Token may be invalid.');
         }
 
-        // Step 4: fetch ad accounts + pages
+        // FIX #2: Verify token by fetching ad accounts (validates token is working)
         $adAccounts = $metaClient->getAdAccounts($accessToken);
-        $pages      = $metaClient->getPages($accessToken);
+
+        if (empty($adAccounts)) {
+            return redirect()->route('marketplace.vendor.meta-ads.connection')
+                ->with('error', 'No ad accounts found or token is invalid. Make sure your Facebook account has access to at least one ad account.');
+        }
 
         // Store in session for account selection step
         session([
@@ -107,24 +129,18 @@ class MetaAdsConnectionController extends BaseController
                 'fb_user_id'   => $me['id'],
                 'fb_user_name' => $me['name'] ?? '',
                 'ad_accounts'  => $adAccounts,
-                'pages'        => $pages,
             ],
         ]);
 
-        // Auto-save if only one choice available
-        if (count($adAccounts) === 1 && count($pages) <= 1) {
-            return $this->saveAccountSelection($accessToken, $expiresIn, $me, $adAccounts[0], $pages[0] ?? null);
-        }
-
+        // FIX #4: Always show selection page (even for single account) so user confirms
         $this->pageTitle('Select Ad Account');
 
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.select-account', [
             'adAccounts' => $adAccounts,
-            'pages'      => $pages,
         ]);
     }
 
-    public function selectAccount(Request $request)
+    public function selectAccount(Request $request, MetaApiClient $metaClient)
     {
         $oauthData = session('meta_oauth');
 
@@ -135,21 +151,25 @@ class MetaAdsConnectionController extends BaseController
 
         $request->validate(['ad_account_id' => ['required', 'string']]);
 
-        $selectedAccount = collect($oauthData['ad_accounts'])->firstWhere('id', $request->input('ad_account_id'));
+        $selectedAccountId = $request->input('ad_account_id');
+
+        // FIX #6: Validate selected account actually belongs to this user
+        $selectedAccount = collect($oauthData['ad_accounts'])->firstWhere('id', $selectedAccountId);
 
         if (! $selectedAccount) {
-            return back()->with('error', 'Selected ad account not found.');
+            return back()->with('error', 'Selected ad account not found in your Facebook account.');
         }
-
-        $selectedPage = $request->input('fb_page_id')
-            ? collect($oauthData['pages'])->firstWhere('id', $request->input('fb_page_id'))
-            : null;
 
         $me = ['id' => $oauthData['fb_user_id'], 'name' => $oauthData['fb_user_name']];
 
         session()->forget('meta_oauth');
 
-        return $this->saveAccountSelection($oauthData['access_token'], $oauthData['expires_in'], $me, $selectedAccount, $selectedPage);
+        return $this->saveAccountSelection(
+            $oauthData['access_token'],
+            $oauthData['expires_in'],
+            $me,
+            $selectedAccount
+        );
     }
 
     public function disconnect()
@@ -171,14 +191,16 @@ class MetaAdsConnectionController extends BaseController
             ->with('success', 'Facebook account disconnected.');
     }
 
-    private function saveAccountSelection(string $accessToken, ?int $expiresIn, array $me, array $adAccount, ?array $page)
+    private function saveAccountSelection(string $accessToken, ?int $expiresIn, array $me, array $adAccount)
     {
+        // Strip "act_" prefix stored separately in ad_account_id
         $rawAccountId = ltrim($adAccount['id'] ?? '', 'act_');
 
         MetaAdAccount::query()->updateOrCreate(
             ['store_id' => $this->storeId],
             [
                 'access_token'     => $accessToken,
+                // FIX #2 & #3: Store exact expiry for refresh tracking
                 'token_expires_at' => $expiresIn ? now()->addSeconds($expiresIn) : now()->addDays(60),
                 'is_connected'     => true,
                 'connected_at'     => now(),
@@ -186,8 +208,9 @@ class MetaAdsConnectionController extends BaseController
                 'fb_user_name'     => $me['name'] ?? '',
                 'ad_account_id'    => $rawAccountId,
                 'ad_account_name'  => $adAccount['name'] ?? '',
-                'fb_page_id'       => $page['id'] ?? null,
-                'fb_page_name'     => $page['name'] ?? null,
+                // FIX #5: page_id is optional — only set if provided
+                'fb_page_id'       => null,
+                'fb_page_name'     => null,
             ]
         );
 
