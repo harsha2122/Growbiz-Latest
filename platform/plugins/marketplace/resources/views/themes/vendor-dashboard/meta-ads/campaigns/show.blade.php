@@ -23,11 +23,11 @@
         </div></div>
         <div class="col-sm-4"><div class="card card-body">
             <div class="text-muted small">Status</div>
-            <span class="badge bg-{{ $campaign->status === 'ACTIVE' ? 'success' : 'secondary' }}">{{ $campaign->status }}</span>
+            <span class="badge bg-{{ $campaign->status === 'ACTIVE' ? 'success' : 'warning' }} text-dark">{{ $campaign->status }}</span>
         </div></div>
         <div class="col-sm-4"><div class="card card-body">
             <div class="text-muted small">Total Spend</div>
-            <strong>${{ number_format($campaign->spend, 2) }}</strong>
+            <strong>₹{{ number_format($campaign->spend, 2) }}</strong>
         </div></div>
     </div>
 
@@ -47,8 +47,8 @@
                             @foreach($campaign->adSets as $adSet)
                                 <tr>
                                     <td><a href="{{ route('marketplace.vendor.meta-ads.ad-sets.show', $adSet->id) }}">{{ $adSet->name }}</a></td>
-                                    <td><span class="badge bg-{{ $adSet->status === 'ACTIVE' ? 'success' : 'secondary' }}">{{ $adSet->status }}</span></td>
-                                    <td>${{ $adSet->daily_budget }}</td>
+                                    <td><span class="badge bg-{{ $adSet->status === 'ACTIVE' ? 'success' : 'warning' }} text-dark">{{ $adSet->status }}</span></td>
+                                    <td>₹{{ $adSet->daily_budget }}</td>
                                     <td>{{ $adSet->ads_count }}</td>
                                     <td>
                                         <div class="d-flex gap-1">
