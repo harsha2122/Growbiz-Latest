@@ -63,7 +63,8 @@ class MetaCampaignController extends BaseController
         ]);
 
         $validated['store_id'] = $this->storeId;
-        $validated['status']   = 'PAUSED';
+        $validated['status']        = 'PAUSED';
+        $validated['ad_account_id'] = 0;
 
         $campaign = MetaCampaign::query()->create($validated);
 
