@@ -36,18 +36,19 @@ class MetaAdsConnectionController extends BaseController
 
         $adAccount = MetaAdAccount::query()->where('store_id', $this->storeId)->first();
 
-        $authAppId   = MarketplaceHelper::getMetaAdsAuthAppId();
+        // Prefer Marketing App for OAuth (it has Marketing API product).
+        // Fall back to Auth App if Marketing App is not configured.
+        $appId       = MarketplaceHelper::getMetaAdsMarketingAppId() ?: MarketplaceHelper::getMetaAdsAuthAppId();
         $redirectUri = route('marketplace.vendor.meta-ads.callback');
 
         $oauthUrl = null;
-        if ($authAppId) {
-            // FIX #1: Add state parameter (CSRF protection)
+        if ($appId) {
+            // CSRF protection: state parameter
             $state = Str::random(40);
             session(['meta_oauth_state' => $state]);
 
-            // FIX #7: Minimal required scopes only
             $oauthUrl = 'https://www.facebook.com/dialog/oauth?' . http_build_query([
-                'client_id'     => $authAppId,
+                'client_id'     => $appId,
                 'redirect_uri'  => $redirectUri,
                 'scope'         => 'ads_management,ads_read',
                 'response_type' => 'code',
@@ -81,8 +82,11 @@ class MetaAdsConnectionController extends BaseController
                 ->with('error', 'No authorization code received from Facebook.');
         }
 
-        $appId       = MarketplaceHelper::getMetaAdsAuthAppId();
-        $appSecret   = MarketplaceHelper::getMetaAdsAuthAppSecret();
+        // Use same app that was used for OAuth (Marketing App preferred, fallback to Auth App)
+        $appId       = MarketplaceHelper::getMetaAdsMarketingAppId() ?: MarketplaceHelper::getMetaAdsAuthAppId();
+        $appSecret   = MarketplaceHelper::getMetaAdsMarketingAppId()
+            ? MarketplaceHelper::getMetaAdsMarketingAppSecret()
+            : MarketplaceHelper::getMetaAdsAuthAppSecret();
         $redirectUri = route('marketplace.vendor.meta-ads.callback');
 
         if (! $appId || ! $appSecret) {
@@ -102,7 +106,7 @@ class MetaAdsConnectionController extends BaseController
 
         $shortToken = $tokenData['access_token'];
 
-        // Step 2: extend to long-lived token (~60 days)
+        // Step 2: extend to long-lived token (~60 days) using same app credentials
         $longTokenData = $metaClient->extendToken($shortToken, $appId, $appSecret);
         $accessToken   = $longTokenData['access_token'] ?? $shortToken;
         $expiresIn     = $longTokenData['expires_in'] ?? ($tokenData['expires_in'] ?? null);

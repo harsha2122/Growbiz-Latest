@@ -15,8 +15,11 @@ class RefreshMetaTokensCommand extends Command
 
     public function handle(MetaApiClient $client): int
     {
-        $appId     = MarketplaceHelper::getMetaAdsAuthAppId();
-        $appSecret = MarketplaceHelper::getMetaAdsAuthAppSecret();
+        // Use Marketing App credentials if configured, else fall back to Auth App
+        $appId     = MarketplaceHelper::getMetaAdsMarketingAppId() ?: MarketplaceHelper::getMetaAdsAuthAppId();
+        $appSecret = MarketplaceHelper::getMetaAdsMarketingAppId()
+            ? MarketplaceHelper::getMetaAdsMarketingAppSecret()
+            : MarketplaceHelper::getMetaAdsAuthAppSecret();
 
         if (! $appId || ! $appSecret) {
             $this->error('Meta Ads App credentials not configured.');
