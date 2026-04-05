@@ -72,10 +72,11 @@ class MetaCampaignController extends BaseController
         if ($adAccount) {
             try {
                 $payload = [
-                    'name'                  => $campaign->name,
-                    'objective'             => $campaign->objective,
-                    'status'                => 'PAUSED',
-                    'special_ad_categories' => [],
+                    'name'                            => $campaign->name,
+                    'objective'                       => $campaign->objective,
+                    'status'                          => 'PAUSED',
+                    'special_ad_categories'           => [],
+                    'is_adset_budget_sharing_enabled' => false,
                 ];
 
                 if ($campaign->daily_budget) {
