@@ -11,6 +11,15 @@
     @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
 
+    <div class="alert alert-info d-flex align-items-start gap-2 mb-3">
+        <i class="ti ti-info-circle fs-5 mt-1"></i>
+        <div>
+            <strong>Payment notice:</strong> Campaigns are created as <strong>PAUSED</strong> by default. Meta will only charge your ad account (INR) once you activate a campaign and it starts running.
+            Ensure your ad account has a payment method at
+            <a href="https://business.facebook.com/billing" target="_blank" class="alert-link">Meta Business Manager →</a>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body p-0">
             @if($campaigns->isEmpty())
@@ -32,9 +41,9 @@
                                     <td><small>{{ str_replace('OUTCOME_', '', $campaign->objective) }}</small></td>
                                     <td>
                                         @if($campaign->daily_budget)
-                                            ${{ $campaign->daily_budget }}/day
+                                            ₹{{ $campaign->daily_budget }}/day
                                         @elseif($campaign->lifetime_budget)
-                                            ${{ $campaign->lifetime_budget }} total
+                                            ₹{{ $campaign->lifetime_budget }} total
                                         @else —
                                         @endif
                                     </td>
@@ -44,7 +53,7 @@
                                         </span>
                                     </td>
                                     <td>{{ $campaign->ad_sets_count }}</td>
-                                    <td>${{ number_format($campaign->spend, 2) }}</td>
+                                    <td>₹{{ number_format($campaign->spend, 2) }}</td>
                                     <td>{{ number_format($campaign->impressions) }}</td>
                                     <td>{{ number_format($campaign->clicks) }}</td>
                                     <td>

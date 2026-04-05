@@ -25,9 +25,25 @@
             Connected as <strong>{{ $adAccount->fb_user_name }}</strong>
             @if($adAccount->ad_account_name)
                 · Ad Account: <strong>{{ $adAccount->ad_account_name }}</strong>
+                @if($adAccount->token_expires_at)
+                    · Token expires: <strong>{{ $adAccount->token_expires_at->format('d M Y') }}</strong>
+                @endif
             @endif
         </div>
     @endif
+
+    {{-- Payment Notice --}}
+    <div class="alert alert-info d-flex align-items-start gap-2">
+        <i class="ti ti-info-circle fs-5 mt-1"></i>
+        <div>
+            <strong>Before activating any campaign:</strong>
+            Make sure your Facebook Ad Account has a valid payment method set up.
+            Meta will charge your ad account in <strong>INR</strong> as your ads run.
+            <a href="https://business.facebook.com/billing" target="_blank" class="alert-link ms-1">
+                Set up payment method on Meta →
+            </a>
+        </div>
+    </div>
 
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-3">
@@ -50,7 +66,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="text-muted mb-1">Total Spend</div>
-                    <h3 class="mb-0">${{ number_format($totalSpend, 2) }}</h3>
+                    <h3 class="mb-0">₹{{ number_format($totalSpend, 2) }}</h3>
                 </div>
             </div>
         </div>
@@ -90,7 +106,7 @@
                                             {{ $campaign->status }}
                                         </span>
                                     </td>
-                                    <td>${{ number_format($campaign->spend, 2) }}</td>
+                                    <td>₹{{ number_format($campaign->spend, 2) }}</td>
                                     <td>{{ number_format($campaign->impressions) }}</td>
                                     <td>{{ number_format($campaign->clicks) }}</td>
                                 </tr>
