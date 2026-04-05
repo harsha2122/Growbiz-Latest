@@ -58,7 +58,7 @@ class MetaAdsConnectionController extends BaseController
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.connection', compact('adAccount', 'oauthUrl'));
     }
 
-    public function callback(Request $request, MetaApiClient $metaClient)
+    public function callback(Request $request)
     {
         // FIX #1: Verify state parameter against CSRF attack
         $state         = $request->input('state');
@@ -91,6 +91,7 @@ class MetaAdsConnectionController extends BaseController
         }
 
         // Step 1: exchange code for short-lived token
+        $metaClient = app(MetaApiClient::class);
         $tokenData = $metaClient->exchangeCodeForToken($code, $appId, $appSecret, $redirectUri);
 
         if (empty($tokenData['access_token'])) {
@@ -140,7 +141,7 @@ class MetaAdsConnectionController extends BaseController
         ]);
     }
 
-    public function selectAccount(Request $request, MetaApiClient $metaClient)
+    public function selectAccount(Request $request)
     {
         $oauthData = session('meta_oauth');
 
