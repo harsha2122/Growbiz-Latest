@@ -75,6 +75,25 @@ class MetaApiClient
     }
 
     /**
+     * Get details for a single ad account including payment/status info.
+     * Returns: account_status (int), funding_source_details, currency, disable_reason
+     */
+    public function getAdAccountDetails(string $accessToken, string $adAccountId): array
+    {
+        try {
+            $response = Http::get("{$this->baseUrl}/act_{$adAccountId}", [
+                'access_token' => $accessToken,
+                'fields'       => 'id,name,account_status,disable_reason,currency,funding_source_details',
+            ]);
+
+            return $response->json() ?? [];
+        } catch (\Throwable $e) {
+            Log::error('MetaApiClient::getAdAccountDetails failed', ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
+
+    /**
      * Get all ad accounts the user has access to.
      */
     public function getAdAccounts(string $accessToken): array

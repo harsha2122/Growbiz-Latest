@@ -11,14 +11,39 @@
     @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
 
-    <div class="alert alert-info d-flex align-items-start gap-2 mb-3">
-        <i class="ti ti-info-circle fs-5 mt-1"></i>
-        <div>
-            <strong>Payment notice:</strong> Campaigns are created as <strong>PAUSED</strong> by default. Meta will only charge your ad account (INR) once you activate a campaign and it starts running.
-            Ensure your ad account has a payment method at
-            <a href="https://business.facebook.com/billing" target="_blank" class="alert-link">Meta Business Manager →</a>
+    {{-- Payment / Account Status Notice --}}
+    @if($hasPaymentMethod === false)
+        <div class="alert alert-danger d-flex align-items-start gap-2 mb-3">
+            <i class="ti ti-credit-card-off fs-5 mt-1 flex-shrink-0"></i>
+            <div>
+                <strong>No payment method on your ad account.</strong>
+                Campaigns saved here will NOT be sent to Meta until you add a payment method.
+                <a href="https://adsmanager.facebook.com/billing" target="_blank" class="alert-link fw-semibold ms-1">
+                    Add payment method →
+                </a>
+                <div class="mt-1 small text-muted">Ads Manager → Account Overview → Set up billing → Add card/UPI</div>
+            </div>
         </div>
-    </div>
+    @elseif($accountStatus === 3)
+        <div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
+            <i class="ti ti-alert-triangle fs-5 mt-1 flex-shrink-0"></i>
+            <div>
+                <strong>Unpaid balance on your ad account.</strong> Campaigns are paused.
+                <a href="https://adsmanager.facebook.com/billing" target="_blank" class="alert-link ms-1">Settle payment →</a>
+            </div>
+        </div>
+    @else
+        <div class="alert alert-info d-flex align-items-start gap-2 mb-3">
+            <i class="ti ti-info-circle fs-5 mt-1 flex-shrink-0"></i>
+            <div>
+                Campaigns are created as <strong>PAUSED</strong> by default. Meta charges your account (INR) only when a campaign is active.
+                @if($hasPaymentMethod !== true)
+                    Ensure your ad account has a payment method at
+                    <a href="https://adsmanager.facebook.com/billing" target="_blank" class="alert-link">Meta Ads Manager →</a>
+                @endif
+            </div>
+        </div>
+    @endif
 
     <div class="card">
         <div class="card-body p-0">

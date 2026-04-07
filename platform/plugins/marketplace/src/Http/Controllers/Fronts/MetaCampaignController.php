@@ -41,7 +41,24 @@ class MetaCampaignController extends BaseController
             ->latest()
             ->paginate(20);
 
-        return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.index', compact('campaigns'));
+        // Live check: payment method
+        $hasPaymentMethod = null;
+        $accountStatus    = null;
+        $adAccount        = $this->getConnectedAccount();
+
+        if ($adAccount) {
+            $details = app(MetaApiClient::class)
+                ->getAdAccountDetails($adAccount->access_token, $adAccount->ad_account_id);
+
+            if (! empty($details['account_status'])) {
+                $accountStatus    = (int) $details['account_status'];
+                $hasPaymentMethod = ! empty($details['funding_source_details']);
+            }
+        }
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.index', compact(
+            'campaigns', 'hasPaymentMethod', 'accountStatus'
+        ));
     }
 
     public function create()
