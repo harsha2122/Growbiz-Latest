@@ -138,7 +138,7 @@
                             @foreach($recentCampaigns as $campaign)
                                 <tr>
                                     <td><a href="{{ route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id) }}">{{ $campaign->name }}</a></td>
-                                    <td>{{ $campaign->objective }}</td>
+                                    <td>{{ str_replace('OUTCOME_', '', $campaign->objective) }}</td>
                                     <td>
                                         <span class="badge bg-{{ $campaign->status === 'ACTIVE' ? 'success' : 'secondary' }}">
                                             {{ $campaign->status }}
