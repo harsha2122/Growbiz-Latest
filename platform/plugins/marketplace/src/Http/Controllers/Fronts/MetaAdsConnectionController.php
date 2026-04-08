@@ -50,7 +50,7 @@ class MetaAdsConnectionController extends BaseController
             $oauthUrl = 'https://www.facebook.com/dialog/oauth?' . http_build_query([
                 'client_id'     => $appId,
                 'redirect_uri'  => $redirectUri,
-                'scope'         => 'ads_management,ads_read',
+                'scope'         => 'ads_management,ads_read,pages_show_list',
                 'response_type' => 'code',
                 'state'         => $state,
             ]);
