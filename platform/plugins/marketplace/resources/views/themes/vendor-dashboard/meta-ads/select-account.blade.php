@@ -54,13 +54,19 @@
                 </p>
 
                 @if(empty($pages))
-                    <div class="alert alert-warning d-flex gap-2">
-                        <i class="ti ti-alert-triangle mt-1"></i>
+                    <div class="alert alert-danger d-flex gap-2">
+                        <i class="ti ti-alert-triangle mt-1 flex-shrink-0"></i>
                         <div>
-                            <strong>No Facebook Pages found</strong> on your account.
-                            You can still connect now, but you won't be able to create ads until you
-                            <a href="https://www.facebook.com/pages/create" target="_blank">create a Facebook Page</a>
-                            and reconnect.
+                            <strong>No Facebook Pages found on your account.</strong>
+                            A Facebook Page is required to publish ads on Meta — your personal profile is not sufficient.
+                            <hr class="my-2">
+                            <strong>How to create one (takes 2 minutes):</strong>
+                            <ol class="mb-1 mt-1">
+                                <li>Go to <a href="https://www.facebook.com/pages/create" target="_blank" class="alert-link">facebook.com/pages/create</a></li>
+                                <li>Enter your business/store name and choose a category</li>
+                                <li>Click Create Page — done!</li>
+                            </ol>
+                            After creating the Page, come back here and <strong>Disconnect → Connect with Facebook</strong> again.
                         </div>
                     </div>
                 @else

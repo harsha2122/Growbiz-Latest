@@ -30,11 +30,21 @@
                     <p class="mb-1">Facebook Page: <strong>{{ $adAccount->fb_page_name }}</strong>
                         <span class="text-muted">({{ $adAccount->fb_page_id }})</span></p>
                 @else
-                    <div class="alert alert-warning d-flex gap-2 mt-3">
+                    <div class="alert alert-danger d-flex gap-2 mt-3">
                         <i class="ti ti-alert-triangle mt-1 flex-shrink-0"></i>
                         <div>
-                            <strong>No Facebook Page linked.</strong>
-                            Ads cannot be pushed to Meta without a Page. Disconnect and reconnect to select your Facebook Page.
+                            <strong>No Facebook Page linked — ads cannot be created.</strong>
+                            Meta requires a Facebook Page to publish ads (your personal profile is not enough).
+                            <div class="mt-2">
+                                Don't have a Page?
+                                <a href="https://www.facebook.com/pages/create" target="_blank" class="alert-link fw-semibold">
+                                    Create a free Facebook Page →
+                                </a>
+                                (takes 2 minutes)
+                            </div>
+                            <div class="mt-1">
+                                Already have a Page? Disconnect and reconnect below to select it.
+                            </div>
                         </div>
                     </div>
                 @endif
