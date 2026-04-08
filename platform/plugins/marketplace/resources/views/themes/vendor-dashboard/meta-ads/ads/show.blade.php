@@ -34,8 +34,8 @@
             <div class="card">
                 <div class="card-header">Performance</div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Impressions</span><strong>{{ number_format($ad->impressions) }}</strong></div>
-                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Clicks</span><strong>{{ number_format($ad->clicks) }}</strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Impressions</span><strong>{{ number_format((int)($ad->impressions ?? 0)) }}</strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Clicks</span><strong>{{ number_format((int)($ad->clicks ?? 0)) }}</strong></div>
                     <div class="d-flex justify-content-between mb-2"><span class="text-muted">CTR</span><strong>{{ $ad->ctr }}%</strong></div>
                     <div class="d-flex justify-content-between mb-2"><span class="text-muted">Spend</span><strong>${{ $ad->spend }}</strong></div>
                     <div class="d-flex justify-content-between"><span class="text-muted">CPC</span><strong>${{ $ad->cpc }}</strong></div>

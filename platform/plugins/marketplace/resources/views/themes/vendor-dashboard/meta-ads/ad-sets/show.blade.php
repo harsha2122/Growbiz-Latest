@@ -100,8 +100,8 @@
                                             </form>
                                         @endif
                                     </td>
-                                    <td>{{ number_format($ad->impressions) }}</td>
-                                    <td>{{ number_format($ad->clicks) }}</td>
+                                    <td>{{ number_format((int)($ad->impressions ?? 0)) }}</td>
+                                    <td>{{ number_format((int)($ad->clicks ?? 0)) }}</td>
                                     <td>
                                         <div class="d-flex gap-1">
                                             <a href="{{ route('marketplace.vendor.meta-ads.ads.preview', $ad->id) }}" class="btn btn-sm btn-outline-info">Preview</a>

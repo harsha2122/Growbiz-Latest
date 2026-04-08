@@ -27,7 +27,7 @@
         </div></div>
         <div class="col-sm-4"><div class="card card-body">
             <div class="text-muted small">Total Spend</div>
-            <strong>₹{{ number_format($campaign->spend, 2) }}</strong>
+            <strong>₹{{ number_format((float)($campaign->spend ?? 0), 2) }}</strong>
         </div></div>
     </div>
 

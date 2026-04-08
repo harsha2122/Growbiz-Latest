@@ -78,9 +78,9 @@
                                         </span>
                                     </td>
                                     <td>{{ $campaign->ad_sets_count }}</td>
-                                    <td>₹{{ number_format($campaign->spend, 2) }}</td>
-                                    <td>{{ number_format($campaign->impressions) }}</td>
-                                    <td>{{ number_format($campaign->clicks) }}</td>
+                                    <td>₹{{ number_format((float)($campaign->spend ?? 0), 2) }}</td>
+                                    <td>{{ number_format((int)($campaign->impressions ?? 0)) }}</td>
+                                    <td>{{ number_format((int)($campaign->clicks ?? 0)) }}</td>
                                     <td>
                                         <div class="d-flex gap-1">
                                             <a href="{{ route('marketplace.vendor.meta-ads.campaigns.edit', $campaign->id) }}"
