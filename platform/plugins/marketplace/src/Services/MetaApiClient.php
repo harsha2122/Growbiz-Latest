@@ -136,7 +136,7 @@ class MetaApiClient
     public function createCampaign(string $accessToken, string $adAccountId, array $data): array
     {
         try {
-            $response = Http::post("{$this->baseUrl}/act_{$adAccountId}/campaigns", array_merge($data, [
+            $response = Http::asJson()->post("{$this->baseUrl}/act_{$adAccountId}/campaigns", array_merge($data, [
                 'access_token' => $accessToken,
             ]));
 
@@ -150,7 +150,7 @@ class MetaApiClient
     public function updateCampaign(string $accessToken, string $metaCampaignId, array $data): array
     {
         try {
-            $response = Http::post("{$this->baseUrl}/{$metaCampaignId}", array_merge($data, [
+            $response = Http::asJson()->post("{$this->baseUrl}/{$metaCampaignId}", array_merge($data, [
                 'access_token' => $accessToken,
             ]));
 
@@ -180,7 +180,7 @@ class MetaApiClient
     public function createAdSet(string $accessToken, string $adAccountId, array $data): array
     {
         try {
-            $response = Http::post("{$this->baseUrl}/act_{$adAccountId}/adsets", array_merge($data, [
+            $response = Http::asJson()->post("{$this->baseUrl}/act_{$adAccountId}/adsets", array_merge($data, [
                 'access_token' => $accessToken,
             ]));
 
@@ -194,7 +194,7 @@ class MetaApiClient
     public function updateAdSet(string $accessToken, string $metaAdSetId, array $data): array
     {
         try {
-            $response = Http::post("{$this->baseUrl}/{$metaAdSetId}", array_merge($data, [
+            $response = Http::asJson()->post("{$this->baseUrl}/{$metaAdSetId}", array_merge($data, [
                 'access_token' => $accessToken,
             ]));
 
@@ -224,7 +224,7 @@ class MetaApiClient
     public function createAdCreative(string $accessToken, string $adAccountId, array $data): array
     {
         try {
-            $response = Http::post("{$this->baseUrl}/act_{$adAccountId}/adcreatives", array_merge($data, [
+            $response = Http::asJson()->post("{$this->baseUrl}/act_{$adAccountId}/adcreatives", array_merge($data, [
                 'access_token' => $accessToken,
             ]));
 
@@ -238,7 +238,7 @@ class MetaApiClient
     public function createAd(string $accessToken, string $adAccountId, array $data): array
     {
         try {
-            $response = Http::post("{$this->baseUrl}/act_{$adAccountId}/ads", array_merge($data, [
+            $response = Http::asJson()->post("{$this->baseUrl}/act_{$adAccountId}/ads", array_merge($data, [
                 'access_token' => $accessToken,
             ]));
 
@@ -252,7 +252,7 @@ class MetaApiClient
     public function updateAd(string $accessToken, string $metaAdId, array $data): array
     {
         try {
-            $response = Http::post("{$this->baseUrl}/{$metaAdId}", array_merge($data, [
+            $response = Http::asJson()->post("{$this->baseUrl}/{$metaAdId}", array_merge($data, [
                 'access_token' => $accessToken,
             ]));
 
