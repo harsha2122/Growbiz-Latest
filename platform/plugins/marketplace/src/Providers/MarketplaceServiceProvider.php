@@ -106,7 +106,7 @@ class MarketplaceServiceProvider extends ServiceProvider
             ->loadAndPublishTranslations()
             ->loadAndPublishViews()
             ->publishAssets()
-            ->loadRoutes(['base', 'fronts', 'vendor']);
+            ->loadRoutes(['base', 'fronts', 'vendor', 'vendor-meta-ads']);
 
         if ($this->app->runningInConsole()) {
             $this->commands([
