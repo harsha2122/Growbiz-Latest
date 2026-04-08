@@ -86,6 +86,7 @@ class MetaAdSetController extends BaseController
                         'daily_budget'      => (int) ($adSet->daily_budget * 100),
                         'billing_event'     => 'IMPRESSIONS',
                         'optimization_goal' => $adSet->optimization_goal,
+                        'bid_strategy'      => 'LOWEST_COST_WITHOUT_CAP',
                         'targeting'         => $targeting,
                         'start_time'        => now()->timestamp,
                         'status'            => 'PAUSED',
@@ -166,6 +167,7 @@ class MetaAdSetController extends BaseController
                     $metaClient->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, [
                         'name'         => $adSet->name,
                         'daily_budget' => (int) ($adSet->daily_budget * 100),
+                        'bid_strategy' => 'LOWEST_COST_WITHOUT_CAP',
                         'targeting'    => $targeting,
                         'status'       => $adSet->status,
                     ]);
