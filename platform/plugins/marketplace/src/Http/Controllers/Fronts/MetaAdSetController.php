@@ -138,16 +138,15 @@ class MetaAdSetController extends BaseController
                         'targeting_locations' => $adSet->targeting_locations,
                     ]);
 
-                    $bidStrategy = ! empty($adSet->bid_cap) ? 'LOWEST_COST_WITH_BID_CAP' : 'LOWEST_COST_WITHOUT_CAP';
-                    $payload     = [
+                    $payload = [
                         'name'         => $adSet->name,
                         'daily_budget' => (int) ($adSet->daily_budget * 100),
-                        'bid_strategy' => $bidStrategy,
                         'targeting'    => $targeting,
                         'status'       => $adSet->status,
                     ];
-                    if ($bidStrategy === 'LOWEST_COST_WITH_BID_CAP') {
-                        $payload['bid_amount'] = (int) ($adSet->bid_cap * 100);
+                    if (! empty($adSet->bid_cap)) {
+                        $payload['bid_strategy'] = 'LOWEST_COST_WITH_BID_CAP';
+                        $payload['bid_amount']   = (int) ($adSet->bid_cap * 100);
                     }
 
                     $metaClient->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, $payload);
@@ -254,20 +253,23 @@ class MetaAdSetController extends BaseController
                 'targeting_locations' => $adSet->targeting_locations,
             ]);
 
-            $bidStrategy = ! empty($adSet->bid_cap) ? 'LOWEST_COST_WITH_BID_CAP' : 'LOWEST_COST_WITHOUT_CAP';
-            $payload     = [
+            $payload = [
                 'name'              => $adSet->name,
                 'campaign_id'       => $metaCampaignId,
                 'daily_budget'      => (int) ($adSet->daily_budget * 100),
                 'billing_event'     => 'IMPRESSIONS',
                 'optimization_goal' => $adSet->optimization_goal,
-                'bid_strategy'      => $bidStrategy,
                 'targeting'         => $targeting,
                 'destination_type'  => 'WEBSITE',
                 'status'            => 'PAUSED',
             ];
-            if ($bidStrategy === 'LOWEST_COST_WITH_BID_CAP') {
-                $payload['bid_amount'] = (int) ($adSet->bid_cap * 100);
+            // Only set bid strategy + amount when vendor explicitly provided a bid cap.
+            // Omitting bid_strategy lets Meta choose the correct default for the campaign
+            // objective + optimization goal — sending LOWEST_COST_WITHOUT_CAP for some
+            // goals (e.g. REACH) causes "Bid amount required" (subcode 1815857).
+            if (! empty($adSet->bid_cap)) {
+                $payload['bid_strategy'] = 'LOWEST_COST_WITH_BID_CAP';
+                $payload['bid_amount']   = (int) ($adSet->bid_cap * 100);
             }
 
             Log::info('Meta createAdSet payload', ['payload' => $payload, 'adset_id' => $adSet->id]);
