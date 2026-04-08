@@ -21,7 +21,7 @@
                     <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Daily Budget ($) <span class="text-danger">*</span></label>
+                    <label class="form-label">Daily Budget (₹) <span class="text-danger">*</span></label>
                     <input type="number" name="daily_budget" class="form-control" min="1" step="0.01" value="{{ old('daily_budget') }}" required>
                 </div>
                 <div class="row">
@@ -46,9 +46,14 @@
                     <label class="form-label">Optimization Goal <span class="text-danger">*</span></label>
                     <select name="optimization_goal" class="form-select" required>
                         <option value="LINK_CLICKS">Link Clicks</option>
+                        <option value="LANDING_PAGE_VIEWS">Landing Page Views</option>
                         <option value="IMPRESSIONS">Impressions</option>
                         <option value="REACH">Reach</option>
+                        <option value="POST_ENGAGEMENT">Post Engagement</option>
+                        <option value="VIDEO_VIEWS">Video Views</option>
+                        <option value="OFFSITE_CONVERSIONS">Conversions</option>
                     </select>
+                    <div class="form-text">Choose based on your campaign objective: Traffic → Link Clicks / Landing Page Views · Engagement → Post Engagement · Awareness → Reach / Impressions · Sales → Conversions</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Locations (comma-separated)</label>

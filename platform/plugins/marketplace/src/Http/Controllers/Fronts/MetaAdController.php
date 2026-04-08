@@ -47,7 +47,10 @@ class MetaAdController extends BaseController
             ->select('id', 'name', 'image', 'price')
             ->get();
 
-        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.create', compact('adSet', 'products'));
+        $adAccount  = $this->getConnectedAccount();
+        $hasPage    = $adAccount && ! empty($adAccount->fb_page_id);
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.create', compact('adSet', 'products', 'hasPage'));
     }
 
     public function store(Request $request, int $adSetId)
@@ -92,7 +95,10 @@ class MetaAdController extends BaseController
         // Push to Meta API
         if ($adSet->meta_adset_id) {
             $adAccount = $this->getConnectedAccount();
-            if ($adAccount && $adAccount->fb_page_id) {
+            if ($adAccount && empty($adAccount->fb_page_id)) {
+                Log::warning('Meta ad creation: no Facebook Page linked for store', ['store_id' => $this->storeId]);
+                // Ad saved locally; vendor must reconnect with a page selected to push to Meta
+            } elseif ($adAccount) {
                 try {
                     $metaClient = app(MetaApiClient::class);
 

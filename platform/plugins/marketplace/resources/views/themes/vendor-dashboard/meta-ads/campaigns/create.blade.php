@@ -25,15 +25,16 @@
                         <option value="OUTCOME_AWARENESS" {{ old('objective') === 'OUTCOME_AWARENESS' ? 'selected' : '' }}>Awareness</option>
                         <option value="OUTCOME_ENGAGEMENT" {{ old('objective') === 'OUTCOME_ENGAGEMENT' ? 'selected' : '' }}>Engagement</option>
                         <option value="OUTCOME_SALES" {{ old('objective') === 'OUTCOME_SALES' ? 'selected' : '' }}>Sales</option>
+                        <option value="OUTCOME_LEADS" {{ old('objective') === 'OUTCOME_LEADS' ? 'selected' : '' }}>Leads</option>
                     </select>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Daily Budget ($)</label>
+                        <label class="form-label">Daily Budget (₹)</label>
                         <input type="number" name="daily_budget" class="form-control" min="1" step="0.01" value="{{ old('daily_budget') }}">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Lifetime Budget ($)</label>
+                        <label class="form-label">Lifetime Budget (₹)</label>
                         <input type="number" name="lifetime_budget" class="form-control" min="1" step="0.01" value="{{ old('lifetime_budget') }}">
                     </div>
                 </div>

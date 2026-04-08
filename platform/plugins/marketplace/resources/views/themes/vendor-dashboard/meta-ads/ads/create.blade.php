@@ -12,6 +12,19 @@
         <div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
     @endif
 
+    @if(!$hasPage)
+        <div class="alert alert-warning d-flex gap-2">
+            <i class="ti ti-alert-triangle fs-5 mt-1 flex-shrink-0"></i>
+            <div>
+                <strong>No Facebook Page linked to your ad account.</strong>
+                The ad will be saved locally but will <strong>not</strong> be pushed to Meta Ads Manager.
+                <a href="{{ route('marketplace.vendor.meta-ads.connection') }}" class="alert-link ms-1">
+                    Go to Connection → Disconnect & reconnect to select a Facebook Page →
+                </a>
+            </div>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
             <form action="{{ route('marketplace.vendor.meta-ads.ad-sets.ads.store', $adSet->id) }}" method="POST" enctype="multipart/form-data">

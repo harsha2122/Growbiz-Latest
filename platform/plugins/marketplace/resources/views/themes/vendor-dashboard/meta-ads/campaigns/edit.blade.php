@@ -21,19 +21,19 @@
                 <div class="mb-3">
                     <label class="form-label">Objective <span class="text-danger">*</span></label>
                     <select name="objective" class="form-select" required>
-                        @foreach(['OUTCOME_TRAFFIC' => 'Traffic', 'OUTCOME_AWARENESS' => 'Awareness', 'OUTCOME_ENGAGEMENT' => 'Engagement', 'OUTCOME_SALES' => 'Sales'] as $val => $label)
+                        @foreach(['OUTCOME_TRAFFIC' => 'Traffic', 'OUTCOME_AWARENESS' => 'Awareness', 'OUTCOME_ENGAGEMENT' => 'Engagement', 'OUTCOME_SALES' => 'Sales', 'OUTCOME_LEADS' => 'Leads'] as $val => $label)
                             <option value="{{ $val }}" {{ old('objective', $campaign->objective) === $val ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Daily Budget ($)</label>
+                        <label class="form-label">Daily Budget (₹)</label>
                         <input type="number" name="daily_budget" class="form-control" min="1" step="0.01"
                                value="{{ old('daily_budget', $campaign->daily_budget) }}">
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Lifetime Budget ($)</label>
+                        <label class="form-label">Lifetime Budget (₹)</label>
                         <input type="number" name="lifetime_budget" class="form-control" min="1" step="0.01"
                                value="{{ old('lifetime_budget', $campaign->lifetime_budget) }}">
                     </div>

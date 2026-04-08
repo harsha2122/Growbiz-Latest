@@ -72,7 +72,7 @@ class MetaCampaignController extends BaseController
     {
         $validated = $request->validate([
             'name'            => ['required', 'string', 'max:255'],
-            'objective'       => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES,OUTCOME_LEADS'],
+            'objective'       => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES,OUTCOME_LEADS,OUTCOME_APP_PROMOTION'],
             'daily_budget'    => ['nullable', 'numeric', 'min:1'],
             'lifetime_budget' => ['nullable', 'numeric', 'min:1'],
             'start_date'      => ['nullable', 'date'],
@@ -148,7 +148,7 @@ class MetaCampaignController extends BaseController
 
         $validated = $request->validate([
             'name'            => ['required', 'string', 'max:255'],
-            'objective'       => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES,OUTCOME_LEADS'],
+            'objective'       => ['required', 'in:OUTCOME_TRAFFIC,OUTCOME_AWARENESS,OUTCOME_ENGAGEMENT,OUTCOME_SALES,OUTCOME_LEADS,OUTCOME_APP_PROMOTION'],
             'daily_budget'    => ['nullable', 'numeric', 'min:1'],
             'lifetime_budget' => ['nullable', 'numeric', 'min:1'],
             'start_date'      => ['nullable', 'date'],

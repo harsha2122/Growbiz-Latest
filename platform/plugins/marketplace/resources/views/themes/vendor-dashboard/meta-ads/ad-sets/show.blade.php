@@ -19,11 +19,11 @@
     <div class="row g-3 mb-4">
         <div class="col-sm-3"><div class="card card-body">
             <div class="text-muted small">Status</div>
-            <span class="badge bg-{{ $adSet->status === 'ACTIVE' ? 'success' : 'secondary' }}">{{ $adSet->status }}</span>
+            <span class="badge bg-{{ $adSet->status === 'ACTIVE' ? 'success' : 'warning' }} text-dark">{{ $adSet->status }}</span>
         </div></div>
         <div class="col-sm-3"><div class="card card-body">
             <div class="text-muted small">Daily Budget</div>
-            <strong>${{ $adSet->daily_budget }}</strong>
+            <strong>₹{{ $adSet->daily_budget }}</strong>
         </div></div>
         <div class="col-sm-3"><div class="card card-body">
             <div class="text-muted small">Age</div>

@@ -21,7 +21,7 @@
                     <input type="text" name="name" class="form-control" value="{{ old('name', $adSet->name) }}" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Daily Budget ($) <span class="text-danger">*</span></label>
+                    <label class="form-label">Daily Budget (₹) <span class="text-danger">*</span></label>
                     <input type="number" name="daily_budget" class="form-control" min="1" step="0.01"
                            value="{{ old('daily_budget', $adSet->daily_budget) }}" required>
                 </div>
@@ -48,7 +48,7 @@
                 <div class="mb-3">
                     <label class="form-label">Optimization Goal</label>
                     <select name="optimization_goal" class="form-select" required>
-                        @foreach(['LINK_CLICKS' => 'Link Clicks', 'IMPRESSIONS' => 'Impressions', 'REACH' => 'Reach'] as $val => $label)
+                        @foreach(['LINK_CLICKS' => 'Link Clicks', 'LANDING_PAGE_VIEWS' => 'Landing Page Views', 'IMPRESSIONS' => 'Impressions', 'REACH' => 'Reach', 'POST_ENGAGEMENT' => 'Post Engagement', 'VIDEO_VIEWS' => 'Video Views', 'OFFSITE_CONVERSIONS' => 'Conversions'] as $val => $label)
                             <option value="{{ $val }}" {{ old('optimization_goal', $adSet->optimization_goal) === $val ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>

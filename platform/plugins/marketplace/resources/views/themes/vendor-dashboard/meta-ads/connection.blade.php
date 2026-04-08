@@ -29,6 +29,14 @@
                 @if($adAccount->fb_page_name)
                     <p class="mb-1">Facebook Page: <strong>{{ $adAccount->fb_page_name }}</strong>
                         <span class="text-muted">({{ $adAccount->fb_page_id }})</span></p>
+                @else
+                    <div class="alert alert-warning d-flex gap-2 mt-3">
+                        <i class="ti ti-alert-triangle mt-1 flex-shrink-0"></i>
+                        <div>
+                            <strong>No Facebook Page linked.</strong>
+                            Ads cannot be pushed to Meta without a Page. Disconnect and reconnect to select your Facebook Page.
+                        </div>
+                    </div>
                 @endif
                 @if($adAccount->token_expires_at)
                     <p class="mb-1 text-muted small">Token expires: {{ $adAccount->token_expires_at->format('M d, Y') }}</p>

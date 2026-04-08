@@ -51,7 +51,7 @@ class MetaAdSetController extends BaseController
             'targeting_age_min'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_age_max'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_genders'   => ['required', 'in:all,male,female'],
-            'optimization_goal'   => ['required', 'in:LINK_CLICKS,IMPRESSIONS,REACH'],
+            'optimization_goal'   => ['required', 'in:LINK_CLICKS,IMPRESSIONS,REACH,LANDING_PAGE_VIEWS,POST_ENGAGEMENT,VIDEO_VIEWS,OFFSITE_CONVERSIONS'],
             'targeting_locations' => ['nullable', 'string'],
             'targeting_interests' => ['nullable', 'string'],
             'placements'          => ['nullable', 'array'],
@@ -87,6 +87,7 @@ class MetaAdSetController extends BaseController
                         'billing_event'     => 'IMPRESSIONS',
                         'optimization_goal' => $adSet->optimization_goal,
                         'targeting'         => $targeting,
+                        'start_time'        => now()->timestamp,
                         'status'            => 'PAUSED',
                     ]);
 
@@ -137,7 +138,7 @@ class MetaAdSetController extends BaseController
             'targeting_age_min'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_age_max'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_genders'   => ['required', 'in:all,male,female'],
-            'optimization_goal'   => ['required', 'in:LINK_CLICKS,IMPRESSIONS,REACH'],
+            'optimization_goal'   => ['required', 'in:LINK_CLICKS,IMPRESSIONS,REACH,LANDING_PAGE_VIEWS,POST_ENGAGEMENT,VIDEO_VIEWS,OFFSITE_CONVERSIONS'],
             'targeting_locations' => ['nullable', 'string'],
             'targeting_interests' => ['nullable', 'string'],
             'placements'          => ['nullable', 'array'],
