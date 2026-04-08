@@ -9,7 +9,7 @@ class MetaAdSet extends Model
     protected $table = 'meta_ad_sets';
 
     protected $fillable = [
-        'campaign_id', 'store_id', 'name', 'status', 'daily_budget',
+        'campaign_id', 'store_id', 'name', 'status', 'daily_budget', 'bid_cap',
         'targeting_locations', 'targeting_age_min', 'targeting_age_max',
         'targeting_genders', 'targeting_interests', 'placements',
         'optimization_goal', 'meta_adset_id', 'impressions', 'clicks', 'spend',
@@ -20,6 +20,7 @@ class MetaAdSet extends Model
         'targeting_interests' => 'array',
         'placements' => 'array',
         'daily_budget' => 'decimal:2',
+        'bid_cap' => 'decimal:2',
         'spend' => 'decimal:2',
     ];
 

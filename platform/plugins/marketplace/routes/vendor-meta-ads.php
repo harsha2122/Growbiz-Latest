@@ -42,6 +42,7 @@ Route::group([
     Route::put('ad-sets/{id}', [MetaAdSetController::class, 'update'])->name('ad-sets.update');
     Route::delete('ad-sets/{id}', [MetaAdSetController::class, 'destroy'])->name('ad-sets.destroy');
     Route::post('ad-sets/{id}/toggle-status', [MetaAdSetController::class, 'toggleStatus'])->name('ad-sets.toggle-status');
+    Route::post('ad-sets/{id}/push-to-meta', [MetaAdSetController::class, 'pushToMeta'])->name('ad-sets.push-to-meta');
 
     // ── Ads — create/store nested under ad set ─────────────────────────────────
     Route::get('ad-sets/{adSetId}/ads/create', [MetaAdController::class, 'create'])->name('ad-sets.ads.create');
@@ -52,4 +53,5 @@ Route::group([
     Route::put('ads/{id}', [MetaAdController::class, 'update'])->name('ads.update');
     Route::delete('ads/{id}', [MetaAdController::class, 'destroy'])->name('ads.destroy');
     Route::post('ads/{id}/toggle-status', [MetaAdController::class, 'toggleStatus'])->name('ads.toggle-status');
+    Route::post('ads/{id}/push-to-meta', [MetaAdController::class, 'pushToMeta'])->name('ads.push-to-meta');
 });

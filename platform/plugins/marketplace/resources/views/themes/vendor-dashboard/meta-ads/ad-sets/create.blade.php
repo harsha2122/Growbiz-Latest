@@ -24,6 +24,11 @@
                     <label class="form-label">Daily Budget (₹) <span class="text-danger">*</span></label>
                     <input type="number" name="daily_budget" class="form-control" min="1" step="0.01" value="{{ old('daily_budget') }}" required>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Bid Cap (₹) <span class="text-muted small fw-normal">— optional</span></label>
+                    <input type="number" name="bid_cap" class="form-control" min="1" step="0.01" value="{{ old('bid_cap') }}" placeholder="Leave blank for no cap (recommended)">
+                    <div class="form-text">Set a maximum bid per result. Leave blank to let Meta optimize automatically (recommended for most campaigns).</div>
+                </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Age Min <span class="text-danger">*</span></label>

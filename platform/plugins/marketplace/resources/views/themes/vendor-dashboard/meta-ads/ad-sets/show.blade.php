@@ -15,6 +15,25 @@
     </div>
 
     @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+    @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
+
+    {{-- Meta Sync Status for Ad Set --}}
+    @if(!$adSet->meta_adset_id)
+        <div class="alert alert-warning d-flex justify-content-between align-items-center">
+            <span><i class="ti ti-cloud-off me-1"></i> <strong>Not synced to Meta Ads Manager.</strong> This ad set has not been pushed to Meta yet.</span>
+            <form action="{{ route('marketplace.vendor.meta-ads.ad-sets.push-to-meta', $adSet->id) }}" method="POST" class="ms-3 flex-shrink-0">
+                @csrf
+                <button type="submit" class="btn btn-warning btn-sm">
+                    <i class="ti ti-upload me-1"></i> Push to Meta
+                </button>
+            </form>
+        </div>
+    @else
+        <div class="alert alert-success py-2 d-flex align-items-center gap-2">
+            <i class="ti ti-cloud-check fs-5"></i>
+            <span>Synced to Meta Ads Manager &nbsp;·&nbsp; Ad Set ID: <code>{{ $adSet->meta_adset_id }}</code></span>
+        </div>
+    @endif
 
     <div class="row g-3 mb-4">
         <div class="col-sm-3"><div class="card card-body">
@@ -35,6 +54,12 @@
         </div></div>
     </div>
 
+    @if($adSet->bid_cap)
+        <div class="alert alert-info py-2 small">
+            <i class="ti ti-coin me-1"></i> Bid Cap: <strong>₹{{ $adSet->bid_cap }}</strong> per result (LOWEST_COST_WITH_BID_CAP)
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header"><h5 class="mb-0">Ads ({{ $adSet->ads->count() }})</h5></div>
         <div class="card-body p-0">
@@ -45,13 +70,36 @@
             @else
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead><tr><th>Name</th><th>Format</th><th>Status</th><th>Impressions</th><th>Clicks</th><th></th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Format</th>
+                                <th>Status</th>
+                                <th>Meta Sync</th>
+                                <th>Impressions</th>
+                                <th>Clicks</th>
+                                <th></th>
+                            </tr>
+                        </thead>
                         <tbody>
                             @foreach($adSet->ads as $ad)
                                 <tr>
                                     <td><a href="{{ route('marketplace.vendor.meta-ads.ads.show', $ad->id) }}">{{ $ad->name }}</a></td>
                                     <td><small>{{ $ad->format }}</small></td>
-                                    <td><span class="badge bg-{{ $ad->status === 'ACTIVE' ? 'success' : ($ad->status === 'IN_REVIEW' ? 'warning' : 'secondary') }}">{{ $ad->status }}</span></td>
+                                    <td><span class="badge bg-{{ $ad->status === 'ACTIVE' ? 'success' : ($ad->status === 'IN_REVIEW' ? 'warning text-dark' : 'secondary') }}">{{ $ad->status }}</span></td>
+                                    <td>
+                                        @if($ad->meta_ad_id)
+                                            <span class="badge bg-success"><i class="ti ti-check me-1"></i>Synced</span>
+                                        @else
+                                            <form action="{{ route('marketplace.vendor.meta-ads.ads.push-to-meta', $ad->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-xs btn-warning py-0 px-2" style="font-size:.75rem"
+                                                    {{ !$adSet->meta_adset_id ? 'disabled title=Push ad set to Meta first' : 'title=Push this ad to Meta' }}>
+                                                    <i class="ti ti-upload"></i> Push
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
                                     <td>{{ number_format($ad->impressions) }}</td>
                                     <td>{{ number_format($ad->clicks) }}</td>
                                     <td>

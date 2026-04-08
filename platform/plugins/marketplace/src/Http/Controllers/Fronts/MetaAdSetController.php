@@ -48,6 +48,7 @@ class MetaAdSetController extends BaseController
         $validated = $request->validate([
             'name'                => ['required', 'string', 'max:255'],
             'daily_budget'        => ['required', 'numeric', 'min:1'],
+            'bid_cap'             => ['nullable', 'numeric', 'min:1'],
             'targeting_age_min'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_age_max'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_genders'   => ['required', 'in:all,male,female'],
@@ -71,35 +72,7 @@ class MetaAdSetController extends BaseController
         if ($campaign->meta_campaign_id) {
             $adAccount = $this->getConnectedAccount();
             if ($adAccount) {
-                try {
-                    $metaClient = app(MetaApiClient::class);
-                    $targeting  = $metaClient->buildTargeting([
-                        'targeting_age_min'   => $adSet->targeting_age_min,
-                        'targeting_age_max'   => $adSet->targeting_age_max,
-                        'targeting_genders'   => $adSet->targeting_genders,
-                        'targeting_locations' => $adSet->targeting_locations,
-                    ]);
-
-                    $result = $metaClient->createAdSet($adAccount->access_token, $adAccount->ad_account_id, [
-                        'name'              => $adSet->name,
-                        'campaign_id'       => $campaign->meta_campaign_id,
-                        'daily_budget'      => (int) ($adSet->daily_budget * 100),
-                        'billing_event'     => 'IMPRESSIONS',
-                        'optimization_goal' => $adSet->optimization_goal,
-                        'bid_strategy'      => 'LOWEST_COST_WITHOUT_CAP',
-                        'targeting'         => $targeting,
-                        'start_time'        => now()->timestamp,
-                        'status'            => 'PAUSED',
-                    ]);
-
-                    if (! empty($result['id'])) {
-                        $adSet->update(['meta_adset_id' => $result['id']]);
-                    } elseif (! empty($result['error'])) {
-                        Log::warning('Meta ad set create API error', ['error' => $result['error']]);
-                    }
-                } catch (\Throwable $e) {
-                    Log::error('Meta ad set push failed', ['error' => $e->getMessage()]);
-                }
+                $this->syncAdSetToMeta($adSet, $campaign->meta_campaign_id, $adAccount);
             }
         }
 
@@ -136,6 +109,7 @@ class MetaAdSetController extends BaseController
         $validated = $request->validate([
             'name'                => ['required', 'string', 'max:255'],
             'daily_budget'        => ['required', 'numeric', 'min:1'],
+            'bid_cap'             => ['nullable', 'numeric', 'min:1'],
             'targeting_age_min'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_age_max'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_genders'   => ['required', 'in:all,male,female'],
@@ -164,13 +138,19 @@ class MetaAdSetController extends BaseController
                         'targeting_locations' => $adSet->targeting_locations,
                     ]);
 
-                    $metaClient->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, [
+                    $bidStrategy = ! empty($adSet->bid_cap) ? 'LOWEST_COST_WITH_BID_CAP' : 'LOWEST_COST_WITHOUT_CAP';
+                    $payload     = [
                         'name'         => $adSet->name,
                         'daily_budget' => (int) ($adSet->daily_budget * 100),
-                        'bid_strategy' => 'LOWEST_COST_WITHOUT_CAP',
+                        'bid_strategy' => $bidStrategy,
                         'targeting'    => $targeting,
                         'status'       => $adSet->status,
-                    ]);
+                    ];
+                    if ($bidStrategy === 'LOWEST_COST_WITH_BID_CAP') {
+                        $payload['bid_amount'] = (int) ($adSet->bid_cap * 100);
+                    }
+
+                    $metaClient->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, $payload);
                 } catch (\Throwable $e) {
                     Log::error('Meta ad set update API failed', ['error' => $e->getMessage()]);
                 }
@@ -225,6 +205,85 @@ class MetaAdSetController extends BaseController
         }
 
         return $this->httpResponse()->setMessage('Ad set status updated.');
+    }
+
+    /**
+     * Re-push an existing ad set (with meta_adset_id = NULL) to Meta Ads Manager.
+     */
+    public function pushToMeta(int $id)
+    {
+        $adSet    = MetaAdSet::query()->where('store_id', $this->storeId)->with('campaign')->findOrFail($id);
+        $campaign = $adSet->campaign;
+
+        if (! $campaign || ! $campaign->meta_campaign_id) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage('Campaign is not synced to Meta. Please push the campaign to Meta first.');
+        }
+
+        $adAccount = $this->getConnectedAccount();
+        if (! $adAccount) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage('No connected Meta ad account found. Please reconnect your Facebook account.');
+        }
+
+        $result = $this->syncAdSetToMeta($adSet, $campaign->meta_campaign_id, $adAccount);
+
+        if ($result['success']) {
+            return $this->httpResponse()->setMessage('Ad set pushed to Meta successfully! Ad Set ID: ' . $result['meta_adset_id']);
+        }
+
+        return $this->httpResponse()
+            ->setError()
+            ->setMessage('Failed to push to Meta: ' . $result['error']);
+    }
+
+    /**
+     * Internal helper — creates the ad set on Meta and saves the returned ID.
+     * Returns ['success' => bool, 'meta_adset_id' => string|null, 'error' => string|null]
+     */
+    private function syncAdSetToMeta(MetaAdSet $adSet, string $metaCampaignId, MetaAdAccount $adAccount): array
+    {
+        try {
+            $metaClient = app(MetaApiClient::class);
+            $targeting  = $metaClient->buildTargeting([
+                'targeting_age_min'   => $adSet->targeting_age_min,
+                'targeting_age_max'   => $adSet->targeting_age_max,
+                'targeting_genders'   => $adSet->targeting_genders,
+                'targeting_locations' => $adSet->targeting_locations,
+            ]);
+
+            $bidStrategy = ! empty($adSet->bid_cap) ? 'LOWEST_COST_WITH_BID_CAP' : 'LOWEST_COST_WITHOUT_CAP';
+            $payload     = [
+                'name'              => $adSet->name,
+                'campaign_id'       => $metaCampaignId,
+                'daily_budget'      => (int) ($adSet->daily_budget * 100),
+                'billing_event'     => 'IMPRESSIONS',
+                'optimization_goal' => $adSet->optimization_goal,
+                'bid_strategy'      => $bidStrategy,
+                'targeting'         => $targeting,
+                'start_time'        => now()->timestamp,
+                'status'            => 'PAUSED',
+            ];
+            if ($bidStrategy === 'LOWEST_COST_WITH_BID_CAP') {
+                $payload['bid_amount'] = (int) ($adSet->bid_cap * 100);
+            }
+
+            $result = $metaClient->createAdSet($adAccount->access_token, $adAccount->ad_account_id, $payload);
+
+            if (! empty($result['id'])) {
+                $adSet->update(['meta_adset_id' => $result['id']]);
+                return ['success' => true, 'meta_adset_id' => $result['id'], 'error' => null];
+            }
+
+            $errorMsg = $result['error']['message'] ?? $result['error']['error_user_title'] ?? 'Unknown Meta API error';
+            Log::warning('Meta ad set create API error', ['error' => $result['error'] ?? $result, 'adset_id' => $adSet->id]);
+            return ['success' => false, 'meta_adset_id' => null, 'error' => $errorMsg];
+        } catch (\Throwable $e) {
+            Log::error('Meta ad set push failed', ['error' => $e->getMessage(), 'adset_id' => $adSet->id]);
+            return ['success' => false, 'meta_adset_id' => null, 'error' => $e->getMessage()];
+        }
     }
 
     private function getConnectedAccount(): ?MetaAdAccount
