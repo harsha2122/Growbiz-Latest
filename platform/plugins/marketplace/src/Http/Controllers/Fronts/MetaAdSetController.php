@@ -263,22 +263,30 @@ class MetaAdSetController extends BaseController
                 'optimization_goal' => $adSet->optimization_goal,
                 'bid_strategy'      => $bidStrategy,
                 'targeting'         => $targeting,
-                'start_time'        => now()->timestamp,
+                'destination_type'  => 'WEBSITE',
                 'status'            => 'PAUSED',
             ];
             if ($bidStrategy === 'LOWEST_COST_WITH_BID_CAP') {
                 $payload['bid_amount'] = (int) ($adSet->bid_cap * 100);
             }
 
+            Log::info('Meta createAdSet payload', ['payload' => $payload, 'adset_id' => $adSet->id]);
+
             $result = $metaClient->createAdSet($adAccount->access_token, $adAccount->ad_account_id, $payload);
+
+            Log::info('Meta createAdSet response', ['response' => $result, 'adset_id' => $adSet->id]);
 
             if (! empty($result['id'])) {
                 $adSet->update(['meta_adset_id' => $result['id']]);
                 return ['success' => true, 'meta_adset_id' => $result['id'], 'error' => null];
             }
 
-            $errorMsg = $result['error']['message'] ?? $result['error']['error_user_title'] ?? 'Unknown Meta API error';
-            Log::warning('Meta ad set create API error', ['error' => $result['error'] ?? $result, 'adset_id' => $adSet->id]);
+            // Build a detailed error message including subcode and user message
+            $err        = $result['error'] ?? [];
+            $errorMsg   = ($err['message'] ?? 'Unknown error')
+                . (isset($err['error_subcode']) ? ' (subcode: ' . $err['error_subcode'] . ')' : '')
+                . (isset($err['error_user_msg']) ? ' — ' . $err['error_user_msg'] : '');
+            Log::warning('Meta ad set create API error', ['error' => $err, 'adset_id' => $adSet->id]);
             return ['success' => false, 'meta_adset_id' => null, 'error' => $errorMsg];
         } catch (\Throwable $e) {
             Log::error('Meta ad set push failed', ['error' => $e->getMessage(), 'adset_id' => $adSet->id]);
