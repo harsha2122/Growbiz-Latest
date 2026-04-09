@@ -45,6 +45,8 @@ class MetaAdSetController extends BaseController
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($campaignId);
 
+        $validGoals = $this->validGoalsForObjective($campaign->objective);
+
         $validated = $request->validate([
             'name'                => ['required', 'string', 'max:255'],
             'daily_budget'        => ['required', 'numeric', 'min:1'],
@@ -52,7 +54,7 @@ class MetaAdSetController extends BaseController
             'targeting_age_min'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_age_max'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_genders'   => ['required', 'in:all,male,female'],
-            'optimization_goal'   => ['required', 'in:LINK_CLICKS,IMPRESSIONS,REACH,LANDING_PAGE_VIEWS,POST_ENGAGEMENT,VIDEO_VIEWS,OFFSITE_CONVERSIONS'],
+            'optimization_goal'   => ['required', 'in:' . implode(',', $validGoals)],
             'targeting_locations' => ['nullable', 'string'],
             'targeting_interests' => ['nullable', 'string'],
             'placements'          => ['nullable', 'array'],
@@ -104,7 +106,10 @@ class MetaAdSetController extends BaseController
 
     public function update(Request $request, int $id)
     {
-        $adSet = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
+        $adSet    = MetaAdSet::query()->where('store_id', $this->storeId)->with('campaign')->findOrFail($id);
+        $campaign = $adSet->campaign;
+
+        $validGoals = $campaign ? $this->validGoalsForObjective($campaign->objective) : $this->allGoals();
 
         $validated = $request->validate([
             'name'                => ['required', 'string', 'max:255'],
@@ -113,7 +118,7 @@ class MetaAdSetController extends BaseController
             'targeting_age_min'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_age_max'   => ['required', 'integer', 'min:13', 'max:65'],
             'targeting_genders'   => ['required', 'in:all,male,female'],
-            'optimization_goal'   => ['required', 'in:LINK_CLICKS,IMPRESSIONS,REACH,LANDING_PAGE_VIEWS,POST_ENGAGEMENT,VIDEO_VIEWS,OFFSITE_CONVERSIONS'],
+            'optimization_goal'   => ['required', 'in:' . implode(',', $validGoals)],
             'targeting_locations' => ['nullable', 'string'],
             'targeting_interests' => ['nullable', 'string'],
             'placements'          => ['nullable', 'array'],
@@ -304,5 +309,22 @@ class MetaAdSetController extends BaseController
             ->whereNotNull('access_token')
             ->whereNotNull('ad_account_id')
             ->first();
+    }
+
+    private function validGoalsForObjective(string $objective): array
+    {
+        return match ($objective) {
+            'OUTCOME_TRAFFIC'    => ['LINK_CLICKS', 'LANDING_PAGE_VIEWS', 'IMPRESSIONS'],
+            'OUTCOME_AWARENESS'  => ['REACH', 'IMPRESSIONS', 'VIDEO_VIEWS'],
+            'OUTCOME_ENGAGEMENT' => ['POST_ENGAGEMENT', 'VIDEO_VIEWS', 'IMPRESSIONS'],
+            'OUTCOME_SALES'      => ['LINK_CLICKS', 'IMPRESSIONS'],
+            'OUTCOME_LEADS'      => ['LINK_CLICKS', 'IMPRESSIONS'],
+            default              => $this->allGoals(),
+        };
+    }
+
+    private function allGoals(): array
+    {
+        return ['LINK_CLICKS', 'IMPRESSIONS', 'REACH', 'LANDING_PAGE_VIEWS', 'POST_ENGAGEMENT', 'VIDEO_VIEWS', 'OFFSITE_CONVERSIONS'];
     }
 }

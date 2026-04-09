@@ -14,6 +14,13 @@
 
     <div class="card">
         <div class="card-body">
+            @if($adSet->campaign)
+            <div class="alert alert-info py-2 small mb-3">
+                Campaign objective: <strong>{{ str_replace('OUTCOME_', '', $adSet->campaign->objective) }}</strong>
+                — only compatible optimization goals are shown below.
+            </div>
+            @endif
+
             <form action="{{ route('marketplace.vendor.meta-ads.ad-sets.update', $adSet->id) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="mb-3">
@@ -53,10 +60,14 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Optimization Goal</label>
-                    <select name="optimization_goal" class="form-select" required>
-                        @foreach(['LINK_CLICKS' => 'Link Clicks', 'LANDING_PAGE_VIEWS' => 'Landing Page Views', 'IMPRESSIONS' => 'Impressions', 'REACH' => 'Reach', 'POST_ENGAGEMENT' => 'Post Engagement', 'VIDEO_VIEWS' => 'Video Views', 'OFFSITE_CONVERSIONS' => 'Conversions'] as $val => $label)
-                            <option value="{{ $val }}" {{ old('optimization_goal', $adSet->optimization_goal) === $val ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
+                    <select name="optimization_goal" id="optimization_goal" class="form-select" required>
+                        <option value="LINK_CLICKS" {{ old('optimization_goal', $adSet->optimization_goal) === 'LINK_CLICKS' ? 'selected' : '' }}>Link Clicks</option>
+                        <option value="LANDING_PAGE_VIEWS" {{ old('optimization_goal', $adSet->optimization_goal) === 'LANDING_PAGE_VIEWS' ? 'selected' : '' }}>Landing Page Views</option>
+                        <option value="IMPRESSIONS" {{ old('optimization_goal', $adSet->optimization_goal) === 'IMPRESSIONS' ? 'selected' : '' }}>Impressions</option>
+                        <option value="REACH" {{ old('optimization_goal', $adSet->optimization_goal) === 'REACH' ? 'selected' : '' }}>Reach</option>
+                        <option value="POST_ENGAGEMENT" {{ old('optimization_goal', $adSet->optimization_goal) === 'POST_ENGAGEMENT' ? 'selected' : '' }}>Post Engagement</option>
+                        <option value="VIDEO_VIEWS" {{ old('optimization_goal', $adSet->optimization_goal) === 'VIDEO_VIEWS' ? 'selected' : '' }}>Video Views</option>
+                        <option value="OFFSITE_CONVERSIONS" {{ old('optimization_goal', $adSet->optimization_goal) === 'OFFSITE_CONVERSIONS' ? 'selected' : '' }}>Conversions</option>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -86,4 +97,34 @@
             </form>
         </div>
     </div>
+
+    @if($adSet->campaign)
+    <script>
+        (function () {
+            const goalsByObjective = {
+                'OUTCOME_TRAFFIC':    ['LINK_CLICKS', 'LANDING_PAGE_VIEWS', 'IMPRESSIONS'],
+                'OUTCOME_AWARENESS':  ['REACH', 'IMPRESSIONS', 'VIDEO_VIEWS'],
+                'OUTCOME_ENGAGEMENT': ['POST_ENGAGEMENT', 'VIDEO_VIEWS', 'IMPRESSIONS'],
+                'OUTCOME_SALES':      ['LINK_CLICKS', 'IMPRESSIONS'],
+                'OUTCOME_LEADS':      ['LINK_CLICKS', 'IMPRESSIONS'],
+            };
+
+            const objective  = '{{ $adSet->campaign->objective }}';
+            const validGoals = goalsByObjective[objective] || [];
+            const select     = document.getElementById('optimization_goal');
+
+            Array.from(select.options).forEach(function (option) {
+                if (validGoals.length && !validGoals.includes(option.value)) {
+                    option.disabled = true;
+                    option.style.display = 'none';
+                }
+            });
+
+            // If current value is not valid for this objective, switch to first valid
+            if (validGoals.length && !validGoals.includes(select.value)) {
+                select.value = validGoals[0];
+            }
+        })();
+    </script>
+    @endif
 @endsection

@@ -14,6 +14,11 @@
 
     <div class="card">
         <div class="card-body">
+            <div class="alert alert-info py-2 small mb-3">
+                Campaign objective: <strong>{{ str_replace('OUTCOME_', '', $campaign->objective) }}</strong>
+                — only compatible optimization goals are shown below.
+            </div>
+
             <form action="{{ route('marketplace.vendor.meta-ads.campaigns.ad-sets.store', $campaign->id) }}" method="POST">
                 @csrf
                 <div class="mb-3">
@@ -49,7 +54,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Optimization Goal <span class="text-danger">*</span></label>
-                    <select name="optimization_goal" class="form-select" required>
+                    <select name="optimization_goal" id="optimization_goal" class="form-select" required>
                         <option value="LINK_CLICKS">Link Clicks</option>
                         <option value="LANDING_PAGE_VIEWS">Landing Page Views</option>
                         <option value="IMPRESSIONS">Impressions</option>
@@ -58,7 +63,6 @@
                         <option value="VIDEO_VIEWS">Video Views</option>
                         <option value="OFFSITE_CONVERSIONS">Conversions</option>
                     </select>
-                    <div class="form-text">Choose based on your campaign objective: Traffic → Link Clicks / Landing Page Views · Engagement → Post Engagement · Awareness → Reach / Impressions · Sales → Conversions</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Locations (comma-separated)</label>
@@ -85,4 +89,35 @@
             </form>
         </div>
     </div>
+
+    <script>
+        (function () {
+            const goalsByObjective = {
+                'OUTCOME_TRAFFIC':    ['LINK_CLICKS', 'LANDING_PAGE_VIEWS', 'IMPRESSIONS'],
+                'OUTCOME_AWARENESS':  ['REACH', 'IMPRESSIONS', 'VIDEO_VIEWS'],
+                'OUTCOME_ENGAGEMENT': ['POST_ENGAGEMENT', 'VIDEO_VIEWS', 'IMPRESSIONS'],
+                'OUTCOME_SALES':      ['LINK_CLICKS', 'IMPRESSIONS'],
+                'OUTCOME_LEADS':      ['LINK_CLICKS', 'IMPRESSIONS'],
+            };
+
+            const objective   = '{{ $campaign->objective }}';
+            const validGoals  = goalsByObjective[objective] || [];
+            const select      = document.getElementById('optimization_goal');
+            const oldVal      = '{{ old('optimization_goal') }}';
+
+            Array.from(select.options).forEach(function (option) {
+                if (validGoals.length && !validGoals.includes(option.value)) {
+                    option.disabled = true;
+                    option.style.display = 'none';
+                }
+            });
+
+            // Restore old value if valid, otherwise pick first valid
+            if (oldVal && validGoals.includes(oldVal)) {
+                select.value = oldVal;
+            } else if (validGoals.length) {
+                select.value = validGoals[0];
+            }
+        })();
+    </script>
 @endsection
