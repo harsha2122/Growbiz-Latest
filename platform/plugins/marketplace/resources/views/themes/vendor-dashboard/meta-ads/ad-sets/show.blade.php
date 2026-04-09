@@ -17,13 +17,40 @@
     @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
 
+    {{-- Optimization goal / objective mismatch warning --}}
+    @php
+        $goalsByObjective = [
+            'OUTCOME_TRAFFIC'    => ['LINK_CLICKS', 'LANDING_PAGE_VIEWS', 'IMPRESSIONS'],
+            'OUTCOME_AWARENESS'  => ['REACH', 'IMPRESSIONS', 'VIDEO_VIEWS'],
+            'OUTCOME_ENGAGEMENT' => ['POST_ENGAGEMENT', 'VIDEO_VIEWS', 'IMPRESSIONS'],
+            'OUTCOME_SALES'      => ['LINK_CLICKS', 'IMPRESSIONS'],
+            'OUTCOME_LEADS'      => ['LINK_CLICKS', 'IMPRESSIONS'],
+        ];
+        $campaignObjective = $adSet->campaign?->objective ?? '';
+        $validGoals        = $goalsByObjective[$campaignObjective] ?? [];
+        $goalMismatch      = $validGoals && !in_array($adSet->optimization_goal, $validGoals);
+    @endphp
+
+    @if($goalMismatch)
+        <div class="alert alert-danger d-flex justify-content-between align-items-center">
+            <div>
+                <i class="ti ti-alert-triangle me-1"></i>
+                <strong>Invalid optimization goal.</strong>
+                Goal <code>{{ $adSet->optimization_goal }}</code> is incompatible with campaign objective
+                <strong>{{ str_replace('OUTCOME_', '', $campaignObjective) }}</strong>.
+                Valid goals: {{ implode(', ', $validGoals) }}.
+            </div>
+            <a href="{{ route('marketplace.vendor.meta-ads.ad-sets.edit', $adSet->id) }}" class="btn btn-danger btn-sm ms-3 flex-shrink-0">Fix Now →</a>
+        </div>
+    @endif
+
     {{-- Meta Sync Status for Ad Set --}}
     @if(!$adSet->meta_adset_id)
         <div class="alert alert-warning d-flex justify-content-between align-items-center">
             <span><i class="ti ti-cloud-off me-1"></i> <strong>Not synced to Meta Ads Manager.</strong> This ad set has not been pushed to Meta yet.</span>
             <form action="{{ route('marketplace.vendor.meta-ads.ad-sets.push-to-meta', $adSet->id) }}" method="POST" class="ms-3 flex-shrink-0">
                 @csrf
-                <button type="submit" class="btn btn-warning btn-sm">
+                <button type="submit" class="btn btn-warning btn-sm" {{ $goalMismatch ? 'disabled title=Fix the optimization goal first' : '' }}>
                     <i class="ti ti-upload me-1"></i> Push to Meta
                 </button>
             </form>

@@ -225,6 +225,20 @@ class MetaAdSetController extends BaseController
                 ->setMessage('Campaign is not synced to Meta. Please push the campaign to Meta first.');
         }
 
+        // Guard: optimization_goal must be compatible with campaign objective
+        $validGoals = $this->validGoalsForObjective($campaign->objective);
+        if (! in_array($adSet->optimization_goal, $validGoals)) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage(sprintf(
+                    'Cannot push: optimization goal "%s" is incompatible with campaign objective "%s". '
+                    . 'Please edit this ad set and change the optimization goal to one of: %s.',
+                    $adSet->optimization_goal,
+                    str_replace('OUTCOME_', '', $campaign->objective),
+                    implode(', ', $validGoals)
+                ));
+        }
+
         $adAccount = $this->getConnectedAccount();
         if (! $adAccount) {
             return $this->httpResponse()
