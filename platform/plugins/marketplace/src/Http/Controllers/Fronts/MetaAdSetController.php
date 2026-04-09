@@ -260,13 +260,13 @@ class MetaAdSetController extends BaseController
                 'billing_event'     => 'IMPRESSIONS',
                 'optimization_goal' => $adSet->optimization_goal,
                 'targeting'         => $targeting,
-                'destination_type'  => 'WEBSITE',
                 'status'            => 'PAUSED',
             ];
-            // Only set bid strategy + amount when vendor explicitly provided a bid cap.
-            // Omitting bid_strategy lets Meta choose the correct default for the campaign
-            // objective + optimization goal — sending LOWEST_COST_WITHOUT_CAP for some
-            // goals (e.g. REACH) causes "Bid amount required" (subcode 1815857).
+            // Only set bid strategy when vendor explicitly provided a bid cap.
+            // Do NOT set bid_strategy or destination_type otherwise — Meta chooses the
+            // correct defaults per campaign objective + optimization goal. Sending
+            // LOWEST_COST_WITHOUT_CAP or destination_type=WEBSITE for REACH/IMPRESSIONS
+            // goals causes error 1815857 "Bid amount required".
             if (! empty($adSet->bid_cap)) {
                 $payload['bid_strategy'] = 'LOWEST_COST_WITH_BID_CAP';
                 $payload['bid_amount']   = (int) ($adSet->bid_cap * 100);
