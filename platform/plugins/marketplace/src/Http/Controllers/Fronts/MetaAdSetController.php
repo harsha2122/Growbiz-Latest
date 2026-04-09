@@ -64,8 +64,8 @@ class MetaAdSetController extends BaseController
         $validated['store_id']    = $this->storeId;
         $validated['status']      = 'PAUSED';
 
-        $validated['targeting_locations'] = $validated['targeting_locations']
-            ? array_map('trim', explode(',', $validated['targeting_locations'])) : [];
+        // targeting_locations arrives as a JSON string of structured location objects
+        $validated['targeting_locations'] = $this->parseLocationsInput($validated['targeting_locations'] ?? null);
         $validated['targeting_interests'] = $validated['targeting_interests']
             ? array_map('trim', explode(',', $validated['targeting_interests'])) : [];
 
@@ -124,8 +124,7 @@ class MetaAdSetController extends BaseController
             'placements'          => ['nullable', 'array'],
         ]);
 
-        $validated['targeting_locations'] = $validated['targeting_locations']
-            ? array_map('trim', explode(',', $validated['targeting_locations'])) : [];
+        $validated['targeting_locations'] = $this->parseLocationsInput($validated['targeting_locations'] ?? null);
         $validated['targeting_interests'] = $validated['targeting_interests']
             ? array_map('trim', explode(',', $validated['targeting_interests'])) : [];
 
@@ -310,6 +309,60 @@ class MetaAdSetController extends BaseController
             Log::error('Meta ad set push failed', ['error' => $e->getMessage(), 'adset_id' => $adSet->id]);
             return ['success' => false, 'meta_adset_id' => null, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * AJAX: search Meta geo locations (countries, regions, cities, zips).
+     */
+    public function searchLocations(Request $request)
+    {
+        $query = trim($request->get('q', ''));
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $adAccount = $this->getConnectedAccount();
+        if (! $adAccount) {
+            return response()->json(['error' => 'No connected Meta account'], 403);
+        }
+
+        $types   = $request->get('types', ['country', 'region', 'city', 'zip']);
+        $results = app(MetaApiClient::class)->searchLocations($adAccount->access_token, $query, (array) $types);
+
+        // Normalize to a clean array for the frontend
+        $mapped = array_map(fn ($r) => [
+            'key'          => $r['key'],
+            'name'         => $r['name'],
+            'type'         => $r['type'],
+            'country_code' => $r['country_code'] ?? null,
+            'region'       => $r['region'] ?? null,
+            'label'        => $r['name']
+                . (isset($r['region']) ? ', ' . $r['region'] : '')
+                . (isset($r['country_name']) ? ', ' . $r['country_name'] : '')
+                . ' (' . ucfirst($r['type']) . ')',
+        ], $results);
+
+        return response()->json(array_values($mapped));
+    }
+
+    /**
+     * Parse the targeting_locations input.
+     * Accepts either a JSON string of structured objects [{key,type,name}]
+     * or a legacy comma-separated country code string.
+     */
+    private function parseLocationsInput(?string $input): array
+    {
+        if (empty($input)) {
+            return [];
+        }
+
+        $decoded = json_decode($input, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        // Legacy fallback: plain comma-separated country codes
+        return array_values(array_filter(array_map('trim', explode(',', $input))));
     }
 
     private function getConnectedAccount(): ?MetaAdAccount

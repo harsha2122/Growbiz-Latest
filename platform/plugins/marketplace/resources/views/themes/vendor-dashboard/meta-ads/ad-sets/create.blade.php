@@ -64,10 +64,9 @@
                         <option value="OFFSITE_CONVERSIONS">Conversions</option>
                     </select>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Locations (comma-separated)</label>
-                    <input type="text" name="targeting_locations" class="form-control" value="{{ old('targeting_locations') }}" placeholder="US, UK, IN">
-                </div>
+                @include(MarketplaceHelper::viewPath('vendor-dashboard.meta-ads.partials.location-picker'), [
+                    'existingLocations' => old('targeting_locations') ? json_decode(old('targeting_locations'), true) ?? [] : [],
+                ])
                 <div class="mb-3">
                     <label class="form-label">Interests (comma-separated)</label>
                     <input type="text" name="targeting_interests" class="form-control" value="{{ old('targeting_interests') }}" placeholder="Shopping, Fashion">

@@ -38,6 +38,8 @@ Route::group([
     // ── Ad Sets — create/store nested under campaign ───────────────────────────
     Route::get('campaigns/{campaignId}/ad-sets/create', [MetaAdSetController::class, 'create'])->name('campaigns.ad-sets.create');
     Route::post('campaigns/{campaignId}/ad-sets', [MetaAdSetController::class, 'store'])->name('campaigns.ad-sets.store');
+    // Static routes must precede wildcard {id} routes
+    Route::get('ad-sets/search-locations', [MetaAdSetController::class, 'searchLocations'])->name('ad-sets.search-locations');
     Route::get('ad-sets/{id}', [MetaAdSetController::class, 'show'])->name('ad-sets.show');
     Route::get('ad-sets/{id}/edit', [MetaAdSetController::class, 'edit'])->name('ad-sets.edit');
     Route::put('ad-sets/{id}', [MetaAdSetController::class, 'update'])->name('ad-sets.update');

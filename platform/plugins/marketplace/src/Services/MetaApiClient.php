@@ -289,7 +289,32 @@ class MetaApiClient
     }
 
     /**
+     * Search Meta's geo location index (countries, regions, cities, zips).
+     * Returns array of [{key, name, type, country_code, ...}]
+     */
+    public function searchLocations(string $accessToken, string $query, array $types = []): array
+    {
+        try {
+            $params = [
+                'access_token'   => $accessToken,
+                'type'           => 'adgeolocation',
+                'q'              => $query,
+                'location_types' => json_encode($types ?: ['country', 'region', 'city', 'zip']),
+            ];
+
+            $response = Http::get("{$this->baseUrl}/search", $params);
+
+            return $response->json()['data'] ?? [];
+        } catch (\Throwable $e) {
+            Log::error('MetaApiClient::searchLocations failed', ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
+
+    /**
      * Build the targeting spec array for ad set creation.
+     * targeting_locations is now an array of structured objects:
+     *   [{key, type, name}] where type is country|region|city|zip
      */
     public function buildTargeting(array $adSet): array
     {
@@ -305,16 +330,52 @@ class MetaApiClient
             $targeting['genders'] = [2];
         }
 
-        // Geo locations (country codes)
         $locations = is_array($adSet['targeting_locations'])
             ? $adSet['targeting_locations']
             : json_decode($adSet['targeting_locations'] ?? '[]', true);
 
+        $geoLocations = [];
+
         if (! empty($locations)) {
-            $targeting['geo_locations'] = ['countries' => array_values(array_filter($locations))];
-        } else {
-            $targeting['geo_locations'] = ['countries' => ['US']]; // default fallback
+            foreach ($locations as $loc) {
+                // Support both old plain string format (country codes) and new structured format
+                if (is_string($loc)) {
+                    $geoLocations['countries'][] = strtoupper(trim($loc));
+                    continue;
+                }
+
+                $type = $loc['type'] ?? 'country';
+                $key  = $loc['key'] ?? null;
+
+                if (! $key) {
+                    continue;
+                }
+
+                switch ($type) {
+                    case 'country':
+                        $geoLocations['countries'][] = $key;
+                        break;
+                    case 'region':
+                        $geoLocations['regions'][] = ['key' => $key];
+                        break;
+                    case 'city':
+                        $geoLocations['cities'][] = ['key' => $key];
+                        break;
+                    case 'zip':
+                        $geoLocations['zips'][] = ['key' => $key];
+                        break;
+                }
+            }
         }
+
+        // Deduplicate countries
+        if (! empty($geoLocations['countries'])) {
+            $geoLocations['countries'] = array_values(array_unique($geoLocations['countries']));
+        }
+
+        $targeting['geo_locations'] = ! empty($geoLocations)
+            ? $geoLocations
+            : ['countries' => ['IN']]; // default fallback
 
         return $targeting;
     }
