@@ -225,12 +225,13 @@ class MetaCampaignController extends BaseController
     {
         try {
             $payload = [
-                'name'                  => $campaign->name,
-                'objective'             => $campaign->objective,
-                'status'                => 'PAUSED',
-                'special_ad_categories' => [],
-                // No daily_budget / lifetime_budget here — budget is managed per ad set.
-                // Mixing campaign-level budget with ad set-level budget causes error 1885621.
+                'name'                            => $campaign->name,
+                'objective'                       => $campaign->objective,
+                'status'                          => 'PAUSED',
+                'special_ad_categories'           => [],
+                'is_adset_budget_sharing_enabled' => false,
+                // No daily_budget / lifetime_budget — budget lives at ad set level.
+                // is_adset_budget_sharing_enabled must be explicitly false when no campaign budget (error 4834011).
             ];
 
             Log::info('Meta createCampaign payload', ['payload' => $payload, 'campaign_id' => $campaign->id]);
