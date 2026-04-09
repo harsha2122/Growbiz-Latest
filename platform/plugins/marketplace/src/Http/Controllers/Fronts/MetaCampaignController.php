@@ -233,8 +233,12 @@ class MetaCampaignController extends BaseController
                 // Mixing campaign-level budget with ad set-level budget causes error 1885621.
             ];
 
+            Log::info('Meta createCampaign payload', ['payload' => $payload, 'campaign_id' => $campaign->id]);
+
             $result = app(MetaApiClient::class)
                 ->createCampaign($adAccount->access_token, $adAccount->ad_account_id, $payload);
+
+            Log::info('Meta createCampaign response', ['response' => $result, 'campaign_id' => $campaign->id]);
 
             if (! empty($result['id'])) {
                 $campaign->update(['meta_campaign_id' => $result['id']]);
@@ -243,7 +247,9 @@ class MetaCampaignController extends BaseController
 
             $err      = $result['error'] ?? [];
             $errorMsg = ($err['message'] ?? 'Unknown error')
-                . (isset($err['error_subcode']) ? ' (subcode: ' . $err['error_subcode'] . ')' : '');
+                . (isset($err['error_subcode']) ? ' (subcode: ' . $err['error_subcode'] . ')' : '')
+                . (isset($err['error_user_msg']) ? ' — ' . $err['error_user_msg'] : '')
+                . (isset($err['error_user_title']) ? ' [' . $err['error_user_title'] . ']' : '');
             Log::warning('Meta campaign create API error', ['error' => $err, 'campaign_id' => $campaign->id]);
 
             return ['success' => false, 'meta_campaign_id' => null, 'error' => $errorMsg];
