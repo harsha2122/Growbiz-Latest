@@ -299,7 +299,11 @@ class MetaAdController extends BaseController
             $metaClient = app(MetaApiClient::class);
 
             // Resolve creative image URL: uploaded file → product image
+            // Ensure the URL is absolute — stored paths like "customers/62/file.png" need RvMedia resolution.
             $creativeUrl = $ad->image_url;
+            if ($creativeUrl && ! str_starts_with($creativeUrl, 'http')) {
+                $creativeUrl = RvMedia::getImageUrl($creativeUrl);
+            }
             if (! $creativeUrl && $ad->product_id) {
                 $product     = Product::find($ad->product_id);
                 $creativeUrl = $product?->image ? RvMedia::getImageUrl($product->image) : null;
@@ -313,6 +317,8 @@ class MetaAdController extends BaseController
                 ];
             }
 
+            Log::info('Meta createAdCreative image URL', ['url' => $creativeUrl, 'ad_id' => $ad->id]);
+
             $creativeResult = $metaClient->createAdCreative(
                 $adAccount->access_token,
                 $adAccount->ad_account_id,
@@ -325,7 +331,7 @@ class MetaAdController extends BaseController
                             'message'        => $ad->primary_text,
                             'name'           => $ad->headline,
                             'description'    => $ad->description ?? '',
-                            'image_url'      => $creativeUrl,
+                            'picture'        => $creativeUrl,
                             'call_to_action' => [
                                 'type'  => $ad->cta_button,
                                 'value' => ['link' => $ad->destination_url],
@@ -336,10 +342,11 @@ class MetaAdController extends BaseController
             );
 
             if (! empty($creativeResult['error'])) {
-                $errorMsg = $creativeResult['error']['message']
-                    ?? $creativeResult['error']['error_user_title']
-                    ?? 'Creative creation failed';
-                Log::warning('Meta ad creative create API error', ['error' => $creativeResult['error'], 'ad_id' => $ad->id]);
+                $err      = $creativeResult['error'];
+                $errorMsg = ($err['message'] ?? 'Creative creation failed')
+                    . (isset($err['error_subcode']) ? ' (subcode: ' . $err['error_subcode'] . ')' : '')
+                    . (isset($err['error_user_msg']) ? ' — ' . $err['error_user_msg'] : '');
+                Log::warning('Meta ad creative create API error', ['error' => $err, 'ad_id' => $ad->id]);
                 return ['success' => false, 'meta_ad_id' => null, 'error' => $errorMsg];
             }
 
