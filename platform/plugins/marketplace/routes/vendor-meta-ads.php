@@ -33,6 +33,7 @@ Route::group([
     Route::put('campaigns/{id}', [MetaCampaignController::class, 'update'])->name('campaigns.update');
     Route::delete('campaigns/{id}', [MetaCampaignController::class, 'destroy'])->name('campaigns.destroy');
     Route::post('campaigns/{id}/toggle-status', [MetaCampaignController::class, 'toggleStatus'])->name('campaigns.toggle-status');
+    Route::post('campaigns/{id}/push-to-meta', [MetaCampaignController::class, 'pushToMeta'])->name('campaigns.push-to-meta');
 
     // ── Ad Sets — create/store nested under campaign ───────────────────────────
     Route::get('campaigns/{campaignId}/ad-sets/create', [MetaAdSetController::class, 'create'])->name('campaigns.ad-sets.create');

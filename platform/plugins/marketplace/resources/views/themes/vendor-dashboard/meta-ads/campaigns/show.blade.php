@@ -15,6 +15,23 @@
     </div>
 
     @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+    @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
+
+    {{-- Meta Sync Status for Campaign --}}
+    @if(!$campaign->meta_campaign_id)
+        <div class="alert alert-warning d-flex justify-content-between align-items-center">
+            <span><i class="ti ti-cloud-off me-1"></i> <strong>Not synced to Meta Ads Manager.</strong> Push this campaign to Meta before creating ad sets.</span>
+            <form action="{{ route('marketplace.vendor.meta-ads.campaigns.push-to-meta', $campaign->id) }}" method="POST" class="ms-3 flex-shrink-0">
+                @csrf
+                <button type="submit" class="btn btn-warning btn-sm"><i class="ti ti-upload me-1"></i> Push to Meta</button>
+            </form>
+        </div>
+    @else
+        <div class="alert alert-success py-2 d-flex align-items-center gap-2">
+            <i class="ti ti-cloud-check fs-5"></i>
+            <span>Synced to Meta Ads Manager &nbsp;·&nbsp; Campaign ID: <code>{{ $campaign->meta_campaign_id }}</code></span>
+        </div>
+    @endif
 
     <div class="row g-3 mb-4">
         <div class="col-sm-4"><div class="card card-body">

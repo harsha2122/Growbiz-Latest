@@ -88,36 +88,11 @@ class MetaCampaignController extends BaseController
         // Push to Meta API
         $adAccount = $this->getConnectedAccount();
         if ($adAccount) {
-            try {
-                $metaClient = app(MetaApiClient::class);
-                $payload = [
-                    'name'                            => $campaign->name,
-                    'objective'                       => $campaign->objective,
-                    'status'                          => 'PAUSED',
-                    'special_ad_categories'           => [],
-                    'is_adset_budget_sharing_enabled' => false,
-                ];
-
-                if ($campaign->daily_budget) {
-                    $payload['daily_budget'] = (int) ($campaign->daily_budget * 100);
-                } elseif ($campaign->lifetime_budget) {
-                    $payload['lifetime_budget'] = (int) ($campaign->lifetime_budget * 100);
-                }
-
-                $result = $metaClient->createCampaign($adAccount->access_token, $adAccount->ad_account_id, $payload);
-
-                if (! empty($result['id'])) {
-                    $campaign->update(['meta_campaign_id' => $result['id']]);
-                } elseif (! empty($result['error'])) {
-                    Log::warning('Meta campaign create API error', ['error' => $result['error']]);
-                }
-            } catch (\Throwable $e) {
-                Log::error('Meta campaign push failed', ['error' => $e->getMessage()]);
-            }
+            $this->syncCampaignToMeta($campaign, $adAccount);
         }
 
         return $this->httpResponse()
-            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.index'))
+            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id))
             ->withCreatedSuccessMessage();
     }
 
@@ -218,6 +193,64 @@ class MetaCampaignController extends BaseController
         }
 
         return $this->httpResponse()->setMessage('Campaign status updated.');
+    }
+
+    public function pushToMeta(int $id)
+    {
+        $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
+
+        $adAccount = $this->getConnectedAccount();
+        if (! $adAccount) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage('No connected Meta ad account found. Please reconnect your Facebook account.');
+        }
+
+        $result = $this->syncCampaignToMeta($campaign, $adAccount);
+
+        if ($result['success']) {
+            return $this->httpResponse()->setMessage('Campaign pushed to Meta successfully! Campaign ID: ' . $result['meta_campaign_id']);
+        }
+
+        return $this->httpResponse()
+            ->setError()
+            ->setMessage('Failed to push campaign to Meta: ' . $result['error']);
+    }
+
+    /**
+     * Creates the campaign on Meta (without budget — budget lives at ad set level).
+     * Returns ['success' => bool, 'meta_campaign_id' => string|null, 'error' => string|null]
+     */
+    private function syncCampaignToMeta(MetaCampaign $campaign, MetaAdAccount $adAccount): array
+    {
+        try {
+            $payload = [
+                'name'                  => $campaign->name,
+                'objective'             => $campaign->objective,
+                'status'                => 'PAUSED',
+                'special_ad_categories' => [],
+                // No daily_budget / lifetime_budget here — budget is managed per ad set.
+                // Mixing campaign-level budget with ad set-level budget causes error 1885621.
+            ];
+
+            $result = app(MetaApiClient::class)
+                ->createCampaign($adAccount->access_token, $adAccount->ad_account_id, $payload);
+
+            if (! empty($result['id'])) {
+                $campaign->update(['meta_campaign_id' => $result['id']]);
+                return ['success' => true, 'meta_campaign_id' => $result['id'], 'error' => null];
+            }
+
+            $err      = $result['error'] ?? [];
+            $errorMsg = ($err['message'] ?? 'Unknown error')
+                . (isset($err['error_subcode']) ? ' (subcode: ' . $err['error_subcode'] . ')' : '');
+            Log::warning('Meta campaign create API error', ['error' => $err, 'campaign_id' => $campaign->id]);
+
+            return ['success' => false, 'meta_campaign_id' => null, 'error' => $errorMsg];
+        } catch (\Throwable $e) {
+            Log::error('Meta campaign push failed', ['error' => $e->getMessage(), 'campaign_id' => $campaign->id]);
+            return ['success' => false, 'meta_campaign_id' => null, 'error' => $e->getMessage()];
+        }
     }
 
     private function getConnectedAccount(): ?MetaAdAccount
