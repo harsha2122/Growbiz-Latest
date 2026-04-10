@@ -312,7 +312,7 @@ class MetaAdSetController extends BaseController
     }
 
     /**
-     * AJAX: search Meta geo locations (countries, regions, cities, zips).
+     * AJAX: search Meta geo locations filtered by type.
      */
     public function searchLocations(Request $request)
     {
@@ -326,20 +326,33 @@ class MetaAdSetController extends BaseController
             return response()->json(['error' => 'No connected Meta account'], 403);
         }
 
-        $types   = $request->get('types', ['country', 'region', 'city', 'zip']);
-        $results = app(MetaApiClient::class)->searchLocations($adAccount->access_token, $query, (array) $types);
+        // Map our tab name → Meta location_type
+        $typeMap = [
+            'country' => ['country'],
+            'region'  => ['region'],
+            'city'    => ['city'],
+            'zip'     => ['zip'],
+        ];
+        $tab   = $request->get('tab', 'country');
+        $types = $typeMap[$tab] ?? ['country'];
 
-        // Normalize to a clean array for the frontend
+        $extra = [];
+        if ($request->filled('country_code') && $tab !== 'country') {
+            $extra['country_code'] = $request->get('country_code');
+        }
+
+        $results = app(MetaApiClient::class)->searchLocations($adAccount->access_token, $query, $types, $extra);
+
         $mapped = array_map(fn ($r) => [
             'key'          => $r['key'],
             'name'         => $r['name'],
             'type'         => $r['type'],
             'country_code' => $r['country_code'] ?? null,
+            'country_name' => $r['country_name'] ?? null,
             'region'       => $r['region'] ?? null,
             'label'        => $r['name']
-                . (isset($r['region']) ? ', ' . $r['region'] : '')
-                . (isset($r['country_name']) ? ', ' . $r['country_name'] : '')
-                . ' (' . ucfirst($r['type']) . ')',
+                . (isset($r['region'])       ? ', ' . $r['region']       : '')
+                . (isset($r['country_name']) ? ', ' . $r['country_name'] : ''),
         ], $results);
 
         return response()->json(array_values($mapped));

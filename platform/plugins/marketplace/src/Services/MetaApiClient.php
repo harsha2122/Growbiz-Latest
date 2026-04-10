@@ -292,15 +292,15 @@ class MetaApiClient
      * Search Meta's geo location index (countries, regions, cities, zips).
      * Returns array of [{key, name, type, country_code, ...}]
      */
-    public function searchLocations(string $accessToken, string $query, array $types = []): array
+    public function searchLocations(string $accessToken, string $query, array $types = [], array $extra = []): array
     {
         try {
-            $params = [
+            $params = array_merge([
                 'access_token'   => $accessToken,
                 'type'           => 'adgeolocation',
                 'q'              => $query,
                 'location_types' => json_encode($types ?: ['country', 'region', 'city', 'zip']),
-            ];
+            ], $extra);
 
             $response = Http::get("{$this->baseUrl}/search", $params);
 
