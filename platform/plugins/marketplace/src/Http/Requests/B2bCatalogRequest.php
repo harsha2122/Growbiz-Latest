@@ -13,6 +13,8 @@ class B2bCatalogRequest extends Request
             'description' => ['nullable', 'string', 'max:2000'],
             'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'pdf_file' => [$this->route('b2b_catalog') ? 'nullable' : 'required', 'file', 'mimes:pdf', 'max:524288'],
+            'contact_number' => ['nullable', 'string', 'max:20'],
+            'whatsapp_number' => ['nullable', 'string', 'max:20'],
         ];
     }
 

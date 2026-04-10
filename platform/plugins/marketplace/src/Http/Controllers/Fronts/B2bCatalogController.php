@@ -42,9 +42,11 @@ class B2bCatalogController extends BaseController
             'description' => ['nullable', 'string', 'max:2000'],
             'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'pdf_file' => ['required', 'file', 'mimes:pdf', 'max:524288'],
+            'contact_number' => ['nullable', 'string', 'max:20'],
+            'whatsapp_number' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $data = $request->only(['title', 'description', 'discount_percentage']);
+        $data = $request->only(['title', 'description', 'discount_percentage', 'contact_number', 'whatsapp_number']);
         $data['pdf_path'] = $request->file('pdf_file')->store('b2b-catalogs', 'public');
         $data['uploaded_by'] = auth('customer')->id();
         $data['uploaded_by_type'] = 'vendor';
@@ -75,9 +77,11 @@ class B2bCatalogController extends BaseController
             'description' => ['nullable', 'string', 'max:2000'],
             'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'pdf_file' => ['nullable', 'file', 'mimes:pdf', 'max:524288'],
+            'contact_number' => ['nullable', 'string', 'max:20'],
+            'whatsapp_number' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $data = $request->only(['title', 'description', 'discount_percentage']);
+        $data = $request->only(['title', 'description', 'discount_percentage', 'contact_number', 'whatsapp_number']);
 
         if ($request->hasFile('pdf_file')) {
             if ($catalog->pdf_path && Storage::disk('public')->exists($catalog->pdf_path)) {

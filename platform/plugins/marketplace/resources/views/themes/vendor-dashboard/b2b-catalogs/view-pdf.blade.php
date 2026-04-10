@@ -1,11 +1,33 @@
 @extends(MarketplaceHelper::viewPath('vendor-dashboard.layouts.master'))
 
 @section('content')
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    @php
+        $contactNumber  = $catalog->contact_number  ?: MarketplaceHelper::getSetting('b2b_contact_call_number', '');
+        $whatsappNumber = $catalog->whatsapp_number ?: MarketplaceHelper::getSetting('b2b_contact_whatsapp_number', '');
+        $whatsappDigits = preg_replace('/\D/', '', $whatsappNumber);
+    @endphp
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <h4 class="mb-0">{{ $catalog->title }}</h4>
-        <a href="{{ route('marketplace.vendor.b2b-catalogs.index') }}" class="btn btn-secondary btn-sm">
-            {{ __('Back to Catalogs') }}
-        </a>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if($contactNumber)
+                <a href="tel:{{ $contactNumber }}"
+                   class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+                    <i class="ti ti-phone"></i> {{ __('Call') }}: {{ $contactNumber }}
+                </a>
+            @endif
+            @if($whatsappDigits)
+                <a href="https://wa.me/{{ $whatsappDigits }}"
+                   target="_blank" rel="noopener"
+                   class="btn btn-sm d-inline-flex align-items-center gap-1"
+                   style="background:#25D366;color:#fff;border-color:#25D366;">
+                    <i class="ti ti-brand-whatsapp"></i> {{ __('WhatsApp') }}
+                </a>
+            @endif
+            <a href="{{ route('marketplace.vendor.b2b-catalogs.index') }}" class="btn btn-secondary btn-sm">
+                {{ __('Back to Catalogs') }}
+            </a>
+        </div>
     </div>
 
     <div class="card">

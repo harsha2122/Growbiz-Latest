@@ -13,6 +13,8 @@ class B2bCatalog extends BaseModel
         'description',
         'discount_percentage',
         'pdf_path',
+        'contact_number',
+        'whatsapp_number',
         'uploaded_by',
         'uploaded_by_type',
     ];

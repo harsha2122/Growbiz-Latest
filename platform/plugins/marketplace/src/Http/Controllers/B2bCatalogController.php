@@ -37,7 +37,7 @@ class B2bCatalogController extends BaseController
 
     public function store(B2bCatalogRequest $request)
     {
-        $data = $request->only(['title', 'description', 'discount_percentage']);
+        $data = $request->only(['title', 'description', 'discount_percentage', 'contact_number', 'whatsapp_number']);
 
         if ($request->hasFile('pdf_file')) {
             $data['pdf_path'] = $request->file('pdf_file')->store('b2b-catalogs', 'public');
@@ -63,7 +63,7 @@ class B2bCatalogController extends BaseController
 
     public function update(B2bCatalog $b2b_catalog, B2bCatalogRequest $request)
     {
-        $data = $request->only(['title', 'description', 'discount_percentage']);
+        $data = $request->only(['title', 'description', 'discount_percentage', 'contact_number', 'whatsapp_number']);
 
         if ($request->hasFile('pdf_file')) {
             if ($b2b_catalog->pdf_path && Storage::disk('public')->exists($b2b_catalog->pdf_path)) {

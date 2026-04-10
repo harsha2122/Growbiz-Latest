@@ -33,6 +33,25 @@
                     @enderror
                 </div>
 
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="contact_number" class="form-label">{{ __('Contact Number') }}</label>
+                        <input type="text" class="form-control @error('contact_number') is-invalid @enderror" id="contact_number" name="contact_number" value="{{ old('contact_number') }}" placeholder="+91XXXXXXXXXX">
+                        <small class="text-muted">{{ __('Leave empty to use the default number from settings.') }}</small>
+                        @error('contact_number')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="whatsapp_number" class="form-label">{{ __('WhatsApp Number') }}</label>
+                        <input type="text" class="form-control @error('whatsapp_number') is-invalid @enderror" id="whatsapp_number" name="whatsapp_number" value="{{ old('whatsapp_number') }}" placeholder="+91XXXXXXXXXX">
+                        <small class="text-muted">{{ __('Leave empty to use the default number from settings.') }}</small>
+                        @error('whatsapp_number')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
                 <div class="mb-3">
                     <label for="pdf_file" class="form-label">{{ __('PDF File') }} <span class="text-danger">*</span></label>
                     <input type="file" class="form-control @error('pdf_file') is-invalid @enderror" id="pdf_file" name="pdf_file" accept=".pdf" required>
