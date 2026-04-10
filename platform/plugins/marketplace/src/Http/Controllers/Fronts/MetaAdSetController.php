@@ -321,41 +321,45 @@ class MetaAdSetController extends BaseController
             return response()->json([]);
         }
 
-        $adAccount = $this->getConnectedAccount();
-        if (! $adAccount) {
-            return response()->json(['error' => 'No connected Meta account'], 403);
+        try {
+            $adAccount = $this->getConnectedAccount();
+            if (! $adAccount) {
+                return response()->json(['error' => 'No connected Meta ad account. Please reconnect Facebook.'], 403);
+            }
+
+            $typeMap = [
+                'country' => ['country'],
+                'region'  => ['region'],
+                'city'    => ['city'],
+                'zip'     => ['zip'],
+            ];
+            $tab   = $request->get('tab', 'country');
+            $types = $typeMap[$tab] ?? ['country'];
+
+            $extra = [];
+            if ($request->filled('country_code') && $tab !== 'country') {
+                $extra['country_code'] = $request->get('country_code');
+            }
+
+            $results = app(MetaApiClient::class)->searchLocations($adAccount->access_token, $query, $types, $extra);
+
+            $mapped = array_map(fn ($r) => [
+                'key'          => $r['key'] ?? '',
+                'name'         => $r['name'] ?? '',
+                'type'         => $r['type'] ?? $tab,
+                'country_code' => $r['country_code'] ?? null,
+                'country_name' => $r['country_name'] ?? null,
+                'region'       => $r['region'] ?? null,
+                'label'        => ($r['name'] ?? '')
+                    . (isset($r['region'])       ? ', ' . $r['region']       : '')
+                    . (isset($r['country_name']) ? ', ' . $r['country_name'] : ''),
+            ], $results);
+
+            return response()->json(array_values($mapped));
+        } catch (\Throwable $e) {
+            Log::error('MetaAdSetController::searchLocations error', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Search failed: ' . $e->getMessage()], 500);
         }
-
-        // Map our tab name → Meta location_type
-        $typeMap = [
-            'country' => ['country'],
-            'region'  => ['region'],
-            'city'    => ['city'],
-            'zip'     => ['zip'],
-        ];
-        $tab   = $request->get('tab', 'country');
-        $types = $typeMap[$tab] ?? ['country'];
-
-        $extra = [];
-        if ($request->filled('country_code') && $tab !== 'country') {
-            $extra['country_code'] = $request->get('country_code');
-        }
-
-        $results = app(MetaApiClient::class)->searchLocations($adAccount->access_token, $query, $types, $extra);
-
-        $mapped = array_map(fn ($r) => [
-            'key'          => $r['key'],
-            'name'         => $r['name'],
-            'type'         => $r['type'],
-            'country_code' => $r['country_code'] ?? null,
-            'country_name' => $r['country_name'] ?? null,
-            'region'       => $r['region'] ?? null,
-            'label'        => $r['name']
-                . (isset($r['region'])       ? ', ' . $r['region']       : '')
-                . (isset($r['country_name']) ? ', ' . $r['country_name'] : ''),
-        ], $results);
-
-        return response()->json(array_values($mapped));
     }
 
     /**

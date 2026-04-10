@@ -303,8 +303,9 @@ class MetaApiClient
             ], $extra);
 
             $response = Http::get("{$this->baseUrl}/search", $params);
+            $json     = $response->json();
 
-            return $response->json()['data'] ?? [];
+            return is_array($json) ? ($json['data'] ?? []) : [];
         } catch (\Throwable $e) {
             Log::error('MetaApiClient::searchLocations failed', ['error' => $e->getMessage()]);
             return [];
