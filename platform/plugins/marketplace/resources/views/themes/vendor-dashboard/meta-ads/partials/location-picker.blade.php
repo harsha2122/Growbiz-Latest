@@ -12,7 +12,7 @@
            value="{{ json_encode($existingLocations) }}">
 
     {{-- Selected location tags --}}
-    <div id="location-tags" class="d-flex flex-wrap gap-2 mb-3 min-height-32">
+    <div id="location-tags" class="d-flex flex-wrap gap-2 mb-2" style="min-height:28px">
         @foreach($existingLocations as $loc)
             @php
                 $isStr = is_string($loc);
@@ -22,70 +22,71 @@
                     (!empty($loc['region'])       ? ', ' . $loc['region']       : '') .
                     (!empty($loc['country_name']) ? ', ' . $loc['country_name'] : '')
                 );
-                $typeColors = ['country' => 'primary', 'region' => 'info', 'city' => 'success', 'zip' => 'secondary'];
-                $color = $typeColors[$type] ?? 'primary';
+                $bgMap = ['country' => '#0d6efd', 'region' => '#0dcaf0', 'city' => '#198754', 'zip' => '#6c757d'];
+                $bg    = $bgMap[$type] ?? '#0d6efd';
             @endphp
-            <span class="badge bg-{{ $color }} d-flex align-items-center gap-1 px-2 py-2 fs-xs location-tag"
+            <span class="location-tag d-inline-flex align-items-center gap-1 px-2 py-1 rounded text-white"
+                  style="font-size:.8rem; background:{{ $bg }};"
                   data-loc="{{ json_encode($isStr ? ['key' => $loc, 'type' => 'country', 'name' => strtoupper($loc)] : $loc) }}">
-                <i class="ti ti-map-pin me-1" style="font-size:.75rem"></i>
                 {{ $label }}
-                <span class="ms-1 opacity-75" style="font-size:.65rem">({{ ucfirst($type) }})</span>
-                <button type="button" class="btn-close btn-close-white ms-1" style="font-size:.55rem"
-                        onclick="LocationPicker.remove(this)"></button>
+                <span class="opacity-75" style="font-size:.65rem">({{ ucfirst($type) }})</span>
+                <button type="button" onclick="LocationPicker.remove(this)"
+                        style="background:none;border:none;color:#fff;font-size:.75rem;line-height:1;padding:0 2px;cursor:pointer;"
+                        title="Remove">×</button>
             </span>
         @endforeach
-        <span id="no-locations-hint" class="{{ count($existingLocations) ? 'd-none' : '' }} text-muted small align-self-center">
+        <span id="no-locations-hint" class="{{ count($existingLocations) ? 'd-none' : '' }} text-muted small align-self-center fst-italic">
             No locations selected — defaults to India
         </span>
     </div>
 
-    {{-- Tab + Search card --}}
-    <div class="card border">
-        <div class="card-header p-0">
-            <ul class="nav nav-tabs card-header-tabs border-0" id="locTypeTabs" role="tablist">
-                @foreach(['country' => ['Country','ti-globe'], 'region' => ['State / Region','ti-map-2'], 'city' => ['City','ti-building-skyscraper'], 'zip' => ['Pincode / Zip','ti-mailbox']] as $tab => [$label, $icon])
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link {{ $tab === 'country' ? 'active' : '' }} px-3 py-2"
-                                id="tab-{{ $tab }}" data-tab="{{ $tab }}"
-                                onclick="LocationPicker.setTab('{{ $tab }}')" type="button">
-                            <i class="ti {{ $icon }} me-1"></i>{{ $label }}
-                        </button>
-                    </li>
-                @endforeach
-            </ul>
+    {{-- Tab + Search box --}}
+    <div style="border:1px solid #dee2e6; border-radius:8px; overflow:visible; background:#fff;">
+
+        {{-- Tab bar --}}
+        <div style="display:flex; border-bottom:1px solid #dee2e6; background:#f8f9fa; border-radius:8px 8px 0 0; overflow:hidden;">
+            @foreach(['country' => ['🌍','Country'], 'region' => ['🗺️','State'], 'city' => ['🏙️','City'], 'zip' => ['📮','Pincode']] as $tab => [$icon, $lbl])
+                <button type="button" id="loctab-{{ $tab }}" data-tab="{{ $tab }}"
+                        onclick="LocationPicker.setTab('{{ $tab }}')"
+                        style="flex:1; border:none; border-right:1px solid #dee2e6; padding:10px 4px;
+                               font-size:.82rem; font-weight:600; cursor:pointer; transition:background .15s;
+                               background:{{ $tab === 'country' ? '#fff' : '#f8f9fa' }};
+                               color:{{ $tab === 'country' ? '#0d6efd' : '#555' }};
+                               border-bottom:{{ $tab === 'country' ? '2px solid #0d6efd' : '2px solid transparent' }};">
+                    {{ $icon }} {{ $lbl }}
+                </button>
+            @endforeach
         </div>
-        <div class="card-body pb-2 pt-2">
-            <div class="position-relative">
-                <input type="text" id="loc_search_input" class="form-control form-control-sm"
-                       placeholder="Type to search countries…" autocomplete="off">
-                <div id="loc_suggestions"
-                     class="position-absolute w-100 bg-white border rounded shadow-sm d-none"
-                     style="top:calc(100% + 4px); max-height:220px; overflow-y:auto; z-index:1055;">
-                </div>
+
+        {{-- Search area --}}
+        <div style="padding:12px; position:relative;">
+            <input type="text" id="loc_search_input" autocomplete="off"
+                   placeholder="Type to search countries…"
+                   style="width:100%; padding:8px 12px; border:1px solid #ced4da; border-radius:6px;
+                          font-size:.9rem; outline:none; box-sizing:border-box;">
+            <div id="loc_suggestions"
+                 style="display:none; position:absolute; left:12px; right:12px; top:calc(100% - 0px);
+                        background:#fff; border:1px solid #ced4da; border-radius:6px;
+                        box-shadow:0 4px 12px rgba(0,0,0,.12); max-height:220px; overflow-y:auto; z-index:9999;">
             </div>
-            <div id="loc_country_filter" class="d-none mt-2">
-                <small class="text-muted">Filtering by country:
-                    <strong id="loc_country_filter_name"></strong>
-                    <a href="#" onclick="LocationPicker.clearCountryFilter(); return false;" class="ms-1 text-danger small">× clear</a>
-                </small>
-            </div>
+        </div>
+
+        {{-- Country-scope hint for sub-tabs --}}
+        <div id="loc_country_filter" style="display:none; padding:0 12px 10px; font-size:.8rem; color:#555;">
+            Filtering by: <strong id="loc_filter_name"></strong>
+            <a href="#" onclick="LocationPicker.clearCountryFilter();return false;"
+               style="color:#dc3545; margin-left:6px;">× clear</a>
         </div>
     </div>
-    <div class="form-text mt-1">
-        <strong>Country</strong> — adds entire country &nbsp;|&nbsp;
-        <strong>State</strong> — targets a state/region &nbsp;|&nbsp;
-        <strong>City</strong> — targets a specific city &nbsp;|&nbsp;
-        <strong>Pincode</strong> — targets an area by postal code
+
+    <div style="font-size:.78rem; color:#888; margin-top:6px;">
+        <span style="color:#0d6efd">●</span> Country &nbsp;
+        <span style="color:#0dcaf0">●</span> State &nbsp;
+        <span style="color:#198754">●</span> City &nbsp;
+        <span style="color:#6c757d">●</span> Pincode
+        &nbsp;·&nbsp; Type 2+ characters to search. Select a country first for better state/city/pincode results.
     </div>
 </div>
-
-<style>
-.location-tag { font-size: .8rem; line-height:1.4; }
-.loc-item { cursor: pointer; padding: 8px 12px; border-bottom: 1px solid #f0f0f0; }
-.loc-item:last-child { border-bottom: none; }
-.loc-item:hover { background: #f8f9fa; }
-.loc-item .loc-type-badge { font-size: .65rem; }
-</style>
 
 <script>
 window.LocationPicker = (function () {
@@ -96,29 +97,29 @@ window.LocationPicker = (function () {
     const dropdown  = document.getElementById('loc_suggestions');
     const noHint    = document.getElementById('no-locations-hint');
 
-    const tabPlaceholders = {
+    const placeholders = {
         country: 'Type to search countries…',
         region:  'Type to search states / regions…',
         city:    'Type to search cities…',
-        zip:     'Type a pincode / zip code…',
+        zip:     'Type a pincode or zip code…',
     };
-    const typeColors = { country:'primary', region:'info', city:'success', zip:'secondary' };
+    const bgColors = { country:'#0d6efd', region:'#0dcaf0', city:'#198754', zip:'#6c757d' };
+    const textColors = { country:'#fff', region:'#000', city:'#fff', zip:'#fff' };
 
-    let locations = @json($existingLocations);
-    let activeTab = 'country';
-    let countryCode = null;
-    let countryName = null;
+    let locations  = @json($existingLocations);
+    let activeTab  = 'country';
+    let cCode      = null;
+    let cName      = null;
     let debounce;
 
     function syncHidden() {
         hidden.value = JSON.stringify(locations);
         noHint.classList.toggle('d-none', locations.length > 0);
+        if (!locations.length) noHint.classList.remove('d-none');
     }
 
     function renderTags() {
-        // Remove existing tags (keep no-hint span)
         tagsWrap.querySelectorAll('.location-tag').forEach(el => el.remove());
-
         locations.forEach((loc, idx) => {
             const isStr = typeof loc === 'string';
             const type  = isStr ? 'country' : (loc.type || 'country');
@@ -126,18 +127,17 @@ window.LocationPicker = (function () {
                 : (loc.name || '')
                   + (loc.region       ? ', ' + loc.region       : '')
                   + (loc.country_name ? ', ' + loc.country_name : '');
-            const color = typeColors[type] || 'primary';
-
+            const bg   = bgColors[type]   || '#0d6efd';
+            const tc   = textColors[type] || '#fff';
             const span = document.createElement('span');
-            span.className = `badge bg-${color} d-flex align-items-center gap-1 px-2 py-2 location-tag`;
-            span.style.fontSize = '.8rem';
-            span.innerHTML = `<i class="ti ti-map-pin me-1" style="font-size:.75rem"></i>${esc(label)}`
-                + `<span class="ms-1 opacity-75" style="font-size:.65rem">(${cap(type)})</span>`
-                + `<button type="button" class="btn-close btn-close-white ms-1" style="font-size:.55rem" data-idx="${idx}"></button>`;
+            span.className = 'location-tag d-inline-flex align-items-center gap-1 px-2 py-1 rounded';
+            span.style.cssText = `font-size:.8rem;background:${bg};color:${tc};`;
+            span.innerHTML = `${esc(label)}<span style="font-size:.65rem;opacity:.75">(${cap(type)})</span>`
+                + `<button type="button" data-idx="${idx}"
+                      style="background:none;border:none;color:${tc};font-size:.85rem;line-height:1;padding:0 2px;cursor:pointer;">×</button>`;
             span.querySelector('button').addEventListener('click', () => removeIdx(idx));
             tagsWrap.insertBefore(span, noHint);
         });
-
         noHint.classList.toggle('d-none', locations.length > 0);
     }
 
@@ -147,133 +147,120 @@ window.LocationPicker = (function () {
         renderTags();
     }
 
+    // Called from inline onclick on server-rendered tags
     function remove(btn) {
         const tag = btn.closest('.location-tag');
-        const locData = tag.dataset.loc ? JSON.parse(tag.dataset.loc) : null;
-        if (locData) {
-            locations = locations.filter(l => JSON.stringify(l) !== JSON.stringify(locData));
-            syncHidden();
-            renderTags();
-        }
+        if (!tag) return;
+        const raw = tag.dataset.loc;
+        if (!raw) return;
+        const loc = JSON.parse(raw);
+        locations = locations.filter(l => JSON.stringify(l) !== JSON.stringify(loc));
+        syncHidden();
+        renderTags();
     }
 
     function isDuplicate(loc) {
         return locations.some(l =>
-            (typeof l === 'object' && typeof loc === 'object' && l.key === loc.key && l.type === loc.type)
+            typeof l === 'object' && typeof loc === 'object' && l.key === loc.key && l.type === loc.type
         );
     }
 
     function addLocation(loc) {
-        if (isDuplicate(loc)) { showDropdown([{_msg:'Already added'}]); return; }
+        if (isDuplicate(loc)) {
+            showMsg('Already added.'); return;
+        }
         locations.push(loc);
+        if (loc.type === 'country') { cCode = loc.key; cName = loc.name; }
         syncHidden();
         renderTags();
         input.value = '';
-        dropdown.classList.add('d-none');
-
-        // After adding a country, offer to filter states/cities by it
-        if (loc.type === 'country') {
-            countryCode = loc.key;
-            countryName = loc.name;
-        }
+        dropdown.style.display = 'none';
+        updateFilterHint();
     }
 
     function setTab(tab) {
         activeTab = tab;
-        document.querySelectorAll('#locTypeTabs .nav-link').forEach(el => {
-            el.classList.toggle('active', el.dataset.tab === tab);
+        document.querySelectorAll('[id^="loctab-"]').forEach(btn => {
+            const active = btn.dataset.tab === tab;
+            btn.style.background        = active ? '#fff'      : '#f8f9fa';
+            btn.style.color             = active ? '#0d6efd'   : '#555';
+            btn.style.borderBottom      = active ? '2px solid #0d6efd' : '2px solid transparent';
         });
-        input.placeholder = tabPlaceholders[tab] || 'Search…';
+        input.placeholder = placeholders[tab] || 'Search…';
         input.value = '';
-        dropdown.classList.add('d-none');
-        // Show country filter hint for region/city/zip if a country was selected
-        updateCountryFilterHint();
+        dropdown.style.display = 'none';
+        input.focus();
+        updateFilterHint();
     }
 
-    function updateCountryFilterHint() {
-        const filterDiv  = document.getElementById('loc_country_filter');
-        const filterName = document.getElementById('loc_country_filter_name');
-        if (countryCode && activeTab !== 'country') {
-            filterDiv.classList.remove('d-none');
-            filterName.textContent = countryName || countryCode;
+    function updateFilterHint() {
+        const div  = document.getElementById('loc_country_filter');
+        const name = document.getElementById('loc_filter_name');
+        if (cCode && activeTab !== 'country') {
+            div.style.display = 'block';
+            name.textContent  = cName || cCode;
         } else {
-            filterDiv.classList.add('d-none');
+            div.style.display = 'none';
         }
     }
 
     function clearCountryFilter() {
-        countryCode = null;
-        countryName = null;
-        updateCountryFilterHint();
+        cCode = null; cName = null;
+        updateFilterHint();
+    }
+
+    function showMsg(msg) {
+        dropdown.innerHTML = `<div style="padding:10px 14px;color:#888;font-size:.85rem;">${esc(msg)}</div>`;
+        dropdown.style.display = 'block';
     }
 
     function showDropdown(items) {
         dropdown.innerHTML = '';
-        if (!items.length) {
-            dropdown.innerHTML = '<div class="px-3 py-2 text-muted small">No results found.</div>';
-            dropdown.classList.remove('d-none');
-            return;
-        }
-        if (items[0]._msg) {
-            dropdown.innerHTML = `<div class="px-3 py-2 text-warning small">${esc(items[0]._msg)}</div>`;
-            dropdown.classList.remove('d-none');
-            return;
-        }
+        if (!items.length) { showMsg('No results found.'); return; }
         items.forEach(item => {
+            const bg = bgColors[item.type] || '#6c757d';
+            const tc = textColors[item.type] || '#fff';
             const div = document.createElement('div');
-            div.className = 'loc-item';
-            const color = typeColors[item.type] || 'secondary';
-            div.innerHTML = `<div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="fw-semibold">${esc(item.name)}</span>
-                    ${item.region       ? `<small class="text-muted ms-1">${esc(item.region)}</small>` : ''}
-                    ${item.country_name ? `<small class="text-muted ms-1">${esc(item.country_name)}</small>` : ''}
-                </div>
-                <span class="badge bg-${color} loc-type-badge">${cap(item.type)}</span>
-            </div>`;
+            div.style.cssText = 'padding:9px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;';
+            div.innerHTML = `<div>
+                <span style="font-weight:600">${esc(item.name)}</span>
+                ${item.region       ? `<span style="color:#888;font-size:.82rem;margin-left:5px">${esc(item.region)}</span>`       : ''}
+                ${item.country_name ? `<span style="color:#888;font-size:.82rem;margin-left:5px">${esc(item.country_name)}</span>` : ''}
+            </div>
+            <span style="font-size:.7rem;font-weight:600;background:${bg};color:${tc};padding:2px 7px;border-radius:20px;">${cap(item.type)}</span>`;
+            div.addEventListener('mouseenter', () => div.style.background = '#f8f9fa');
+            div.addEventListener('mouseleave', () => div.style.background = '#fff');
             div.addEventListener('mousedown', e => {
                 e.preventDefault();
-                addLocation({
-                    key:          item.key,
-                    type:         item.type,
-                    name:         item.name,
-                    region:       item.region || null,
-                    country_name: item.country_name || null,
-                    country_code: item.country_code || null,
-                });
+                addLocation({ key: item.key, type: item.type, name: item.name,
+                               region: item.region || null, country_name: item.country_name || null,
+                               country_code: item.country_code || null });
             });
             dropdown.appendChild(div);
         });
-        dropdown.classList.remove('d-none');
+        dropdown.style.display = 'block';
     }
 
     function doSearch(q) {
         let url = `${searchUrl}?q=${encodeURIComponent(q)}&tab=${activeTab}`;
-        if (countryCode && activeTab !== 'country') {
-            url += `&country_code=${encodeURIComponent(countryCode)}`;
-        }
+        if (cCode && activeTab !== 'country') url += `&country_code=${encodeURIComponent(cCode)}`;
         fetch(url)
             .then(r => r.json())
             .then(data => showDropdown(Array.isArray(data) ? data : []))
-            .catch(() => dropdown.classList.add('d-none'));
+            .catch(() => dropdown.style.display = 'none');
     }
 
     input.addEventListener('input', function () {
         clearTimeout(debounce);
         const q = this.value.trim();
-        if (q.length < 2) { dropdown.classList.add('d-none'); return; }
+        if (q.length < 2) { dropdown.style.display = 'none'; return; }
         debounce = setTimeout(() => doSearch(q), 300);
     });
-
-    input.addEventListener('blur', () => setTimeout(() => dropdown.classList.add('d-none'), 200));
-    input.addEventListener('focus', function () {
-        if (this.value.trim().length >= 2) doSearch(this.value.trim());
-    });
+    input.addEventListener('blur',  () => setTimeout(() => dropdown.style.display = 'none', 200));
+    input.addEventListener('focus', function () { if (this.value.trim().length >= 2) doSearch(this.value.trim()); });
 
     function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
-    function esc(s) {
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
     return { setTab, remove, clearCountryFilter };
 })();
