@@ -244,10 +244,26 @@ window.LocationPicker = (function () {
     function doSearch(q) {
         let url = `${searchUrl}?q=${encodeURIComponent(q)}&tab=${activeTab}`;
         if (cCode && activeTab !== 'country') url += `&country_code=${encodeURIComponent(cCode)}`;
-        fetch(url)
-            .then(r => r.json())
-            .then(data => showDropdown(Array.isArray(data) ? data : []))
-            .catch(() => dropdown.style.display = 'none');
+
+        showMsg('Searching…');
+
+        fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => {
+                if (!r.ok) {
+                    return r.text().then(txt => { throw new Error(`HTTP ${r.status}: ${txt.substring(0, 120)}`); });
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (Array.isArray(data)) {
+                    showDropdown(data);
+                } else if (data && data.error) {
+                    showMsg('⚠ ' + data.error);
+                } else {
+                    showDropdown([]);
+                }
+            })
+            .catch(err => showMsg('⚠ Could not load results: ' + err.message));
     }
 
     input.addEventListener('input', function () {
