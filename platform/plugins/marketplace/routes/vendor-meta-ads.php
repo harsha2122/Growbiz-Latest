@@ -38,14 +38,13 @@ Route::group([
     // ── Ad Sets — create/store nested under campaign ───────────────────────────
     Route::get('campaigns/{campaignId}/ad-sets/create', [MetaAdSetController::class, 'create'])->name('campaigns.ad-sets.create');
     Route::post('campaigns/{campaignId}/ad-sets', [MetaAdSetController::class, 'store'])->name('campaigns.ad-sets.store');
-    // Static routes must precede wildcard {id} routes
     Route::get('ad-sets/search-locations', [MetaAdSetController::class, 'searchLocations'])->name('ad-sets.search-locations');
-    Route::get('ad-sets/{id}', [MetaAdSetController::class, 'show'])->name('ad-sets.show');
-    Route::get('ad-sets/{id}/edit', [MetaAdSetController::class, 'edit'])->name('ad-sets.edit');
-    Route::put('ad-sets/{id}', [MetaAdSetController::class, 'update'])->name('ad-sets.update');
-    Route::delete('ad-sets/{id}', [MetaAdSetController::class, 'destroy'])->name('ad-sets.destroy');
-    Route::post('ad-sets/{id}/toggle-status', [MetaAdSetController::class, 'toggleStatus'])->name('ad-sets.toggle-status');
-    Route::post('ad-sets/{id}/push-to-meta', [MetaAdSetController::class, 'pushToMeta'])->name('ad-sets.push-to-meta');
+    Route::get('ad-sets/{id}', [MetaAdSetController::class, 'show'])->where('id', '[0-9]+')->name('ad-sets.show');
+    Route::get('ad-sets/{id}/edit', [MetaAdSetController::class, 'edit'])->where('id', '[0-9]+')->name('ad-sets.edit');
+    Route::put('ad-sets/{id}', [MetaAdSetController::class, 'update'])->where('id', '[0-9]+')->name('ad-sets.update');
+    Route::delete('ad-sets/{id}', [MetaAdSetController::class, 'destroy'])->where('id', '[0-9]+')->name('ad-sets.destroy');
+    Route::post('ad-sets/{id}/toggle-status', [MetaAdSetController::class, 'toggleStatus'])->where('id', '[0-9]+')->name('ad-sets.toggle-status');
+    Route::post('ad-sets/{id}/push-to-meta', [MetaAdSetController::class, 'pushToMeta'])->where('id', '[0-9]+')->name('ad-sets.push-to-meta');
 
     // ── Ads — create/store nested under ad set ─────────────────────────────────
     Route::get('ad-sets/{adSetId}/ads/create', [MetaAdController::class, 'create'])->name('ad-sets.ads.create');
