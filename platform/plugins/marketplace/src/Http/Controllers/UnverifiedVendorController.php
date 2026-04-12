@@ -113,20 +113,10 @@ class UnverifiedVendorController extends BaseController
 
         $storage = Storage::disk('local');
 
-        if ($vendor->store->pan_card_file && $storage->exists($vendor->store->pan_card_file)) {
-            $storage->delete($vendor->store->pan_card_file);
-        }
-
-        if ($vendor->store->aadhar_card_file && $storage->exists($vendor->store->aadhar_card_file)) {
-            $storage->delete($vendor->store->aadhar_card_file);
-        }
-
-        if ($vendor->store->gst_certificate_file && $storage->exists($vendor->store->gst_certificate_file)) {
-            $storage->delete($vendor->store->gst_certificate_file);
-        }
-
-        if ($vendor->store->udyam_aadhar_file && $storage->exists($vendor->store->udyam_aadhar_file)) {
-            $storage->delete($vendor->store->udyam_aadhar_file);
+        foreach (['aadhar_file_1', 'aadhar_file_2', 'business_doc_file', 'pan_card_file', 'aadhar_card_file', 'gst_certificate_file', 'udyam_aadhar_file'] as $field) {
+            if ($vendor->store->$field && $storage->exists($vendor->store->$field)) {
+                $storage->delete($vendor->store->$field);
+            }
         }
 
         if (MarketplaceHelper::getSetting('verify_vendor', 1) && ($vendor->store->email || $vendor->email)) {
@@ -181,9 +171,19 @@ class UnverifiedVendorController extends BaseController
 
         $storage = Storage::disk('local');
 
-        $fileField = $type . '_file';
+        $fieldMap = [
+            'aadhar_1'        => 'aadhar_file_1',
+            'aadhar_2'        => 'aadhar_file_2',
+            'business_doc'    => 'business_doc_file',
+            'pan_card'        => 'pan_card_file',
+            'aadhar_card'     => 'aadhar_card_file',
+            'gst_certificate' => 'gst_certificate_file',
+            'udyam_aadhar'    => 'udyam_aadhar_file',
+        ];
 
-        if (! isset($vendor->store->$fileField) || ! $storage->exists($vendor->store->$fileField)) {
+        $fileField = $fieldMap[$type] ?? null;
+
+        if (! $fileField || ! $vendor->store->$fileField || ! $storage->exists($vendor->store->$fileField)) {
             return BaseHttpResponse::make()
                 ->setError()
                 ->setMessage(__('File not found!'));

@@ -31,70 +31,73 @@ window.addEventListener('load', function() {
             window.initVendorDropzones()
         }
 
-        if (!window.panCardDropzone && jQ('#pan-card-dropzone').length) {
-            console.log('Initializing PAN card dropzone')
-            window.panCardDropzone = new Dropzone('#pan-card-dropzone', {
+        if (!window.aadharFile1Dropzone && jQ('#aadhar-file-1-dropzone').length) {
+            console.log('Initializing Aadhaar file 1 dropzone')
+            window.aadharFile1Dropzone = new Dropzone('#aadhar-file-1-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
-                paramName: 'pan_card_file',
+                paramName: 'aadhar_file_1',
                 maxFiles: 1,
                 acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: jQ('#pan-card-dropzone').data('placeholder'),
+                dictDefaultMessage: jQ('#aadhar-file-1-dropzone').data('placeholder') || 'Drop Aadhaar PDF or Front Image here',
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
                 }
             })
         }
 
-        if (!window.aadharCardDropzone && jQ('#aadhar-card-dropzone').length) {
-            console.log('Initializing Aadhar card dropzone')
-            window.aadharCardDropzone = new Dropzone('#aadhar-card-dropzone', {
+        if (!window.aadharFile2Dropzone && jQ('#aadhar-file-2-dropzone').length) {
+            console.log('Initializing Aadhaar file 2 dropzone')
+            window.aadharFile2Dropzone = new Dropzone('#aadhar-file-2-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
-                paramName: 'aadhar_card_file',
+                paramName: 'aadhar_file_2',
                 maxFiles: 1,
-                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
+                acceptedFiles: '.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: jQ('#aadhar-card-dropzone').data('placeholder'),
+                dictDefaultMessage: jQ('#aadhar-file-2-dropzone').data('placeholder') || 'Drop Aadhaar Back Image here',
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
                 }
             })
         }
 
-        if (!window.gstCertificateDropzone && jQ('#gst-certificate-dropzone').length) {
-            console.log('Initializing GST certificate dropzone')
-            window.gstCertificateDropzone = new Dropzone('#gst-certificate-dropzone', {
+        if (!window.businessDocDropzone && jQ('#business-doc-dropzone').length) {
+            console.log('Initializing Business Document dropzone')
+            window.businessDocDropzone = new Dropzone('#business-doc-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
-                paramName: 'gst_certificate_file',
+                paramName: 'business_doc_file',
                 maxFiles: 1,
                 acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: jQ('#gst-certificate-dropzone').data('placeholder'),
-                maxfilesexceeded: function(file) {
-                    this.removeFile(file)
-                }
-            })
-        }
-
-        if (!window.udyamAadharDropzone && jQ('#udyam-aadhar-dropzone').length) {
-            console.log('Initializing Udyam Aadhar dropzone')
-            window.udyamAadharDropzone = new Dropzone('#udyam-aadhar-dropzone', {
-                url: '#',
-                autoProcessQueue: false,
-                paramName: 'udyam_aadhar_file',
-                maxFiles: 1,
-                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
-                addRemoveLinks: true,
-                dictDefaultMessage: jQ('#udyam-aadhar-dropzone').data('placeholder'),
+                dictDefaultMessage: jQ('#business-doc-dropzone').data('placeholder') || 'Drop Business Document here or click to upload',
                 maxfilesexceeded: function(file) {
                     this.removeFile(file)
                 }
             })
         }
     }
+
+    // Aadhaar mode toggle
+    jQ(document).on('change', 'input[name="aadhar_mode"]', function() {
+        const mode = jQ(this).val()
+        const wrapper = jQ('#aadhar-file-2-wrapper')
+        if (mode === 'images') {
+            wrapper.show()
+            // init dropzone if not yet done
+            if (!window.aadharFile2Dropzone && jQ('#aadhar-file-2-dropzone').length) {
+                setTimeout(initializeDropzones, 50)
+            }
+        } else {
+            wrapper.hide()
+            // clear file 2 if user switches back to PDF mode
+            if (window.aadharFile2Dropzone) {
+                window.aadharFile2Dropzone.removeAllFiles(true)
+            }
+        }
+    })
 
     // Check initial state on page load
     const checkedVendorRadio = jQ('input[name=is_vendor]:checked')
@@ -195,48 +198,36 @@ window.addEventListener('load', function() {
 
         const formData = new FormData(form.get(0))
 
-        formData.delete('pan_card_file')
-        formData.delete('aadhar_card_file')
-        formData.delete('gst_certificate_file')
-        formData.delete('udyam_aadhar_file')
+        // Remove any stale file fields — we'll append from dropzones
+        formData.delete('aadhar_file_1')
+        formData.delete('aadhar_file_2')
+        formData.delete('business_doc_file')
 
-        if (window.panCardDropzone && window.panCardDropzone.files.length > 0) {
-            const file = window.panCardDropzone.files[0]
-            formData.append('pan_card_file', file, file.name)
-            console.log('PAN Card file added:', file.name, 'Type:', file.type, 'Size:', file.size)
+        if (window.aadharFile1Dropzone && window.aadharFile1Dropzone.files.length > 0) {
+            const file = window.aadharFile1Dropzone.files[0]
+            formData.append('aadhar_file_1', file, file.name)
+            console.log('Aadhaar file 1 added:', file.name, 'Size:', file.size)
         } else {
-            console.log('ERROR: No PAN card file uploaded')
+            console.log('No Aadhaar file 1 uploaded')
         }
 
-        if (window.aadharCardDropzone && window.aadharCardDropzone.files.length > 0) {
-            const file = window.aadharCardDropzone.files[0]
-            formData.append('aadhar_card_file', file, file.name)
-            console.log('Aadhar Card file added:', file.name, 'Type:', file.type, 'Size:', file.size)
-        } else {
-            console.log('ERROR: No Aadhar card file uploaded')
+        // Only append aadhar_file_2 when images mode is selected
+        const aadharMode = form.find('input[name="aadhar_mode"]:checked').val()
+        if (aadharMode === 'images' && window.aadharFile2Dropzone && window.aadharFile2Dropzone.files.length > 0) {
+            const file = window.aadharFile2Dropzone.files[0]
+            formData.append('aadhar_file_2', file, file.name)
+            console.log('Aadhaar file 2 added:', file.name, 'Size:', file.size)
         }
 
-        if (window.gstCertificateDropzone && window.gstCertificateDropzone.files.length > 0) {
-            const file = window.gstCertificateDropzone.files[0]
-            formData.append('gst_certificate_file', file, file.name)
-            console.log('GST Certificate file added:', file.name, 'Type:', file.type, 'Size:', file.size)
+        if (window.businessDocDropzone && window.businessDocDropzone.files.length > 0) {
+            const file = window.businessDocDropzone.files[0]
+            formData.append('business_doc_file', file, file.name)
+            console.log('Business doc file added:', file.name, 'Size:', file.size)
         } else {
-            console.log('ERROR: No GST certificate file uploaded')
-        }
-
-        if (window.udyamAadharDropzone && window.udyamAadharDropzone.files.length > 0) {
-            const file = window.udyamAadharDropzone.files[0]
-            formData.append('udyam_aadhar_file', file, file.name)
-            console.log('Udyam Aadhar file added:', file.name, 'Type:', file.type, 'Size:', file.size)
-        } else {
-            console.log('ERROR: No Udyam Aadhar file uploaded')
+            console.log('No Business Document file uploaded')
         }
 
         console.log('Submitting to:', form.prop('action'))
-        console.log('FormData entries:')
-        for (let pair of formData.entries()) {
-            console.log(pair[0], ':', pair[1])
-        }
 
         jQ.ajax({
             url: form.prop('action'),
@@ -264,7 +255,6 @@ window.addEventListener('load', function() {
             error: function(xhr) {
                 console.log('ERROR Response Status:', xhr.status)
                 console.log('ERROR Response JSON:', xhr.responseJSON)
-                console.log('ERROR Response Text:', xhr.responseText)
 
                 const errors = xhr.responseJSON?.errors || {}
 
@@ -274,7 +264,7 @@ window.addEventListener('load', function() {
                 Object.keys(errors).forEach((key) => {
                     const error = Array.isArray(errors[key]) ? errors[key][0] : errors[key]
 
-                    if (['pan_card_file', 'aadhar_card_file', 'gst_certificate_file', 'udyam_aadhar_file'].includes(key)) {
+                    if (['aadhar_file_1', 'aadhar_file_2', 'business_doc_file', 'business_doc_type'].includes(key)) {
                         const wrapper = form.find(`[data-field-name="${key}"]`)
                         wrapper.find('.invalid-feedback').remove()
                         wrapper.append(`<div class="invalid-feedback" style="display: block">${error}</div>`)

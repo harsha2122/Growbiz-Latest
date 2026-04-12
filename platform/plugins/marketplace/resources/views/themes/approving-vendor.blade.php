@@ -14,28 +14,26 @@
             <li class="list-group-item"><strong>{{ __('Owner') }}:</strong> {{ $store->customer->name }}</li>
             <li class="list-group-item"><strong>{{ __('Phone') }}:</strong> {{ $store->phone }}</li>
             @if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true))
-                @if ($store->pan_card_file && Storage::disk('local')->exists($store->pan_card_file))
+                @if ($store->aadhar_file_1 && Storage::disk('local')->exists($store->aadhar_file_1))
                     <li class="list-group-item">
-                        <strong>{{ __('PAN Card') }}: </strong>
-                        <a href="{{ route('marketplace.vendor.become-vendor.download', ['file' => 'pan_card']) }}" target="_blank" class="text-primary">{{ __('View Document') }}</a>
+                        <strong>{{ __('Aadhaar (Front/PDF)') }}: </strong>
+                        <a href="{{ route('marketplace.vendor.become-vendor.download', ['file' => 'aadhar_1']) }}" target="_blank" class="text-primary">{{ __('View Document') }}</a>
                     </li>
                 @endif
-                @if ($store->aadhar_card_file && Storage::disk('local')->exists($store->aadhar_card_file))
+                @if ($store->aadhar_file_2 && Storage::disk('local')->exists($store->aadhar_file_2))
                     <li class="list-group-item">
-                        <strong>{{ __('Aadhar Card') }}: </strong>
-                        <a href="{{ route('marketplace.vendor.become-vendor.download', ['file' => 'aadhar_card']) }}" target="_blank" class="text-primary">{{ __('View Document') }}</a>
+                        <strong>{{ __('Aadhaar (Back)') }}: </strong>
+                        <a href="{{ route('marketplace.vendor.become-vendor.download', ['file' => 'aadhar_2']) }}" target="_blank" class="text-primary">{{ __('View Document') }}</a>
                     </li>
                 @endif
-                @if ($store->gst_certificate_file && Storage::disk('local')->exists($store->gst_certificate_file))
+                @if ($store->business_doc_file && Storage::disk('local')->exists($store->business_doc_file))
+                    @php
+                        $docTypeLabels = ['gst_certificate' => 'GST Certificate', 'shop_act' => 'Shop Act', 'udyam_aadhar' => 'Udyam Aadhaar'];
+                        $docLabel = $store->business_doc_type ? ($docTypeLabels[$store->business_doc_type] ?? $store->business_doc_type) : 'Business Document';
+                    @endphp
                     <li class="list-group-item">
-                        <strong>{{ __('GST Certificate') }}: </strong>
-                        <a href="{{ route('marketplace.vendor.become-vendor.download', ['file' => 'gst_certificate']) }}" target="_blank" class="text-primary">{{ __('View Document') }}</a>
-                    </li>
-                @endif
-                @if ($store->udyam_aadhar_file && Storage::disk('local')->exists($store->udyam_aadhar_file))
-                    <li class="list-group-item">
-                        <strong>{{ __('Udyam Aadhar') }}: </strong>
-                        <a href="{{ route('marketplace.vendor.become-vendor.download', ['file' => 'udyam_aadhar']) }}" target="_blank" class="text-primary">{{ __('View Document') }}</a>
+                        <strong>{{ __($docLabel) }}: </strong>
+                        <a href="{{ route('marketplace.vendor.become-vendor.download', ['file' => 'business_doc']) }}" target="_blank" class="text-primary">{{ __('View Document') }}</a>
                     </li>
                 @endif
             @endif

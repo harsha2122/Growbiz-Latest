@@ -56,7 +56,7 @@ class BecomeVendorController extends BaseController
 
             if (
                 MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true)
-                && (! $store->pan_card_file || ! $store->aadhar_card_file || ! $store->gst_certificate_file || ! $store->udyam_aadhar_file)
+                && (! $store->aadhar_file_1 || ! $store->business_doc_file || ! $store->business_doc_type)
             ) {
                 $storeInfo = [
                     'shop_name' => $store->name,
@@ -70,7 +70,7 @@ class BecomeVendorController extends BaseController
                         'missing_documentation_alert',
                         HtmlField::class,
                         HtmlFieldOption::make()
-                            ->content('<div class="alert alert-warning">' . __('Missing documentations! Please upload your PAN Card, Aadhar Card, GST Certificate and Udyam Aadhar to continue.') . '</div>')
+                            ->content('<div class="alert alert-warning">' . __('Missing documentations! Please upload your Aadhaar Card and Business Document to continue.') . '</div>')
                     )
                     ->setUrl(route('marketplace.vendor.become-vendor.update'))
                     ->setMethod('PUT');
@@ -124,7 +124,7 @@ class BecomeVendorController extends BaseController
 
         abort_if($customer->is_vendor
         && (! MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true)
-            || ($customer->store->pan_card_file && $customer->store->aadhar_card_file && $customer->store->gst_certificate_file && $customer->store->udyam_aadhar_file)), 404);
+            || ($customer->store->aadhar_file_1 && $customer->store->business_doc_file && $customer->store->business_doc_type)), 404);
 
         $store = $customer->store;
 
@@ -144,24 +144,20 @@ class BecomeVendorController extends BaseController
             $storage->makeDirectory("vendor-documents/$store->slug");
         }
 
-        if ($panCardFile = $request->file('pan_card_file')) {
-            $panCardFilePath = $storage->putFileAs("vendor-documents/$store->slug", $panCardFile, 'pan_card.' . $panCardFile->getClientOriginalExtension());
-            $store->pan_card_file = $panCardFilePath;
+        if ($aadharFile1 = $request->file('aadhar_file_1')) {
+            $store->aadhar_file_1 = $storage->putFileAs("vendor-documents/$store->slug", $aadharFile1, 'aadhar_file_1.' . $aadharFile1->getClientOriginalExtension());
         }
 
-        if ($aadharCardFile = $request->file('aadhar_card_file')) {
-            $aadharCardFilePath = $storage->putFileAs("vendor-documents/$store->slug", $aadharCardFile, 'aadhar_card.' . $aadharCardFile->getClientOriginalExtension());
-            $store->aadhar_card_file = $aadharCardFilePath;
+        if ($aadharFile2 = $request->file('aadhar_file_2')) {
+            $store->aadhar_file_2 = $storage->putFileAs("vendor-documents/$store->slug", $aadharFile2, 'aadhar_file_2.' . $aadharFile2->getClientOriginalExtension());
         }
 
-        if ($gstCertificateFile = $request->file('gst_certificate_file')) {
-            $gstCertificateFilePath = $storage->putFileAs("vendor-documents/$store->slug", $gstCertificateFile, 'gst_certificate.' . $gstCertificateFile->getClientOriginalExtension());
-            $store->gst_certificate_file = $gstCertificateFilePath;
+        if ($businessDocType = $request->input('business_doc_type')) {
+            $store->business_doc_type = $businessDocType;
         }
 
-        if ($udyamAadharFile = $request->file('udyam_aadhar_file')) {
-            $udyamAadharFilePath = $storage->putFileAs("vendor-documents/$store->slug", $udyamAadharFile, 'udyam_aadhar.' . $udyamAadharFile->getClientOriginalExtension());
-            $store->udyam_aadhar_file = $udyamAadharFilePath;
+        if ($businessDocFile = $request->file('business_doc_file')) {
+            $store->business_doc_file = $storage->putFileAs("vendor-documents/$store->slug", $businessDocFile, 'business_doc.' . $businessDocFile->getClientOriginalExtension());
         }
 
         $store->save();
@@ -181,12 +177,16 @@ class BecomeVendorController extends BaseController
         abort_if(! $customer->is_vendor || ! $customer->store, 404);
 
         $fileType = $request->query('file');
-        $allowedTypes = ['pan_card', 'aadhar_card', 'gst_certificate', 'udyam_aadhar'];
+        $fieldMap = [
+            'aadhar_1'     => 'aadhar_file_1',
+            'aadhar_2'     => 'aadhar_file_2',
+            'business_doc' => 'business_doc_file',
+        ];
 
-        abort_if(! in_array($fileType, $allowedTypes), 404);
+        abort_if(! array_key_exists($fileType, $fieldMap), 404);
 
         $storage = Storage::disk('local');
-        $fileField = $fileType . '_file';
+        $fileField = $fieldMap[$fileType];
         $filePath = $customer->store->{$fileField};
 
         if (! $filePath || ! $storage->exists($filePath)) {

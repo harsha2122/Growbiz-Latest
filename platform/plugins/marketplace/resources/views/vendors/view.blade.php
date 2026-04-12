@@ -173,76 +173,60 @@
                             <strong>{{ trans('plugins/marketplace::marketplace.documents') }}</strong>
                             <div class="mt-2">
                                 @php
-                                    $hasAnyDocument = $store->pan_card_file || $store->aadhar_card_file || $store->gst_certificate_file || $store->udyam_aadhar_file;
+                                    $hasAnyDocument = $store->aadhar_file_1 || $store->business_doc_file;
+                                    $docTypeLabels = ['gst_certificate' => 'GST Certificate', 'shop_act' => 'Shop Act', 'udyam_aadhar' => 'Udyam Aadhaar'];
                                 @endphp
 
                                 @if(!$hasAnyDocument)
                                     <p class="text-muted small">No documents uploaded</p>
                                 @else
-                                    @if($store->pan_card_file)
-                                        @if(Storage::disk('local')->exists($store->pan_card_file))
-                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'pan_card']) }}"
-                                               class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                               target="_blank">
-                                                <x-core::icon name="ti ti-file-text" />
-                                                View PAN Card
-                                            </a>
-                                        @else
-                                            <div class="alert alert-warning small mb-2 p-2">
-                                                <x-core::icon name="ti ti-alert-triangle" />
-                                                PAN Card: File missing on disk
-                                                <br><small class="text-muted">Path: {{ $store->pan_card_file }}</small>
-                                            </div>
-                                        @endif
-                                    @endif
-
-                                    @if($store->aadhar_card_file)
-                                        @if(Storage::disk('local')->exists($store->aadhar_card_file))
-                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'aadhar_card']) }}"
+                                    @if($store->aadhar_file_1)
+                                        @if(Storage::disk('local')->exists($store->aadhar_file_1))
+                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'aadhar_1']) }}"
                                                class="btn btn-sm btn-outline-primary w-100 mb-2"
                                                target="_blank">
                                                 <x-core::icon name="ti ti-id" />
-                                                View Aadhar Card
+                                                View Aadhaar (Front/PDF)
                                             </a>
                                         @else
                                             <div class="alert alert-warning small mb-2 p-2">
                                                 <x-core::icon name="ti ti-alert-triangle" />
-                                                Aadhar Card: File missing on disk
-                                                <br><small class="text-muted">Path: {{ $store->aadhar_card_file }}</small>
+                                                Aadhaar Front/PDF: File missing on disk
                                             </div>
                                         @endif
                                     @endif
 
-                                    @if($store->gst_certificate_file)
-                                        @if(Storage::disk('local')->exists($store->gst_certificate_file))
-                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'gst_certificate']) }}"
+                                    @if($store->aadhar_file_2)
+                                        @if(Storage::disk('local')->exists($store->aadhar_file_2))
+                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'aadhar_2']) }}"
+                                               class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                               target="_blank">
+                                                <x-core::icon name="ti ti-id" />
+                                                View Aadhaar (Back)
+                                            </a>
+                                        @else
+                                            <div class="alert alert-warning small mb-2 p-2">
+                                                <x-core::icon name="ti ti-alert-triangle" />
+                                                Aadhaar Back: File missing on disk
+                                            </div>
+                                        @endif
+                                    @endif
+
+                                    @if($store->business_doc_file)
+                                        @if(Storage::disk('local')->exists($store->business_doc_file))
+                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'business_doc']) }}"
                                                class="btn btn-sm btn-outline-primary w-100 mb-2"
                                                target="_blank">
                                                 <x-core::icon name="ti ti-file-certificate" />
-                                                View GST Certificate
+                                                View Business Doc
+                                                @if($store->business_doc_type)
+                                                    ({{ $docTypeLabels[$store->business_doc_type] ?? $store->business_doc_type }})
+                                                @endif
                                             </a>
                                         @else
                                             <div class="alert alert-warning small mb-2 p-2">
                                                 <x-core::icon name="ti ti-alert-triangle" />
-                                                GST Certificate: File missing on disk
-                                                <br><small class="text-muted">Path: {{ $store->gst_certificate_file }}</small>
-                                            </div>
-                                        @endif
-                                    @endif
-
-                                    @if($store->udyam_aadhar_file)
-                                        @if(Storage::disk('local')->exists($store->udyam_aadhar_file))
-                                            <a href="{{ route('marketplace.vendors.download-document', [$vendor->id, 'udyam_aadhar']) }}"
-                                               class="btn btn-sm btn-outline-primary w-100"
-                                               target="_blank">
-                                                <x-core::icon name="ti ti-file-check" />
-                                                View Udyam Aadhar
-                                            </a>
-                                        @else
-                                            <div class="alert alert-warning small mb-2 p-2">
-                                                <x-core::icon name="ti ti-alert-triangle" />
-                                                Udyam Aadhar: File missing on disk
-                                                <br><small class="text-muted">Path: {{ $store->udyam_aadhar_file }}</small>
+                                                Business Document: File missing on disk
                                             </div>
                                         @endif
                                     @endif

@@ -81,46 +81,33 @@
                             {{ BaseHelper::formatDateTime($vendor->created_at) }}
                         </x-core::datagrid.item>
 
-                        @if($vendor->store->pan_card_file && Storage::disk('local')->exists($vendor->store->pan_card_file))
+                        @if($vendor->store->aadhar_file_1 && Storage::disk('local')->exists($vendor->store->aadhar_file_1))
                             <x-core::datagrid.item>
-                                <x-slot:title>
-                                    PAN Card
-                                </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'pan_card']) }}" target="_blank">
-                                    View PAN Card
+                                <x-slot:title>Aadhaar (Front/PDF)</x-slot:title>
+                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'aadhar_1']) }}" target="_blank">
+                                    View Aadhaar (Front/PDF)
                                 </a>
                             </x-core::datagrid.item>
                         @endif
 
-                        @if($vendor->store->aadhar_card_file && Storage::disk('local')->exists($vendor->store->aadhar_card_file))
+                        @if($vendor->store->aadhar_file_2 && Storage::disk('local')->exists($vendor->store->aadhar_file_2))
                             <x-core::datagrid.item>
-                                <x-slot:title>
-                                    Aadhar Card
-                                </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'aadhar_card']) }}" target="_blank">
-                                    View Aadhar Card
+                                <x-slot:title>Aadhaar (Back)</x-slot:title>
+                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'aadhar_2']) }}" target="_blank">
+                                    View Aadhaar (Back)
                                 </a>
                             </x-core::datagrid.item>
                         @endif
 
-                        @if($vendor->store->gst_certificate_file && Storage::disk('local')->exists($vendor->store->gst_certificate_file))
+                        @if($vendor->store->business_doc_file && Storage::disk('local')->exists($vendor->store->business_doc_file))
+                            @php
+                                $docTypeLabels = ['gst_certificate' => 'GST Certificate', 'shop_act' => 'Shop Act', 'udyam_aadhar' => 'Udyam Aadhaar'];
+                                $docLabel = $vendor->store->business_doc_type ? ($docTypeLabels[$vendor->store->business_doc_type] ?? $vendor->store->business_doc_type) : 'Business Document';
+                            @endphp
                             <x-core::datagrid.item>
-                                <x-slot:title>
-                                    GST Certificate
-                                </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'gst_certificate']) }}" target="_blank">
-                                    View GST Certificate
-                                </a>
-                            </x-core::datagrid.item>
-                        @endif
-
-                        @if($vendor->store->udyam_aadhar_file && Storage::disk('local')->exists($vendor->store->udyam_aadhar_file))
-                            <x-core::datagrid.item>
-                                <x-slot:title>
-                                    Udyam Aadhar
-                                </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'udyam_aadhar']) }}" target="_blank">
-                                    View Udyam Aadhar
+                                <x-slot:title>Business Document ({{ $docLabel }})</x-slot:title>
+                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'business_doc']) }}" target="_blank">
+                                    View Business Document
                                 </a>
                             </x-core::datagrid.item>
                         @endif

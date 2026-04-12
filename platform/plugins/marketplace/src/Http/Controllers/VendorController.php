@@ -101,9 +101,19 @@ class VendorController extends BaseController
 
         $storage = Storage::disk('local');
 
-        $fileField = $type . '_file';
+        $fieldMap = [
+            'aadhar_1'        => 'aadhar_file_1',
+            'aadhar_2'        => 'aadhar_file_2',
+            'business_doc'    => 'business_doc_file',
+            'pan_card'        => 'pan_card_file',
+            'aadhar_card'     => 'aadhar_card_file',
+            'gst_certificate' => 'gst_certificate_file',
+            'udyam_aadhar'    => 'udyam_aadhar_file',
+        ];
 
-        if (! isset($vendor->store->$fileField) || ! $storage->exists($vendor->store->$fileField)) {
+        $fileField = $fieldMap[$type] ?? null;
+
+        if (! $fileField || ! $vendor->store->$fileField || ! $storage->exists($vendor->store->$fileField)) {
             return BaseHttpResponse::make()
                 ->setError()
                 ->setMessage(__('File not found!'));
