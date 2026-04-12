@@ -189,33 +189,31 @@ class HookServiceProvider extends ServiceProvider
                     ];
 
                     if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', 1)) {
-                        $vendorRules['pan_card_file'] = [
+                        $vendorRules['aadhar_file_1'] = [
                             'nullable',
                             'required_if:is_vendor,1',
                             'file',
                             'mimes:pdf,jpg,jpeg,png,webp',
                             'max:2048',
                         ];
-                        $vendorRules['aadhar_card_file'] = [
+                        $vendorRules['aadhar_file_2'] = [
+                            'nullable',
+                            'file',
+                            'mimes:jpg,jpeg,png,webp',
+                            'max:2048',
+                        ];
+                        $vendorRules['business_doc_file'] = [
                             'nullable',
                             'required_if:is_vendor,1',
                             'file',
                             'mimes:pdf,jpg,jpeg,png,webp',
                             'max:2048',
                         ];
-                        $vendorRules['gst_certificate_file'] = [
+                        $vendorRules['business_doc_type'] = [
                             'nullable',
                             'required_if:is_vendor,1',
-                            'file',
-                            'mimes:pdf,jpg,jpeg,png,webp',
-                            'max:2048',
-                        ];
-                        $vendorRules['udyam_aadhar_file'] = [
-                            'nullable',
-                            'required_if:is_vendor,1',
-                            'file',
-                            'mimes:pdf,jpg,jpeg,png,webp',
-                            'max:2048',
+                            'string',
+                            'in:gst_certificate,shop_act,udyam_aadhar',
                         ];
                     }
 
@@ -230,10 +228,10 @@ class HookServiceProvider extends ServiceProvider
                     ];
 
                     if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', 1)) {
-                        $vendorAttributes['pan_card_file'] = __('PAN Card');
-                        $vendorAttributes['aadhar_card_file'] = __('Aadhar Card');
-                        $vendorAttributes['gst_certificate_file'] = __('GST Certificate');
-                        $vendorAttributes['udyam_aadhar_file'] = __('Udyam Aadhar');
+                        $vendorAttributes['aadhar_file_1'] = __('Aadhaar Card');
+                        $vendorAttributes['aadhar_file_2'] = __('Aadhaar Card (Back)');
+                        $vendorAttributes['business_doc_file'] = __('Business Document');
+                        $vendorAttributes['business_doc_type'] = __('Business Document Type');
                     }
 
                     return $attributes + $vendorAttributes;
@@ -247,10 +245,9 @@ class HookServiceProvider extends ServiceProvider
                     ];
 
                     if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', 1)) {
-                        $vendorMessages['pan_card_file.required_if'] = __('PAN Card is required.');
-                        $vendorMessages['aadhar_card_file.required_if'] = __('Aadhar Card is required.');
-                        $vendorMessages['gst_certificate_file.required_if'] = __('GST Certificate is required.');
-                        $vendorMessages['udyam_aadhar_file.required_if'] = __('Udyam Aadhar is required.');
+                        $vendorMessages['aadhar_file_1.required_if'] = __('Aadhaar Card is required.');
+                        $vendorMessages['business_doc_file.required_if'] = __('Business Document is required.');
+                        $vendorMessages['business_doc_type.required_if'] = __('Please select a Business Document type.');
                     }
 
                     return $attributes + $vendorMessages;
@@ -421,107 +418,120 @@ class HookServiceProvider extends ServiceProvider
                     );
 
                 if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', 1)) {
+                    $aadharContent = '
+<div class="mb-2">
+    <div class="btn-group btn-group-sm" role="group">
+        <input type="radio" class="btn-check" name="aadhar_upload_mode" id="reg-aadhar-mode-pdf" value="pdf" checked>
+        <label class="btn btn-outline-secondary" for="reg-aadhar-mode-pdf">Upload as PDF</label>
+        <input type="radio" class="btn-check" name="aadhar_upload_mode" id="reg-aadhar-mode-images" value="images">
+        <label class="btn btn-outline-secondary" for="reg-aadhar-mode-images">Upload as Images (Front &amp; Back)</label>
+    </div>
+</div>
+<div id="aadhar-dropzone-1" class="dropzone mb-2" data-placeholder="Drop Aadhaar PDF here or click to upload"></div>
+<div id="aadhar-dropzone-2" class="dropzone" data-placeholder="Drop Aadhaar Back Image here or click to upload" style="display:none;"></div>';
+
+                    $businessDocContent = '
+<div class="mb-2">
+    <div class="d-flex gap-3 flex-wrap">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="business_doc_type" id="reg-bdt-gst" value="gst_certificate" checked>
+            <label class="form-check-label" for="reg-bdt-gst">GST Certificate</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="business_doc_type" id="reg-bdt-shop" value="shop_act">
+            <label class="form-check-label" for="reg-bdt-shop">Shop Act</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="business_doc_type" id="reg-bdt-udyam" value="udyam_aadhar">
+            <label class="form-check-label" for="reg-bdt-udyam">Udyam Aadhaar</label>
+        </div>
+    </div>
+</div>
+<div id="business-doc-dropzone" class="dropzone" data-placeholder="Drop Business Document here or click to upload"></div>';
+
                     $form
                         ->addAfter(
                             'shop_phone',
-                            'pan_card',
+                            'aadhar_doc',
                             'html',
                             HtmlFieldOption::make()
-                                ->label(__('PAN Card'))
+                                ->label(__('Aadhaar Card'))
                                 ->required()
-                                ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'pan_card_file'])
-                                ->content('<div id="pan-card-dropzone" class="dropzone" data-placeholder="' . __('Drop PAN Card here or click to upload') . '"></div>'),
+                                ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'aadhar_file_1'])
+                                ->content($aadharContent),
                         )
                         ->addAfter(
-                            'pan_card',
-                            'aadhar_card',
+                            'aadhar_doc',
+                            'business_doc',
                             'html',
                             HtmlFieldOption::make()
-                                ->label(__('Aadhar Card'))
+                                ->label(__('Business Document'))
                                 ->required()
-                                ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'aadhar_card_file'])
-                                ->content('<div id="aadhar-card-dropzone" class="dropzone" data-placeholder="' . __('Drop Aadhar Card here or click to upload') . '"></div>'),
+                                ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'business_doc_file'])
+                                ->content($businessDocContent),
                         )
-                        ->addAfter(
-                            'aadhar_card',
-                            'gst_certificate',
-                            'html',
-                            HtmlFieldOption::make()
-                                ->label(__('GST Certificate'))
-                                ->required()
-                                ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'gst_certificate_file'])
-                                ->content('<div id="gst-certificate-dropzone" class="dropzone" data-placeholder="' . __('Drop GST Certificate here or click to upload') . '"></div>'),
-                        )
-                        ->addAfter(
-                            'gst_certificate',
-                            'udyam_aadhar',
-                            'html',
-                            HtmlFieldOption::make()
-                                ->label(__('Udyam Aadhar'))
-                                ->required()
-                                ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'udyam_aadhar_file'])
-                                ->content('<div id="udyam-aadhar-dropzone" class="dropzone" data-placeholder="' . __('Drop Udyam Aadhar here or click to upload') . '"></div>'),
-                        )
-                        ->addAfter('udyam_aadhar', 'vendor_toggle_script', 'html', HtmlFieldOption::make()->content('<script>
+                        ->addAfter('business_doc', 'vendor_toggle_script', 'html', HtmlFieldOption::make()->content('<script>
 (function(){
     var radios = document.querySelectorAll("input[name=is_vendor]");
     var vendorDiv = document.querySelector("[data-bb-toggle=\"vendor-info\"]");
 
-    window.panCardDropzone = null;
-    window.aadharCardDropzone = null;
-    window.gstCertificateDropzone = null;
-    window.udyamAadharDropzone = null;
+    window.aadharDropzone1 = null;
+    window.aadharDropzone2 = null;
+    window.businessDocDropzone = null;
 
     window.initVendorDropzones = function() {
         if (typeof Dropzone === "undefined") return;
 
-        if (!window.panCardDropzone && document.getElementById("pan-card-dropzone")) {
-            window.panCardDropzone = new Dropzone("#pan-card-dropzone", {
+        if (!window.aadharDropzone1 && document.getElementById("aadhar-dropzone-1")) {
+            window.aadharDropzone1 = new Dropzone("#aadhar-dropzone-1", {
                 url: "#",
                 autoProcessQueue: false,
-                paramName: "pan_card_file",
+                paramName: "aadhar_file_1",
                 maxFiles: 1,
                 acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
                 addRemoveLinks: true,
-                dictDefaultMessage: "Drop PAN Card here or click to upload"
+                dictDefaultMessage: "Drop Aadhaar PDF here or click to upload",
+                maxfilesexceeded: function(file) { this.removeFile(file); }
             });
         }
 
-        if (!window.aadharCardDropzone && document.getElementById("aadhar-card-dropzone")) {
-            window.aadharCardDropzone = new Dropzone("#aadhar-card-dropzone", {
+        if (!window.aadharDropzone2 && document.getElementById("aadhar-dropzone-2")) {
+            window.aadharDropzone2 = new Dropzone("#aadhar-dropzone-2", {
                 url: "#",
                 autoProcessQueue: false,
-                paramName: "aadhar_card_file",
+                paramName: "aadhar_file_2",
                 maxFiles: 1,
-                acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
+                acceptedFiles: ".jpg,.jpeg,.png,.webp",
                 addRemoveLinks: true,
-                dictDefaultMessage: "Drop Aadhar Card here or click to upload"
+                dictDefaultMessage: "Drop Aadhaar Back Image here or click to upload",
+                maxfilesexceeded: function(file) { this.removeFile(file); }
             });
         }
 
-        if (!window.gstCertificateDropzone && document.getElementById("gst-certificate-dropzone")) {
-            window.gstCertificateDropzone = new Dropzone("#gst-certificate-dropzone", {
+        if (!window.businessDocDropzone && document.getElementById("business-doc-dropzone")) {
+            window.businessDocDropzone = new Dropzone("#business-doc-dropzone", {
                 url: "#",
                 autoProcessQueue: false,
-                paramName: "gst_certificate_file",
+                paramName: "business_doc_file",
                 maxFiles: 1,
                 acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
                 addRemoveLinks: true,
-                dictDefaultMessage: "Drop GST Certificate here or click to upload"
+                dictDefaultMessage: "Drop Business Document here or click to upload",
+                maxfilesexceeded: function(file) { this.removeFile(file); }
             });
         }
 
-        if (!window.udyamAadharDropzone && document.getElementById("udyam-aadhar-dropzone")) {
-            window.udyamAadharDropzone = new Dropzone("#udyam-aadhar-dropzone", {
-                url: "#",
-                autoProcessQueue: false,
-                paramName: "udyam_aadhar_file",
-                maxFiles: 1,
-                acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
-                addRemoveLinks: true,
-                dictDefaultMessage: "Drop Udyam Aadhar here or click to upload"
+        document.querySelectorAll("input[name=aadhar_upload_mode]").forEach(function(r) {
+            r.addEventListener("change", function() {
+                var dz2 = document.getElementById("aadhar-dropzone-2");
+                if (this.value === "images") {
+                    dz2.style.display = "";
+                } else {
+                    dz2.style.display = "none";
+                    if (window.aadharDropzone2) window.aadharDropzone2.removeAllFiles();
+                }
             });
-        }
+        });
     };
 
     function toggleVendorForm() {

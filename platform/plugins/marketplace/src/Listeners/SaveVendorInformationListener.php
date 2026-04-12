@@ -67,24 +67,20 @@ class SaveVendorInformationListener
             $storage->makeDirectory("vendor-documents/$store->slug");
         }
 
-        if ($panCardFile = $this->request->file('pan_card_file')) {
-            $panCardFilePath = $storage->putFileAs("vendor-documents/$store->slug", $panCardFile, 'pan_card.' . $panCardFile->getClientOriginalExtension());
-            $store->pan_card_file = $panCardFilePath;
+        if ($aadharFile1 = $this->request->file('aadhar_file_1')) {
+            $store->aadhar_file_1 = $storage->putFileAs("vendor-documents/$store->slug", $aadharFile1, 'aadhar_1.' . $aadharFile1->getClientOriginalExtension());
         }
 
-        if ($aadharCardFile = $this->request->file('aadhar_card_file')) {
-            $aadharCardFilePath = $storage->putFileAs("vendor-documents/$store->slug", $aadharCardFile, 'aadhar_card.' . $aadharCardFile->getClientOriginalExtension());
-            $store->aadhar_card_file = $aadharCardFilePath;
+        if ($aadharFile2 = $this->request->file('aadhar_file_2')) {
+            $store->aadhar_file_2 = $storage->putFileAs("vendor-documents/$store->slug", $aadharFile2, 'aadhar_2.' . $aadharFile2->getClientOriginalExtension());
         }
 
-        if ($gstCertificateFile = $this->request->file('gst_certificate_file')) {
-            $gstCertificateFilePath = $storage->putFileAs("vendor-documents/$store->slug", $gstCertificateFile, 'gst_certificate.' . $gstCertificateFile->getClientOriginalExtension());
-            $store->gst_certificate_file = $gstCertificateFilePath;
+        if ($businessDocFile = $this->request->file('business_doc_file')) {
+            $store->business_doc_file = $storage->putFileAs("vendor-documents/$store->slug", $businessDocFile, 'business_doc.' . $businessDocFile->getClientOriginalExtension());
         }
 
-        if ($udyamAadharFile = $this->request->file('udyam_aadhar_file')) {
-            $udyamAadharFilePath = $storage->putFileAs("vendor-documents/$store->slug", $udyamAadharFile, 'udyam_aadhar.' . $udyamAadharFile->getClientOriginalExtension());
-            $store->udyam_aadhar_file = $udyamAadharFilePath;
+        if ($this->request->input('business_doc_type')) {
+            $store->business_doc_type = $this->request->input('business_doc_type');
         }
 
         if ($store->isDirty()) {

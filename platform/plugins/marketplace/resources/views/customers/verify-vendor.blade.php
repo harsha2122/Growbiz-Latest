@@ -81,46 +81,31 @@
                             {{ BaseHelper::formatDateTime($vendor->created_at) }}
                         </x-core::datagrid.item>
 
-                        @if($vendor->store->pan_card_file && Storage::disk('local')->exists($vendor->store->pan_card_file))
+                        @if($vendor->store->aadhar_file_1 && Storage::disk('local')->exists($vendor->store->aadhar_file_1))
                             <x-core::datagrid.item>
-                                <x-slot:title>
-                                    PAN Card
-                                </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'pan_card']) }}" target="_blank">
-                                    View PAN Card
+                                <x-slot:title>Aadhaar Card</x-slot:title>
+                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'aadhar_1']) }}" target="_blank">
+                                    View Aadhaar (Side 1)
                                 </a>
+                                @if($vendor->store->aadhar_file_2 && Storage::disk('local')->exists($vendor->store->aadhar_file_2))
+                                    &nbsp;|&nbsp;
+                                    <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'aadhar_2']) }}" target="_blank">
+                                        Side 2
+                                    </a>
+                                @endif
                             </x-core::datagrid.item>
                         @endif
 
-                        @if($vendor->store->aadhar_card_file && Storage::disk('local')->exists($vendor->store->aadhar_card_file))
+                        @if($vendor->store->business_doc_file && Storage::disk('local')->exists($vendor->store->business_doc_file))
                             <x-core::datagrid.item>
                                 <x-slot:title>
-                                    Aadhar Card
+                                    Business Document
+                                    @if($vendor->store->business_doc_type)
+                                        <br><small class="text-muted">{{ match($vendor->store->business_doc_type) { 'gst_certificate' => 'GST Certificate', 'shop_act' => 'Shop Act', 'udyam_aadhar' => 'Udyam Aadhaar', default => $vendor->store->business_doc_type } }}</small>
+                                    @endif
                                 </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'aadhar_card']) }}" target="_blank">
-                                    View Aadhar Card
-                                </a>
-                            </x-core::datagrid.item>
-                        @endif
-
-                        @if($vendor->store->gst_certificate_file && Storage::disk('local')->exists($vendor->store->gst_certificate_file))
-                            <x-core::datagrid.item>
-                                <x-slot:title>
-                                    GST Certificate
-                                </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'gst_certificate']) }}" target="_blank">
-                                    View GST Certificate
-                                </a>
-                            </x-core::datagrid.item>
-                        @endif
-
-                        @if($vendor->store->udyam_aadhar_file && Storage::disk('local')->exists($vendor->store->udyam_aadhar_file))
-                            <x-core::datagrid.item>
-                                <x-slot:title>
-                                    Udyam Aadhar
-                                </x-slot:title>
-                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'udyam_aadhar']) }}" target="_blank">
-                                    View Udyam Aadhar
+                                <a href="{{ route('marketplace.unverified-vendors.download-document', [$vendor, 'business_doc']) }}" target="_blank">
+                                    View Document
                                 </a>
                             </x-core::datagrid.item>
                         @endif

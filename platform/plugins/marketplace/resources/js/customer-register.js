@@ -1,105 +1,74 @@
-console.log('=== Marketplace Customer Register JS Loaded ===')
-
 // Disable Dropzone auto-discovery to prevent "No URL provided" error
 if (typeof Dropzone !== 'undefined') {
     Dropzone.autoDiscover = false
 }
 
-// Wait for both DOM and all scripts to load
 window.addEventListener('load', function() {
-    console.log('=== Window Loaded - Checking Dependencies ===')
-    console.log('jQuery available?', typeof jQuery !== 'undefined' || typeof $ !== 'undefined')
-    console.log('Dropzone available?', typeof Dropzone !== 'undefined')
-
-    // Use jQuery or $ depending on what's available
     const jQ = typeof jQuery !== 'undefined' ? jQuery : (typeof $ !== 'undefined' ? $ : null)
 
-    if (!jQ) {
-        console.error('ERROR: jQuery not found! Vendor registration will not work.')
+    if (!jQ || typeof Dropzone === 'undefined') {
         return
     }
-
-    if (typeof Dropzone === 'undefined') {
-        console.error('ERROR: Dropzone not found! Document uploads will not work.')
-        return
-    }
-
-    console.log('=== Initializing Vendor Registration ===')
 
     function initializeDropzones() {
         if (typeof window.initVendorDropzones === 'function') {
             window.initVendorDropzones()
         }
 
-        if (!window.panCardDropzone && jQ('#pan-card-dropzone').length) {
-            console.log('Initializing PAN card dropzone')
-            window.panCardDropzone = new Dropzone('#pan-card-dropzone', {
+        if (!window.aadharDropzone1 && jQ('#aadhar-dropzone-1').length) {
+            window.aadharDropzone1 = new Dropzone('#aadhar-dropzone-1', {
                 url: '#',
                 autoProcessQueue: false,
-                paramName: 'pan_card_file',
+                paramName: 'aadhar_file_1',
                 maxFiles: 1,
                 acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: jQ('#pan-card-dropzone').data('placeholder'),
-                maxfilesexceeded: function(file) {
-                    this.removeFile(file)
-                }
+                dictDefaultMessage: jQ('#aadhar-dropzone-1').data('placeholder') || 'Drop Aadhaar here or click to upload',
+                maxfilesexceeded: function(file) { this.removeFile(file) }
             })
         }
 
-        if (!window.aadharCardDropzone && jQ('#aadhar-card-dropzone').length) {
-            console.log('Initializing Aadhar card dropzone')
-            window.aadharCardDropzone = new Dropzone('#aadhar-card-dropzone', {
+        if (!window.aadharDropzone2 && jQ('#aadhar-dropzone-2').length) {
+            window.aadharDropzone2 = new Dropzone('#aadhar-dropzone-2', {
                 url: '#',
                 autoProcessQueue: false,
-                paramName: 'aadhar_card_file',
+                paramName: 'aadhar_file_2',
                 maxFiles: 1,
-                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
+                acceptedFiles: '.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: jQ('#aadhar-card-dropzone').data('placeholder'),
-                maxfilesexceeded: function(file) {
-                    this.removeFile(file)
-                }
+                dictDefaultMessage: jQ('#aadhar-dropzone-2').data('placeholder') || 'Drop Aadhaar Back here or click to upload',
+                maxfilesexceeded: function(file) { this.removeFile(file) }
             })
         }
 
-        if (!window.gstCertificateDropzone && jQ('#gst-certificate-dropzone').length) {
-            console.log('Initializing GST certificate dropzone')
-            window.gstCertificateDropzone = new Dropzone('#gst-certificate-dropzone', {
+        if (!window.businessDocDropzone && jQ('#business-doc-dropzone').length) {
+            window.businessDocDropzone = new Dropzone('#business-doc-dropzone', {
                 url: '#',
                 autoProcessQueue: false,
-                paramName: 'gst_certificate_file',
+                paramName: 'business_doc_file',
                 maxFiles: 1,
                 acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
                 addRemoveLinks: true,
-                dictDefaultMessage: jQ('#gst-certificate-dropzone').data('placeholder'),
-                maxfilesexceeded: function(file) {
-                    this.removeFile(file)
-                }
+                dictDefaultMessage: jQ('#business-doc-dropzone').data('placeholder') || 'Drop Business Document here or click to upload',
+                maxfilesexceeded: function(file) { this.removeFile(file) }
             })
         }
 
-        if (!window.udyamAadharDropzone && jQ('#udyam-aadhar-dropzone').length) {
-            console.log('Initializing Udyam Aadhar dropzone')
-            window.udyamAadharDropzone = new Dropzone('#udyam-aadhar-dropzone', {
-                url: '#',
-                autoProcessQueue: false,
-                paramName: 'udyam_aadhar_file',
-                maxFiles: 1,
-                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
-                addRemoveLinks: true,
-                dictDefaultMessage: jQ('#udyam-aadhar-dropzone').data('placeholder'),
-                maxfilesexceeded: function(file) {
-                    this.removeFile(file)
-                }
-            })
-        }
+        // Aadhaar mode toggle
+        jQ(document).on('change', 'input[name="aadhar_upload_mode"]', function() {
+            const dz2 = jQ('#aadhar-dropzone-2')
+            if (jQ(this).val() === 'images') {
+                dz2.show()
+            } else {
+                dz2.hide()
+                if (window.aadharDropzone2) window.aadharDropzone2.removeAllFiles()
+            }
+        })
     }
 
     // Check initial state on page load
     const checkedVendorRadio = jQ('input[name=is_vendor]:checked')
     if (checkedVendorRadio.length && checkedVendorRadio.val() == 1) {
-        console.log('Page loaded with vendor selected, showing form')
         jQ('[data-bb-toggle="vendor-info"]').show()
         initializeDropzones()
     }
@@ -107,17 +76,11 @@ window.addEventListener('load', function() {
     // Handle radio button changes
     jQ(document).on('change', 'input[name=is_vendor]', (e) => {
         const currentTarget = jQ(e.currentTarget)
-        console.log('Vendor radio changed, value:', currentTarget.val())
-
         if (currentTarget.val() == 1) {
-            console.log('Showing vendor form')
             jQ('[data-bb-toggle="vendor-info"]').slideDown(() => {
-                setTimeout(() => {
-                    initializeDropzones()
-                }, 100)
+                setTimeout(() => { initializeDropzones() }, 100)
             })
         } else {
-            console.log('Hiding vendor form')
             jQ('[data-bb-toggle="vendor-info"]').slideUp()
             currentTarget.closest('form').find('button[type=submit]').prop('disabled', false)
         }
@@ -128,9 +91,7 @@ window.addEventListener('load', function() {
         const form = currentTarget.closest('form')
         const url = currentTarget.val()
 
-        if (!url) {
-            return
-        }
+        if (!url) return
 
         const slug = form.find('[data-slug-value]')
 
@@ -151,18 +112,14 @@ window.addEventListener('load', function() {
                     jQ('.shop-url-status').removeClass('text-danger').addClass('text-success').text(message)
                     form.find('button[type=submit]').prop('disabled', false)
                 }
-
                 if (data?.slug) {
-                    slug.html(
-                        `${slug.data('base-url')}/<strong>${data.slug.substring(0, 100).toLowerCase()}</strong>`,
-                    )
+                    slug.html(`${slug.data('base-url')}/<strong>${data.slug.substring(0, 100).toLowerCase()}</strong>`)
                 }
             },
             complete: () => currentTarget.prop('disabled', false),
         })
     })
 
-    // Use capture phase to intercept form submission BEFORE validation
     document.addEventListener('submit', function(e) {
         const form = jQ(e.target)
 
@@ -173,69 +130,38 @@ window.addEventListener('load', function() {
         const isVendorInput = form.find('input[name="is_vendor"]:checked').val()
         const isVendor = isVendorInput == 1 || form.hasClass('become-vendor-form')
 
-        console.log('CAPTURE PHASE - Form submit detected')
-        console.log('Form classes:', form.attr('class'))
-        console.log('isVendor:', isVendor)
-
         if (isVendor) {
-            console.log('PREVENTING DEFAULT - Vendor registration')
             e.preventDefault()
             e.stopPropagation()
             e.stopImmediatePropagation()
-
             handleVendorRegistration(form)
             return false
         }
-    }, true) // true = use capture phase
+    }, true)
 
     function handleVendorRegistration(form) {
-        console.log('=== Vendor Registration Started ===')
-
         initializeDropzones()
 
         const formData = new FormData(form.get(0))
 
-        formData.delete('pan_card_file')
-        formData.delete('aadhar_card_file')
-        formData.delete('gst_certificate_file')
-        formData.delete('udyam_aadhar_file')
+        formData.delete('aadhar_file_1')
+        formData.delete('aadhar_file_2')
+        formData.delete('business_doc_file')
 
-        if (window.panCardDropzone && window.panCardDropzone.files.length > 0) {
-            const file = window.panCardDropzone.files[0]
-            formData.append('pan_card_file', file, file.name)
-            console.log('PAN Card file added:', file.name, 'Type:', file.type, 'Size:', file.size)
-        } else {
-            console.log('ERROR: No PAN card file uploaded')
+        if (window.aadharDropzone1 && window.aadharDropzone1.files.length > 0) {
+            const file = window.aadharDropzone1.files[0]
+            formData.append('aadhar_file_1', file, file.name)
         }
 
-        if (window.aadharCardDropzone && window.aadharCardDropzone.files.length > 0) {
-            const file = window.aadharCardDropzone.files[0]
-            formData.append('aadhar_card_file', file, file.name)
-            console.log('Aadhar Card file added:', file.name, 'Type:', file.type, 'Size:', file.size)
-        } else {
-            console.log('ERROR: No Aadhar card file uploaded')
+        const aadharMode = form.find('input[name="aadhar_upload_mode"]:checked').val()
+        if (aadharMode === 'images' && window.aadharDropzone2 && window.aadharDropzone2.files.length > 0) {
+            const file = window.aadharDropzone2.files[0]
+            formData.append('aadhar_file_2', file, file.name)
         }
 
-        if (window.gstCertificateDropzone && window.gstCertificateDropzone.files.length > 0) {
-            const file = window.gstCertificateDropzone.files[0]
-            formData.append('gst_certificate_file', file, file.name)
-            console.log('GST Certificate file added:', file.name, 'Type:', file.type, 'Size:', file.size)
-        } else {
-            console.log('ERROR: No GST certificate file uploaded')
-        }
-
-        if (window.udyamAadharDropzone && window.udyamAadharDropzone.files.length > 0) {
-            const file = window.udyamAadharDropzone.files[0]
-            formData.append('udyam_aadhar_file', file, file.name)
-            console.log('Udyam Aadhar file added:', file.name, 'Type:', file.type, 'Size:', file.size)
-        } else {
-            console.log('ERROR: No Udyam Aadhar file uploaded')
-        }
-
-        console.log('Submitting to:', form.prop('action'))
-        console.log('FormData entries:')
-        for (let pair of formData.entries()) {
-            console.log(pair[0], ':', pair[1])
+        if (window.businessDocDropzone && window.businessDocDropzone.files.length > 0) {
+            const file = window.businessDocDropzone.files[0]
+            formData.append('business_doc_file', file, file.name)
         }
 
         jQ.ajax({
@@ -246,7 +172,6 @@ window.addEventListener('load', function() {
             contentType: false,
             cache: false,
             success: function(response) {
-                console.log('SUCCESS Response:', response)
                 if (response?.data?.next_page) {
                     window.location.href = response.data.next_page
                 } else if (response?.data?.next_url) {
@@ -262,10 +187,6 @@ window.addEventListener('load', function() {
                 }
             },
             error: function(xhr) {
-                console.log('ERROR Response Status:', xhr.status)
-                console.log('ERROR Response JSON:', xhr.responseJSON)
-                console.log('ERROR Response Text:', xhr.responseText)
-
                 const errors = xhr.responseJSON?.errors || {}
 
                 form.find('input').removeClass('is-invalid')
@@ -274,8 +195,14 @@ window.addEventListener('load', function() {
                 Object.keys(errors).forEach((key) => {
                     const error = Array.isArray(errors[key]) ? errors[key][0] : errors[key]
 
-                    if (['pan_card_file', 'aadhar_card_file', 'gst_certificate_file', 'udyam_aadhar_file'].includes(key)) {
-                        const wrapper = form.find(`[data-field-name="${key}"]`)
+                    if (['aadhar_file_1', 'aadhar_file_2', 'business_doc_file', 'business_doc_type'].includes(key)) {
+                        const fieldMap = {
+                            'aadhar_file_1': 'aadhar_file_1',
+                            'aadhar_file_2': 'aadhar_file_1',
+                            'business_doc_file': 'business_doc_file',
+                            'business_doc_type': 'business_doc_file',
+                        }
+                        const wrapper = form.find(`[data-field-name="${fieldMap[key]}"]`)
                         wrapper.find('.invalid-feedback').remove()
                         wrapper.append(`<div class="invalid-feedback" style="display: block">${error}</div>`)
                     } else {
@@ -293,6 +220,4 @@ window.addEventListener('load', function() {
     if (jQ('.become-vendor-form').length) {
         initializeDropzones()
     }
-
-    console.log('=== Vendor Registration Initialization Complete ===')
 })

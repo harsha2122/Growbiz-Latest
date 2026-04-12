@@ -80,54 +80,60 @@ class BecomeVendorForm extends FormAbstract
                 $customer = auth('customer')->user();
                 $store = $customer?->store;
 
+                $aadharMode = $store?->aadhar_file_2 ? 'images' : 'pdf';
+
+                $aadharContent = '
+<div class="mb-2">
+    <div class="btn-group btn-group-sm" role="group">
+        <input type="radio" class="btn-check" name="aadhar_upload_mode" id="aadhar-mode-pdf" value="pdf" ' . ($aadharMode === 'pdf' ? 'checked' : '') . '>
+        <label class="btn btn-outline-secondary" for="aadhar-mode-pdf">Upload as PDF</label>
+        <input type="radio" class="btn-check" name="aadhar_upload_mode" id="aadhar-mode-images" value="images" ' . ($aadharMode === 'images' ? 'checked' : '') . '>
+        <label class="btn btn-outline-secondary" for="aadhar-mode-images">Upload as Images (Front &amp; Back)</label>
+    </div>
+</div>
+' . ($store?->aadhar_file_1 ? '<div class="mb-2"><a href="' . route('marketplace.vendor.become-vendor.download', ['file' => 'aadhar_1']) . '" target="_blank" class="btn btn-sm btn-info">View Uploaded Aadhaar (Side 1)</a></div>' : '') . '
+' . ($store?->aadhar_file_2 ? '<div class="mb-2"><a href="' . route('marketplace.vendor.become-vendor.download', ['file' => 'aadhar_2']) . '" target="_blank" class="btn btn-sm btn-info">View Uploaded Aadhaar (Side 2)</a></div>' : '') . '
+<div id="aadhar-dropzone-1" class="dropzone mb-2" data-placeholder="Drop Aadhaar PDF here or click to upload"></div>
+<div id="aadhar-dropzone-2" class="dropzone" data-placeholder="Drop Aadhaar Back Image here or click to upload" style="display:none;"></div>';
+
+                $businessDocContent = '
+<div class="mb-2">
+    <div class="d-flex gap-3 flex-wrap">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="business_doc_type" id="bdt-gst" value="gst_certificate" ' . ($store?->business_doc_type === 'gst_certificate' || !$store?->business_doc_type ? 'checked' : '') . '>
+            <label class="form-check-label" for="bdt-gst">GST Certificate</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="business_doc_type" id="bdt-shop" value="shop_act" ' . ($store?->business_doc_type === 'shop_act' ? 'checked' : '') . '>
+            <label class="form-check-label" for="bdt-shop">Shop Act</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="business_doc_type" id="bdt-udyam" value="udyam_aadhar" ' . ($store?->business_doc_type === 'udyam_aadhar' ? 'checked' : '') . '>
+            <label class="form-check-label" for="bdt-udyam">Udyam Aadhaar</label>
+        </div>
+    </div>
+</div>
+' . ($store?->business_doc_file ? '<div class="mb-2"><a href="' . route('marketplace.vendor.become-vendor.download', ['file' => 'business_doc']) . '" target="_blank" class="btn btn-sm btn-info">View Uploaded Business Document</a></div>' : '') . '
+<div id="business-doc-dropzone" class="dropzone" data-placeholder="Drop Business Document here or click to upload"></div>';
+
                 $this
                     ->add(
-                        'pan_card',
+                        'aadhar_doc',
                         'html',
                         HtmlFieldOption::make()
-                            ->label(__('PAN Card'))
+                            ->label(__('Aadhaar Card'))
                             ->required()
-                            ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'pan_card_file'])
-                            ->content(
-                                ($store?->pan_card_file ? '<div class="mb-2"><a href="' . route('marketplace.vendor.become-vendor.download', ['file' => 'pan_card']) . '" target="_blank" class="btn btn-sm btn-info">View Uploaded PAN Card</a></div>' : '') .
-                                '<div id="pan-card-dropzone" class="dropzone" data-placeholder="' . __('Drop PAN Card here or click to upload') . '"></div>'
-                            ),
+                            ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'aadhar_file_1'])
+                            ->content($aadharContent),
                     )
                     ->add(
-                        'aadhar_card',
+                        'business_doc',
                         'html',
                         HtmlFieldOption::make()
-                            ->label(__('Aadhar Card'))
+                            ->label(__('Business Document'))
                             ->required()
-                            ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'aadhar_card_file'])
-                            ->content(
-                                ($store?->aadhar_card_file ? '<div class="mb-2"><a href="' . route('marketplace.vendor.become-vendor.download', ['file' => 'aadhar_card']) . '" target="_blank" class="btn btn-sm btn-info">View Uploaded Aadhar Card</a></div>' : '') .
-                                '<div id="aadhar-card-dropzone" class="dropzone" data-placeholder="' . __('Drop Aadhar Card here or click to upload') . '"></div>'
-                            ),
-                    )
-                    ->add(
-                        'gst_certificate',
-                        'html',
-                        HtmlFieldOption::make()
-                            ->label(__('GST Certificate'))
-                            ->required()
-                            ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'gst_certificate_file'])
-                            ->content(
-                                ($store?->gst_certificate_file ? '<div class="mb-2"><a href="' . route('marketplace.vendor.become-vendor.download', ['file' => 'gst_certificate']) . '" target="_blank" class="btn btn-sm btn-info">View Uploaded GST Certificate</a></div>' : '') .
-                                '<div id="gst-certificate-dropzone" class="dropzone" data-placeholder="' . __('Drop GST Certificate here or click to upload') . '"></div>'
-                            ),
-                    )
-                    ->add(
-                        'udyam_aadhar',
-                        'html',
-                        HtmlFieldOption::make()
-                            ->label(__('Udyam Aadhar'))
-                            ->required()
-                            ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'udyam_aadhar_file'])
-                            ->content(
-                                ($store?->udyam_aadhar_file ? '<div class="mb-2"><a href="' . route('marketplace.vendor.become-vendor.download', ['file' => 'udyam_aadhar']) . '" target="_blank" class="btn btn-sm btn-info">View Uploaded Udyam Aadhar</a></div>' : '') .
-                                '<div id="udyam-aadhar-dropzone" class="dropzone" data-placeholder="' . __('Drop Udyam Aadhar here or click to upload') . '"></div>'
-                            ),
+                            ->wrapperAttributes(['class' => 'mb-3 position-relative', 'data-field-name' => 'business_doc_file'])
+                            ->content($businessDocContent),
                     );
             })
             ->add(
