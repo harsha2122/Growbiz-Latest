@@ -434,6 +434,8 @@ class HookServiceProvider extends ServiceProvider
                                     '<input type="radio" class="btn-check" name="aadhar_mode" id="aadhar-mode-images" value="images" autocomplete="off">' .
                                     '<label class="btn btn-outline-secondary btn-sm" for="aadhar-mode-images">Upload as Images (Front + Back)</label>' .
                                     '</div></div>' .
+                                    '<input type="file" name="aadhar_file_1" id="aadhar-file-1-input" class="d-none" accept=".pdf,.jpg,.jpeg,.png,.webp">' .
+                                    '<input type="file" name="aadhar_file_2" id="aadhar-file-2-input" class="d-none" accept=".jpg,.jpeg,.png,.webp">' .
                                     '<div data-field-name="aadhar_file_1"><div id="aadhar-file-1-dropzone" class="dropzone" data-placeholder="' . __('Drop Aadhaar PDF or Front Image here') . '"></div></div>' .
                                     '<div id="aadhar-file-2-wrapper" data-field-name="aadhar_file_2" style="display:none;" class="mt-2"><div id="aadhar-file-2-dropzone" class="dropzone" data-placeholder="' . __('Drop Aadhaar Back Image here') . '"></div></div>'
                                 ),
@@ -452,6 +454,7 @@ class HookServiceProvider extends ServiceProvider
                                     '<div class="form-check"><input class="form-check-input" type="radio" name="business_doc_type" id="bdt-shop" value="shop_act"><label class="form-check-label" for="bdt-shop">Shop Act</label></div>' .
                                     '<div class="form-check"><input class="form-check-input" type="radio" name="business_doc_type" id="bdt-udyam" value="udyam_aadhar"><label class="form-check-label" for="bdt-udyam">Udyam Aadhaar</label></div>' .
                                     '</div></div>' .
+                                    '<input type="file" name="business_doc_file" id="business-doc-input" class="d-none" accept=".pdf,.jpg,.jpeg,.png,.webp">' .
                                     '<div data-field-name="business_doc_file"><div id="business-doc-dropzone" class="dropzone" data-placeholder="' . __('Drop Business Document here or click to upload') . '"></div></div>'
                                 ),
                         )
@@ -459,31 +462,52 @@ class HookServiceProvider extends ServiceProvider
 (function(){
     var vendorDiv = document.querySelector("[data-bb-toggle=\"vendor-info\"]");
 
-    // Helper: create a Dropzone on an element if not already created
-    function tryInitDz(selector, globalVar, opts) {
-        if (typeof Dropzone === "undefined" || window[globalVar]) return;
+    // Sync a Dropzone file into a hidden <input type="file"> via DataTransfer
+    function syncToInput(inputId, file) {
+        var input = document.getElementById(inputId);
+        if (!input) return;
+        try {
+            var dt = new DataTransfer();
+            if (file) dt.items.add(file);
+            input.files = dt.files;
+        } catch(e) { console.warn("DataTransfer not supported:", e); }
+    }
+
+    function makeDz(selector, inputId, globalVar, opts) {
+        if (typeof Dropzone === "undefined") return;
         var el = document.querySelector(selector);
-        if (!el || el.dropzone) return;
-        var cfg = Object.assign({
-            url: "#", autoProcessQueue: false, maxFiles: 1,
-            addRemoveLinks: true,
-            maxfilesexceeded: function(f){ this.removeFile(f); }
-        }, opts);
-        window[globalVar] = new Dropzone(selector, cfg);
+        if (!el) return;
+        // Reuse existing instance
+        var dz = el.dropzone || window[globalVar];
+        if (!dz) {
+            var cfg = Object.assign({
+                url: "#", autoProcessQueue: false, maxFiles: 1,
+                addRemoveLinks: true,
+                maxfilesexceeded: function(f){ this.removeFile(f); }
+            }, opts);
+            dz = new Dropzone(selector, cfg);
+            window[globalVar] = dz;
+        }
+        // Bind DataTransfer sync (only once)
+        if (!dz._inputSynced) {
+            dz._inputSynced = true;
+            dz.on("addedfile", function(f) { syncToInput(inputId, f); });
+            dz.on("removedfile", function() { syncToInput(inputId, null); });
+        }
     }
 
     function initDropzones() {
-        tryInitDz("#aadhar-file-1-dropzone", "aadharFile1Dropzone", {
+        makeDz("#aadhar-file-1-dropzone", "aadhar-file-1-input", "aadharFile1Dropzone", {
             paramName: "aadhar_file_1",
             acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
             dictDefaultMessage: "Drop Aadhaar PDF or Front Image here"
         });
-        tryInitDz("#aadhar-file-2-dropzone", "aadharFile2Dropzone", {
+        makeDz("#aadhar-file-2-dropzone", "aadhar-file-2-input", "aadharFile2Dropzone", {
             paramName: "aadhar_file_2",
             acceptedFiles: ".jpg,.jpeg,.png,.webp",
             dictDefaultMessage: "Drop Aadhaar Back Image here"
         });
-        tryInitDz("#business-doc-dropzone", "businessDocDropzone", {
+        makeDz("#business-doc-dropzone", "business-doc-input", "businessDocDropzone", {
             paramName: "business_doc_file",
             acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
             dictDefaultMessage: "Drop Business Document here or click to upload"
@@ -499,22 +523,15 @@ class HookServiceProvider extends ServiceProvider
         if (vendorDiv) vendorDiv.style.display = "none";
     }
 
-    // Handle radio changes
     document.querySelectorAll("input[name=is_vendor]").forEach(function(r) {
         r.addEventListener("change", function() {
             this.value == "1" ? showVendorForm() : hideVendorForm();
         });
     });
 
-    // Set initial state
     var checked = document.querySelector("input[name=is_vendor]:checked");
-    if (checked && checked.value == "1") {
-        showVendorForm();
-    } else {
-        hideVendorForm();
-    }
+    if (checked && checked.value == "1") { showVendorForm(); } else { hideVendorForm(); }
 
-    // Aadhaar mode toggle
     document.addEventListener("change", function(e) {
         if (e.target && e.target.name === "aadhar_mode") {
             var wrapper = document.getElementById("aadhar-file-2-wrapper");
