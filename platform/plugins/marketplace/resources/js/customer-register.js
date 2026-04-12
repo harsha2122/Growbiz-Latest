@@ -196,6 +196,20 @@ window.addEventListener('load', function() {
 
         initializeDropzones()
 
+        // Helper: get Dropzone instance by element ID — tries DOM-attached instance first,
+        // falls back to the global variable. Avoids stale-reference bugs.
+        function getDz(elementId, globalVar) {
+            try {
+                const el = document.getElementById(elementId)
+                if (el && el.dropzone) return el.dropzone
+                if (el && Dropzone && Dropzone.instances) {
+                    const found = Dropzone.instances.find(dz => dz.element === el)
+                    if (found) return found
+                }
+            } catch (e) { /* ignore */ }
+            return window[globalVar] || null
+        }
+
         const formData = new FormData(form.get(0))
 
         // Remove any stale file fields — we'll append from dropzones
@@ -203,28 +217,33 @@ window.addEventListener('load', function() {
         formData.delete('aadhar_file_2')
         formData.delete('business_doc_file')
 
-        if (window.aadharFile1Dropzone && window.aadharFile1Dropzone.files.length > 0) {
-            const file = window.aadharFile1Dropzone.files[0]
+        const dz1 = getDz('aadhar-file-1-dropzone', 'aadharFile1Dropzone')
+        if (dz1 && dz1.files.length > 0) {
+            const file = dz1.files[0]
             formData.append('aadhar_file_1', file, file.name)
             console.log('Aadhaar file 1 added:', file.name, 'Size:', file.size)
         } else {
-            console.log('No Aadhaar file 1 uploaded')
+            console.log('No Aadhaar file 1 uploaded. dz1:', dz1, 'files:', dz1?.files?.length)
         }
 
         // Only append aadhar_file_2 when images mode is selected
         const aadharMode = form.find('input[name="aadhar_mode"]:checked').val()
-        if (aadharMode === 'images' && window.aadharFile2Dropzone && window.aadharFile2Dropzone.files.length > 0) {
-            const file = window.aadharFile2Dropzone.files[0]
-            formData.append('aadhar_file_2', file, file.name)
-            console.log('Aadhaar file 2 added:', file.name, 'Size:', file.size)
+        if (aadharMode === 'images') {
+            const dz2 = getDz('aadhar-file-2-dropzone', 'aadharFile2Dropzone')
+            if (dz2 && dz2.files.length > 0) {
+                const file = dz2.files[0]
+                formData.append('aadhar_file_2', file, file.name)
+                console.log('Aadhaar file 2 added:', file.name, 'Size:', file.size)
+            }
         }
 
-        if (window.businessDocDropzone && window.businessDocDropzone.files.length > 0) {
-            const file = window.businessDocDropzone.files[0]
+        const dzBiz = getDz('business-doc-dropzone', 'businessDocDropzone')
+        if (dzBiz && dzBiz.files.length > 0) {
+            const file = dzBiz.files[0]
             formData.append('business_doc_file', file, file.name)
             console.log('Business doc file added:', file.name, 'Size:', file.size)
         } else {
-            console.log('No Business Document file uploaded')
+            console.log('No Business Document file uploaded. dzBiz:', dzBiz, 'files:', dzBiz?.files?.length)
         }
 
         console.log('Submitting to:', form.prop('action'))
