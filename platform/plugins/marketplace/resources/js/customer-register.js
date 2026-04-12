@@ -5,11 +5,12 @@ if (typeof Dropzone !== 'undefined') {
     Dropzone.autoDiscover = false
 }
 
+// File cache updated via Dropzone events — much more reliable than reading dz.files at submit time
+window._dzFiles = window._dzFiles || {}
+
 // Wait for both DOM and all scripts to load
 window.addEventListener('load', function() {
     console.log('=== Window Loaded - Checking Dependencies ===')
-    console.log('jQuery available?', typeof jQuery !== 'undefined' || typeof $ !== 'undefined')
-    console.log('Dropzone available?', typeof Dropzone !== 'undefined')
 
     // Use jQuery or $ depending on what's available
     const jQ = typeof jQuery !== 'undefined' ? jQuery : (typeof $ !== 'undefined' ? $ : null)
@@ -26,58 +27,71 @@ window.addEventListener('load', function() {
 
     console.log('=== Initializing Vendor Registration ===')
 
+    /**
+     * Bind addedfile/removedfile events to a Dropzone instance so we track the
+     * current file in window._dzFiles[key]. Safe to call multiple times (no-op
+     * if already bound via the _filesTracked flag).
+     */
+    function trackDropzoneFiles(dz, key) {
+        if (!dz || dz._filesTracked) return
+        dz._filesTracked = true
+        dz.on('addedfile', function(file) {
+            window._dzFiles[key] = file
+            console.log('File cached for', key, ':', file.name)
+        })
+        dz.on('removedfile', function() {
+            window._dzFiles[key] = null
+            console.log('File removed from cache for', key)
+        })
+    }
+
+    /**
+     * Get or create a Dropzone for elementId, then track files via events.
+     * Returns the Dropzone instance.
+     */
+    function setupDropzone(elementId, globalVar, fileKey, options) {
+        const el = document.getElementById(elementId)
+        if (!el) return null
+
+        // Re-use an existing instance (created by inline script or previous call)
+        let dz = el.dropzone || window[globalVar]
+
+        if (!dz) {
+            // Create a fresh instance
+            const defaults = {
+                url: '#',
+                autoProcessQueue: false,
+                maxFiles: 1,
+                addRemoveLinks: true,
+                dictDefaultMessage: jQ('#' + elementId).data('placeholder') || 'Drop file here',
+                maxfilesexceeded: function(file) { this.removeFile(file) },
+            }
+            dz = new Dropzone('#' + elementId, Object.assign(defaults, options))
+            window[globalVar] = dz
+        }
+
+        trackDropzoneFiles(dz, fileKey)
+        return dz
+    }
+
     function initializeDropzones() {
-        if (typeof window.initVendorDropzones === 'function') {
-            window.initVendorDropzones()
-        }
+        setupDropzone('aadhar-file-1-dropzone', 'aadharFile1Dropzone', 'aadhar1', {
+            paramName: 'aadhar_file_1',
+            acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
+            dictDefaultMessage: 'Drop Aadhaar PDF or Front Image here',
+        })
 
-        if (!window.aadharFile1Dropzone && jQ('#aadhar-file-1-dropzone').length) {
-            console.log('Initializing Aadhaar file 1 dropzone')
-            window.aadharFile1Dropzone = new Dropzone('#aadhar-file-1-dropzone', {
-                url: '#',
-                autoProcessQueue: false,
-                paramName: 'aadhar_file_1',
-                maxFiles: 1,
-                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
-                addRemoveLinks: true,
-                dictDefaultMessage: jQ('#aadhar-file-1-dropzone').data('placeholder') || 'Drop Aadhaar PDF or Front Image here',
-                maxfilesexceeded: function(file) {
-                    this.removeFile(file)
-                }
-            })
-        }
+        setupDropzone('aadhar-file-2-dropzone', 'aadharFile2Dropzone', 'aadhar2', {
+            paramName: 'aadhar_file_2',
+            acceptedFiles: '.jpg,.jpeg,.png,.webp',
+            dictDefaultMessage: 'Drop Aadhaar Back Image here',
+        })
 
-        if (!window.aadharFile2Dropzone && jQ('#aadhar-file-2-dropzone').length) {
-            console.log('Initializing Aadhaar file 2 dropzone')
-            window.aadharFile2Dropzone = new Dropzone('#aadhar-file-2-dropzone', {
-                url: '#',
-                autoProcessQueue: false,
-                paramName: 'aadhar_file_2',
-                maxFiles: 1,
-                acceptedFiles: '.jpg,.jpeg,.png,.webp',
-                addRemoveLinks: true,
-                dictDefaultMessage: jQ('#aadhar-file-2-dropzone').data('placeholder') || 'Drop Aadhaar Back Image here',
-                maxfilesexceeded: function(file) {
-                    this.removeFile(file)
-                }
-            })
-        }
-
-        if (!window.businessDocDropzone && jQ('#business-doc-dropzone').length) {
-            console.log('Initializing Business Document dropzone')
-            window.businessDocDropzone = new Dropzone('#business-doc-dropzone', {
-                url: '#',
-                autoProcessQueue: false,
-                paramName: 'business_doc_file',
-                maxFiles: 1,
-                acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
-                addRemoveLinks: true,
-                dictDefaultMessage: jQ('#business-doc-dropzone').data('placeholder') || 'Drop Business Document here or click to upload',
-                maxfilesexceeded: function(file) {
-                    this.removeFile(file)
-                }
-            })
-        }
+        setupDropzone('business-doc-dropzone', 'businessDocDropzone', 'businessDoc', {
+            paramName: 'business_doc_file',
+            acceptedFiles: '.pdf,.jpg,.jpeg,.png,.webp',
+            dictDefaultMessage: 'Drop Business Document here or click to upload',
+        })
     }
 
     // Aadhaar mode toggle
@@ -86,16 +100,13 @@ window.addEventListener('load', function() {
         const wrapper = jQ('#aadhar-file-2-wrapper')
         if (mode === 'images') {
             wrapper.show()
-            // init dropzone if not yet done
-            if (!window.aadharFile2Dropzone && jQ('#aadhar-file-2-dropzone').length) {
-                setTimeout(initializeDropzones, 50)
-            }
+            initializeDropzones()
         } else {
             wrapper.hide()
-            // clear file 2 if user switches back to PDF mode
             if (window.aadharFile2Dropzone) {
                 window.aadharFile2Dropzone.removeAllFiles(true)
             }
+            window._dzFiles['aadhar2'] = null
         }
     })
 
@@ -115,9 +126,7 @@ window.addEventListener('load', function() {
         if (currentTarget.val() == 1) {
             console.log('Showing vendor form')
             jQ('[data-bb-toggle="vendor-info"]').slideDown(() => {
-                setTimeout(() => {
-                    initializeDropzones()
-                }, 100)
+                setTimeout(() => initializeDropzones(), 100)
             })
         } else {
             console.log('Hiding vendor form')
@@ -176,75 +185,70 @@ window.addEventListener('load', function() {
         const isVendorInput = form.find('input[name="is_vendor"]:checked').val()
         const isVendor = isVendorInput == 1 || form.hasClass('become-vendor-form')
 
-        console.log('CAPTURE PHASE - Form submit detected')
-        console.log('Form classes:', form.attr('class'))
-        console.log('isVendor:', isVendor)
+        console.log('CAPTURE PHASE - Form submit detected, isVendor:', isVendor)
 
         if (isVendor) {
-            console.log('PREVENTING DEFAULT - Vendor registration')
             e.preventDefault()
             e.stopPropagation()
             e.stopImmediatePropagation()
-
             handleVendorRegistration(form)
             return false
         }
     }, true) // true = use capture phase
 
+    function appendFileFromDropzone(formData, fieldName, fileKey, dzElementId, dzGlobalVar) {
+        // Primary: use event-cached file (most reliable)
+        const cached = window._dzFiles[fileKey]
+        if (cached) {
+            formData.append(fieldName, cached, cached.name)
+            console.log('Appended', fieldName, 'from cache:', cached.name, 'size:', cached.size)
+            return true
+        }
+
+        // Fallback: read from Dropzone instance directly
+        const el = document.getElementById(dzElementId)
+        const dz = (el && el.dropzone) || window[dzGlobalVar] ||
+            (el && Dropzone.instances && Dropzone.instances.find(d => d.element === el)) ||
+            null
+
+        if (dz && dz.files && dz.files.length > 0) {
+            const file = dz.files[0]
+            formData.append(fieldName, file, file.name)
+            console.log('Appended', fieldName, 'from dz.files:', file.name, 'size:', file.size)
+            return true
+        }
+
+        console.error('NO FILE for', fieldName,
+            '| _dzFiles[' + fileKey + ']:', cached,
+            '| el:', el,
+            '| el.dropzone:', el && el.dropzone,
+            '| window var:', window[dzGlobalVar],
+            '| dz.files:', dz && dz.files)
+        return false
+    }
+
     function handleVendorRegistration(form) {
         console.log('=== Vendor Registration Started ===')
 
+        // Ensure dropzones are initialized and event tracking is active
         initializeDropzones()
-
-        // Helper: get Dropzone instance by element ID — tries DOM-attached instance first,
-        // falls back to the global variable. Avoids stale-reference bugs.
-        function getDz(elementId, globalVar) {
-            try {
-                const el = document.getElementById(elementId)
-                if (el && el.dropzone) return el.dropzone
-                if (el && Dropzone && Dropzone.instances) {
-                    const found = Dropzone.instances.find(dz => dz.element === el)
-                    if (found) return found
-                }
-            } catch (e) { /* ignore */ }
-            return window[globalVar] || null
-        }
 
         const formData = new FormData(form.get(0))
 
-        // Remove any stale file fields — we'll append from dropzones
+        // Remove stale file fields — we re-append from Dropzone
         formData.delete('aadhar_file_1')
         formData.delete('aadhar_file_2')
         formData.delete('business_doc_file')
 
-        const dz1 = getDz('aadhar-file-1-dropzone', 'aadharFile1Dropzone')
-        if (dz1 && dz1.files.length > 0) {
-            const file = dz1.files[0]
-            formData.append('aadhar_file_1', file, file.name)
-            console.log('Aadhaar file 1 added:', file.name, 'Size:', file.size)
-        } else {
-            console.log('No Aadhaar file 1 uploaded. dz1:', dz1, 'files:', dz1?.files?.length)
-        }
+        appendFileFromDropzone(formData, 'aadhar_file_1', 'aadhar1', 'aadhar-file-1-dropzone', 'aadharFile1Dropzone')
 
         // Only append aadhar_file_2 when images mode is selected
         const aadharMode = form.find('input[name="aadhar_mode"]:checked').val()
         if (aadharMode === 'images') {
-            const dz2 = getDz('aadhar-file-2-dropzone', 'aadharFile2Dropzone')
-            if (dz2 && dz2.files.length > 0) {
-                const file = dz2.files[0]
-                formData.append('aadhar_file_2', file, file.name)
-                console.log('Aadhaar file 2 added:', file.name, 'Size:', file.size)
-            }
+            appendFileFromDropzone(formData, 'aadhar_file_2', 'aadhar2', 'aadhar-file-2-dropzone', 'aadharFile2Dropzone')
         }
 
-        const dzBiz = getDz('business-doc-dropzone', 'businessDocDropzone')
-        if (dzBiz && dzBiz.files.length > 0) {
-            const file = dzBiz.files[0]
-            formData.append('business_doc_file', file, file.name)
-            console.log('Business doc file added:', file.name, 'Size:', file.size)
-        } else {
-            console.log('No Business Document file uploaded. dzBiz:', dzBiz, 'files:', dzBiz?.files?.length)
-        }
+        appendFileFromDropzone(formData, 'business_doc_file', 'businessDoc', 'business-doc-dropzone', 'businessDocDropzone')
 
         console.log('Submitting to:', form.prop('action'))
 

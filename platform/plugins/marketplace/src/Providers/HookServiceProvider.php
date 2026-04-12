@@ -457,83 +457,12 @@ class HookServiceProvider extends ServiceProvider
                         )
                         ->addAfter('business_doc', 'vendor_toggle_script', 'html', HtmlFieldOption::make()->content('<script>
 (function(){
-    var radios = document.querySelectorAll("input[name=is_vendor]");
+    // Set initial vendor form visibility. Dropzone creation is handled by customer-register.js.
     var vendorDiv = document.querySelector("[data-bb-toggle=\"vendor-info\"]");
-
-    window.aadharFile1Dropzone = null;
-    window.aadharFile2Dropzone = null;
-    window.businessDocDropzone = null;
-
-    window.initVendorDropzones = function() {
-        if (typeof Dropzone === "undefined") return;
-
-        if (!window.aadharFile1Dropzone && document.getElementById("aadhar-file-1-dropzone")) {
-            window.aadharFile1Dropzone = new Dropzone("#aadhar-file-1-dropzone", {
-                url: "#",
-                autoProcessQueue: false,
-                paramName: "aadhar_file_1",
-                maxFiles: 1,
-                acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
-                addRemoveLinks: true,
-                dictDefaultMessage: "Drop Aadhaar PDF or Front Image here"
-            });
-        }
-
-        if (!window.aadharFile2Dropzone && document.getElementById("aadhar-file-2-dropzone")) {
-            window.aadharFile2Dropzone = new Dropzone("#aadhar-file-2-dropzone", {
-                url: "#",
-                autoProcessQueue: false,
-                paramName: "aadhar_file_2",
-                maxFiles: 1,
-                acceptedFiles: ".jpg,.jpeg,.png,.webp",
-                addRemoveLinks: true,
-                dictDefaultMessage: "Drop Aadhaar Back Image here"
-            });
-        }
-
-        if (!window.businessDocDropzone && document.getElementById("business-doc-dropzone")) {
-            window.businessDocDropzone = new Dropzone("#business-doc-dropzone", {
-                url: "#",
-                autoProcessQueue: false,
-                paramName: "business_doc_file",
-                maxFiles: 1,
-                acceptedFiles: ".pdf,.jpg,.jpeg,.png,.webp",
-                addRemoveLinks: true,
-                dictDefaultMessage: "Drop Business Document here or click to upload"
-            });
-        }
-    };
-
-    // Aadhaar mode toggle
-    document.addEventListener("change", function(e) {
-        if (e.target && e.target.name === "aadhar_mode") {
-            var wrapper = document.getElementById("aadhar-file-2-wrapper");
-            if (wrapper) {
-                wrapper.style.display = e.target.value === "images" ? "block" : "none";
-            }
-            if (e.target.value === "images" && !window.aadharFile2Dropzone) {
-                setTimeout(window.initVendorDropzones, 50);
-            }
-        }
-    });
-
-    function toggleVendorForm() {
-        var checked = document.querySelector("input[name=is_vendor]:checked");
-        if (vendorDiv && checked) {
-            if (checked.value == "1") {
-                vendorDiv.style.display = "block";
-                setTimeout(window.initVendorDropzones, 100);
-            } else {
-                vendorDiv.style.display = "none";
-            }
-        }
+    var checked = document.querySelector("input[name=is_vendor]:checked");
+    if (vendorDiv && checked && checked.value != "1") {
+        vendorDiv.style.display = "none";
     }
-
-    radios.forEach(function(radio) {
-        radio.addEventListener("change", toggleVendorForm);
-    });
-
-    toggleVendorForm();
 })();
 </script>'))
                         ->addAfter('vendor_toggle_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
