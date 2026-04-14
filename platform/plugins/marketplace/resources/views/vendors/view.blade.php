@@ -638,5 +638,51 @@
                 </x-core::card>
             @endif
         </div>
+
+        {{-- Referrals --}}
+        @if ($store)
+            @php $storeReferrals = $store->referrals()->with('referee:id,name,email')->latest('joined_at')->get(); @endphp
+            <div class="col-12 mt-4">
+                <x-core::card>
+                    <x-core::card.header>
+                        <x-core::card.title>
+                            {{ __('Referrals') }}
+                            <span class="badge bg-primary ms-2">{{ $storeReferrals->count() }}</span>
+                        </x-core::card.title>
+                    </x-core::card.header>
+                    <x-core::card.body>
+                        <p class="mb-2"><strong>{{ __('Referral Code') }}:</strong>
+                            <code>{{ $store->referral_code ?? '—' }}</code>
+                        </p>
+                        @if ($storeReferrals->isEmpty())
+                            <p class="text-muted mb-0">{{ __('No referrals yet.') }}</p>
+                        @else
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>{{ __('Name') }}</th>
+                                            <th>{{ __('Email') }}</th>
+                                            <th>{{ __('Joined') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($storeReferrals as $i => $referral)
+                                            <tr>
+                                                <td>{{ $i + 1 }}</td>
+                                                <td>{{ $referral->referee->name ?? '—' }}</td>
+                                                <td>{{ $referral->referee->email ?? '—' }}</td>
+                                                <td>{{ $referral->joined_at->format('d M Y') }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </x-core::card.body>
+                </x-core::card>
+            </div>
+        @endif
     </div>
 @endsection

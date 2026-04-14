@@ -20,7 +20,7 @@ class VendorController extends BaseController
     public function view($id)
     {
         $vendor = Vendor::query()
-            ->with(['store', 'orders', 'addresses', 'wishlist', 'reviews', 'revenues', 'withdrawals'])
+            ->with(['store', 'store.referrals.referee', 'orders', 'addresses', 'wishlist', 'reviews', 'revenues', 'withdrawals'])
             ->findOrFail($id);
 
         $this->pageTitle(trans('plugins/marketplace::marketplace.view_vendor', ['name' => $vendor->name]));

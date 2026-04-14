@@ -264,6 +264,29 @@ class HookServiceProvider extends ServiceProvider
                         }
                     }
                 }, 45, 2);
+
+                // Record vendor referral after registration
+                add_action(BASE_ACTION_AFTER_CREATE_CONTENT, function (string $type, $request, $object): void {
+                    if ($type !== CUSTOMER_MODULE_SCREEN_NAME) {
+                        return;
+                    }
+
+                    $refCode = $request->input('referral_code');
+                    if (! $refCode || ! $request->input('is_vendor')) {
+                        return;
+                    }
+
+                    $referrerStore = Store::where('referral_code', $refCode)->first();
+                    if (! $referrerStore) {
+                        return;
+                    }
+
+                    \Botble\Marketplace\Models\VendorReferral::create([
+                        'referrer_store_id' => $referrerStore->id,
+                        'referee_id'        => $object->id,
+                        'joined_at'         => now(),
+                    ]);
+                }, 130, 3);
             }
 
             add_filter('ecommerce_import_product_row_data', [$this, 'setStoreToRow'], 45);
@@ -541,7 +564,10 @@ class HookServiceProvider extends ServiceProvider
     });
 })();
 </script>'))
-                        ->addAfter('vendor_toggle_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
+                        ->addAfter('vendor_toggle_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>'])
+                        ->addAfter('closeVendorWrapper', 'referral_code_field', HtmlField::class, [
+                            'html' => '<input type="hidden" name="referral_code" value="' . e(old('referral_code', request('ref'))) . '">',
+                        ]);
                 } else {
                     $form
                         ->addAfter('shop_phone', 'vendor_toggle_script', 'html', HtmlFieldOption::make()->content('<script>
@@ -563,7 +589,10 @@ class HookServiceProvider extends ServiceProvider
     toggleVendorForm();
 })();
 </script>'))
-                        ->addAfter('vendor_toggle_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>']);
+                        ->addAfter('vendor_toggle_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>'])
+                        ->addAfter('closeVendorWrapper', 'referral_code_field', HtmlField::class, [
+                            'html' => '<input type="hidden" name="referral_code" value="' . e(old('referral_code', request('ref'))) . '">',
+                        ]);
                 }
             });
         }

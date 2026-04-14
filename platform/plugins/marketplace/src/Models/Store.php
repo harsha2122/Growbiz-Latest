@@ -66,6 +66,7 @@ class Store extends BaseModel
         'sponsored_video_url',
         'sponsored_video_thumbnail',
         'sponsored_video_expires_at',
+        'referral_code',
     ];
 
     protected $casts = [
@@ -84,6 +85,15 @@ class Store extends BaseModel
 
     protected static function booted(): void
     {
+        static::creating(function (Store $store): void {
+            if (empty($store->referral_code)) {
+                do {
+                    $code = strtoupper(Str::random(8));
+                } while (static::where('referral_code', $code)->exists());
+                $store->referral_code = $code;
+            }
+        });
+
         static::deleted(function (Store $store): void {
             $store->products()->each(fn (Product $product) => $product->delete());
             $store->discounts()->delete();
@@ -112,6 +122,11 @@ class Store extends BaseModel
                 }
             }
         });
+    }
+
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(VendorReferral::class, 'referrer_store_id');
     }
 
     public function customer(): BelongsTo

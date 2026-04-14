@@ -9,6 +9,7 @@ use Botble\Ecommerce\Http\Middleware\CheckProductSpecificationEnabledMiddleware;
 use Botble\Marketplace\Http\Controllers\Fronts\ExportProductController;
 use Botble\Marketplace\Http\Controllers\Fronts\ImportProductController;
 use Botble\Marketplace\Http\Controllers\Fronts\MessageController;
+use Botble\Marketplace\Http\Controllers\Fronts\ReferralController;
 use Botble\Marketplace\Http\Controllers\Fronts\MetaAdController;
 use Botble\Marketplace\Http\Controllers\Fronts\MetaAdSetController;
 use Botble\Marketplace\Http\Controllers\Fronts\MetaAdsDashboardController;
@@ -365,6 +366,8 @@ Route::group([
 
     Route::get('settings/languages', [LanguageSettingController::class, 'index'])->name('language-settings.index');
     Route::put('settings/languages', [LanguageSettingController::class, 'update'])->name('language-settings.update');
+
+    Route::get('referrals', [ReferralController::class, 'index'])->name('referrals');
 
     Route::prefix('contact-admin')->group(function (): void {
         Route::get('/', [
