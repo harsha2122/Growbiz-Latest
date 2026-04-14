@@ -11,6 +11,7 @@ use Botble\Marketplace\Events\NewVendorRegistered;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Models\Store;
 use Botble\Marketplace\Models\VendorInfo;
+use Botble\Marketplace\Models\VendorReferral;
 use Botble\Slug\Facades\SlugHelper;
 use Botble\Slug\Models\Slug;
 use Carbon\Carbon;
@@ -60,6 +61,20 @@ class SaveVendorInformationListener
         }
 
         $store->refresh();
+
+        // Record referral if a valid referral code was passed
+        if ($refCode = $this->request->input('referral_code')) {
+            $referrerStore = Store::where('referral_code', $refCode)
+                ->where('id', '!=', $store->id)
+                ->first();
+            if ($referrerStore) {
+                VendorReferral::create([
+                    'referrer_store_id' => $referrerStore->id,
+                    'referee_id'        => $customer->getAuthIdentifier(),
+                    'joined_at'         => now(),
+                ]);
+            }
+        }
 
         $storage = Storage::disk('local');
 
