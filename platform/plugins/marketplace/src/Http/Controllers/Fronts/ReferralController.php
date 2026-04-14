@@ -19,7 +19,7 @@ class ReferralController extends BaseController
             ->latest('joined_at')
             ->paginate(20);
 
-        $referralLink = route('register') . '?ref=' . $store->referral_code;
+        $referralLink = url('/register') . '?ref=' . $store->referral_code;
 
         return view('plugins/marketplace::themes.vendor-dashboard.referrals', compact(
             'store',
