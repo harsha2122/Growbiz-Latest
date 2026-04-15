@@ -523,10 +523,8 @@
     </div>
 </div>
 
-{{-- Catalog data passed to JS --}}
-<script>
-    var BB_CATALOGS = @json($catalogs->map(function ($c) {
-        $pdfCount = $c->pdfs->count();
+@php
+    $catalogsForJs = $catalogs->map(function ($c) {
         return [
             'id'          => $c->id,
             'title'       => $c->title,
@@ -535,12 +533,19 @@
             'discount'    => (float) $c->discount_percentage,
             'contact'     => $c->contact_number,
             'whatsapp'    => $c->whatsapp_number,
-            'pdfs'        => $c->pdfs->map(fn($p) => [
-                'title'    => $p->title,
-                'view_url' => route('public.b2b-catalogs.pdf.view', [$c->id, $p->id]),
-            ])->values()->all(),
+            'pdfs'        => $c->pdfs->map(function ($p) use ($c) {
+                return [
+                    'title'    => $p->title,
+                    'view_url' => route('public.b2b-catalogs.pdf.view', [$c->id, $p->id]),
+                ];
+            })->values()->all(),
         ];
-    })->keyBy('id')->all());
+    })->keyBy('id')->all();
+@endphp
+
+{{-- Catalog data passed to JS --}}
+<script>
+    var BB_CATALOGS = @json($catalogsForJs);
 
     document.addEventListener('DOMContentLoaded', function () {
         var modal = document.getElementById('catalogModal');
