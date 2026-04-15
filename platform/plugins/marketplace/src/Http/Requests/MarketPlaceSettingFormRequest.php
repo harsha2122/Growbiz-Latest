@@ -58,6 +58,7 @@ class MarketPlaceSettingFormRequest extends BaseProductRequest
             'b2b_contact_call_number' => ['nullable', 'string', 'max:20'],
             'b2b_contact_whatsapp_number' => ['nullable', 'string', 'max:20'],
             'enable_login_otp' => [new OnOffRule()],
+            'referral_earning_per_referral' => ['nullable', 'numeric', 'min:0'],
         ];
 
         if ($this->input('enable_commission_fee_for_each_category')) {
