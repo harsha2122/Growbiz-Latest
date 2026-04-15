@@ -132,24 +132,27 @@
                 </div>
                 @php
                     $isOutOfStock = $product->isOutOfStock();
+                    $isStickyService = (string) $product->product_type === 'service';
                 @endphp
                 <div class="sticky-actions-button d-flex align-items-center gap-2">
-                    <button
-                        type="submit"
-                        name="add-to-cart"
-                        @class(['tp-product-details-add-to-cart-btn', 'btn-disabled' => $isOutOfStock])
-                        @disabled($isOutOfStock)
-                        {!! EcommerceHelper::jsAttributes('add-to-cart-in-form', $product) !!}
-                    >
-                        {{ __('Add To Cart') }}
-                    </button>
-                    @if (EcommerceHelper::isQuickBuyButtonEnabled())
+                    @if (!$isStickyService)
+                        <button
+                            type="submit"
+                            name="add-to-cart"
+                            @class(['tp-product-details-add-to-cart-btn', 'btn-disabled' => $isOutOfStock])
+                            @disabled($isOutOfStock)
+                            {!! EcommerceHelper::jsAttributes('add-to-cart-in-form', $product) !!}
+                        >
+                            {{ __('Add To Cart') }}
+                        </button>
+                    @endif
+                    @if ($isStickyService || EcommerceHelper::isQuickBuyButtonEnabled())
                         <button
                             type="submit"
                             name="checkout"
                             @class(['tp-product-details-buy-now-btn', 'btn-disabled' => $isOutOfStock])
                             @disabled($isOutOfStock)
-                        >{{ (string) $product->product_type === 'service' ? __('Book Now') : __('Buy Now') }}</button>
+                        >{{ $isStickyService ? __('Book Now') : __('Buy Now') }}</button>
                     @endif
                 </div>
             </div>

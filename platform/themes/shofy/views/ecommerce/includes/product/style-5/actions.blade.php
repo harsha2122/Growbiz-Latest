@@ -1,6 +1,6 @@
 <div class="tp-product-action-2 tp-product-action-5 tp-product-action-greenStyle">
     <div class="tp-product-action-item-2 d-flex flex-column">
-        @if (EcommerceHelper::isCartEnabled())
+        @if (EcommerceHelper::isCartEnabled() && (string) $product->product_type !== 'service')
             <button
                 type="button"
                 class="tp-product-action-btn-2 tp-product-add-cart-btn"

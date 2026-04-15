@@ -126,6 +126,7 @@
                 @else
                     <input type="hidden" name="qty" value="1" />
                 @endif
+                @if (!$isService)
                 <div class="tp-product-details-add-to-cart mb-15 w-100">
                     <button
                         type="submit"
@@ -138,8 +139,9 @@
                         {{ __('Add To Cart') }}
                     </button>
                 </div>
+                @endif
             </div>
-            @if (EcommerceHelper::isQuickBuyButtonEnabled())
+            @if ($isService || EcommerceHelper::isQuickBuyButtonEnabled())
                 <button
                     type="submit"
                     name="checkout"
