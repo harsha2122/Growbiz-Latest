@@ -5,6 +5,35 @@
 @extends(MarketplaceHelper::viewPath('vendor-dashboard.layouts.master'))
 
 @section('content')
+    @if ($perReferralAmount > 0)
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="h3 mb-1">₹{{ number_format($totalReferralEarnings, 2) }}</div>
+                        <div class="text-muted">{{ __('Total Referral Earnings') }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="h3 mb-1">{{ $referrals->total() }}</div>
+                        <div class="text-muted">{{ __('Total Referrals') }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="h3 mb-1">₹{{ number_format($perReferralAmount, 2) }}</div>
+                        <div class="text-muted">{{ __('Earning per Referral') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="mb-4">
         <h5 class="mb-1">{{ __('Your Referral Link') }}</h5>
         <p class="text-muted small mb-2">{{ __('Share this link so other sellers can join through you.') }}</p>

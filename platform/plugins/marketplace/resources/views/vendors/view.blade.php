@@ -641,7 +641,10 @@
 
         {{-- Referrals --}}
         @if ($store)
-            @php $storeReferrals = $store->referrals()->with('referee:id,name,email')->latest('joined_at')->get(); @endphp
+            @php
+                $storeReferrals = $store->referrals()->with('referee:id,name,email')->latest('joined_at')->get();
+                $perReferral = (float) \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('referral_earning_per_referral', 0);
+            @endphp
             <div class="col-12 mt-4">
                 <x-core::card>
                     <x-core::card.header>
@@ -654,6 +657,13 @@
                         <p class="mb-2"><strong>{{ __('Referral Code') }}:</strong>
                             <code>{{ $store->referral_code ?? '—' }}</code>
                         </p>
+                        @if ($perReferral > 0)
+                            <p class="mb-2">
+                                <strong>{{ __('Referral Earnings') }}:</strong>
+                                ₹{{ number_format($storeReferrals->count() * $perReferral, 2) }}
+                                <span class="text-muted small">({{ $storeReferrals->count() }} × ₹{{ number_format($perReferral, 2) }})</span>
+                            </p>
+                        @endif
                         @if ($storeReferrals->isEmpty())
                             <p class="text-muted mb-0">{{ __('No referrals yet.') }}</p>
                         @else

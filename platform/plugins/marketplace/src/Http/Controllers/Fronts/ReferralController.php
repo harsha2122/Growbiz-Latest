@@ -2,6 +2,7 @@
 
 namespace Botble\Marketplace\Http\Controllers\Fronts;
 
+use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Http\Controllers\BaseController;
 
 class ReferralController extends BaseController
@@ -21,10 +22,15 @@ class ReferralController extends BaseController
 
         $referralLink = url('/register') . '?ref=' . $store->referral_code;
 
+        $perReferralAmount = (float) MarketplaceHelper::getSetting('referral_earning_per_referral', 0);
+        $totalReferralEarnings = $referrals->total() * $perReferralAmount;
+
         return view('plugins/marketplace::themes.vendor-dashboard.referrals', compact(
             'store',
             'referrals',
-            'referralLink'
+            'referralLink',
+            'perReferralAmount',
+            'totalReferralEarnings'
         ));
     }
 }

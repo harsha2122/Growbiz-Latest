@@ -294,6 +294,14 @@ class MarketplaceSettingForm extends SettingForm
                     ->label(trans('plugins/marketplace::marketplace.settings.enable_login_otp'))
                     ->helperText(trans('plugins/marketplace::marketplace.settings.enable_login_otp_helper'))
                     ->value(MarketplaceHelper::isLoginOtpEnabled())
+            )
+            ->add(
+                'referral_earning_per_referral',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(__('Earning per referral (₹)'))
+                    ->helperText(__('Amount earned by a vendor for each successful referral. Set to 0 to disable earnings display.'))
+                    ->defaultValue(MarketplaceHelper::getSetting('referral_earning_per_referral', 0))
             );
     }
 }
