@@ -224,6 +224,21 @@ AdminHelper::registerRoutes(function (): void {
                     'uses' => 'B2bCatalogController@streamPdf',
                     'permission' => 'marketplace.b2b-catalogs.index',
                 ]);
+                Route::delete('{b2b_catalog}/pdfs/{b2b_catalog_pdf}', [
+                    'as' => 'pdfs.destroy',
+                    'uses' => 'B2bCatalogController@destroyPdf',
+                    'permission' => 'marketplace.b2b-catalogs.edit',
+                ]);
+                Route::get('{b2b_catalog}/pdfs/{b2b_catalog_pdf}/view', [
+                    'as' => 'pdfs.view',
+                    'uses' => 'B2bCatalogController@viewCatalogPdf',
+                    'permission' => 'marketplace.b2b-catalogs.index',
+                ]);
+                Route::get('{b2b_catalog}/pdfs/{b2b_catalog_pdf}/stream', [
+                    'as' => 'pdfs.stream',
+                    'uses' => 'B2bCatalogController@streamCatalogPdf',
+                    'permission' => 'marketplace.b2b-catalogs.index',
+                ]);
             });
 
             Route::get('meta-ads-settings', [

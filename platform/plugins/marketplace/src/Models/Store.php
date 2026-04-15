@@ -129,6 +129,11 @@ class Store extends BaseModel
         return $this->hasMany(VendorReferral::class, 'referrer_store_id');
     }
 
+    public function b2bCatalogs(): HasMany
+    {
+        return $this->hasMany(B2bCatalog::class, 'store_id');
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class)->withDefault();
