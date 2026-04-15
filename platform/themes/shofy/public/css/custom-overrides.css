@@ -1,6 +1,6 @@
 /**
  * Custom CSS Overrides
- * Product image contain mode - shows full image without cropping
+ * Product image cover mode - fills card completely
  * Fixed height 250px for all product cards
  */
 
@@ -14,10 +14,6 @@
     height: 250px !important;
     max-height: 250px !important;
     min-height: 250px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background-color: #ffffff !important;
     overflow: hidden !important;
 }
 
@@ -28,14 +24,12 @@
 .tp-product-thumb-4 a,
 .tp-product-thumb-5 a,
 [class*="tp-product-thumb"] a {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    display: block !important;
     width: 100% !important;
     height: 100% !important;
 }
 
-/* ALL product images - contain mode */
+/* ALL product images - cover mode */
 .tp-product-thumb img,
 .tp-product-thumb-2 img,
 .tp-product-thumb-3 img,
@@ -47,21 +41,22 @@
 .tp-product-item-3 img,
 .tp-product-item-4 img,
 .tp-product-item-5 img {
-    width: auto !important;
-    height: auto !important;
+    width: 100% !important;
+    height: 100% !important;
     max-width: 100% !important;
-    max-height: 240px !important;
-    object-fit: contain !important;
+    max-height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
     transform: none !important;
 }
 
-/* Override w-img class that forces width:100% */
+/* Override w-img / m-img */
 .w-img img,
 .m-img img {
-    width: auto !important;
-    height: auto !important;
-    max-height: 240px !important;
-    object-fit: contain !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
 }
 
 /* Disable zoom on hover */
