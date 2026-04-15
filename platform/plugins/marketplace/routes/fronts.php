@@ -3,6 +3,7 @@
 use Botble\Base\Http\Middleware\RequiresJsonRequestMiddleware;
 use Botble\Marketplace\Http\Controllers\Fronts\BecomeVendorController;
 use Botble\Marketplace\Http\Controllers\Fronts\ContactStoreController;
+use Botble\Marketplace\Http\Controllers\Fronts\PublicB2bCatalogController;
 use Botble\Marketplace\Http\Controllers\Fronts\PublicStoreController;
 use Botble\Marketplace\Models\Store;
 use Botble\Slug\Facades\SlugHelper;
@@ -29,6 +30,12 @@ Route::group([
             ->group(function (): void {
                 Route::post('{id}/contact', [ContactStoreController::class, 'store'])->name('stores.contact');
             });
+
+        Route::prefix('b2b-catalogs')->name('public.b2b-catalogs.')->group(function (): void {
+            Route::get('/', [PublicB2bCatalogController::class, 'index'])->name('index');
+            Route::get('{catalog}/pdfs/{pdf}/view', [PublicB2bCatalogController::class, 'viewPdf'])->name('pdf.view');
+            Route::get('{catalog}/pdfs/{pdf}/stream', [PublicB2bCatalogController::class, 'streamPdf'])->name('pdf.stream');
+        });
 
         Route::middleware('customer')->prefix('customer/become-vendor')->name('marketplace.vendor.')->group(
             function (): void {
