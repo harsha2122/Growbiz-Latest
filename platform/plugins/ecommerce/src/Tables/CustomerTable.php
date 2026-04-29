@@ -26,6 +26,7 @@ use Botble\Table\Columns\NameColumn;
 use Botble\Table\Columns\PhoneColumn;
 use Botble\Table\Columns\StatusColumn;
 use Botble\Table\Columns\YesNoColumn;
+use Botble\Table\Columns\Column;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -66,7 +67,8 @@ class CustomerTable extends TableAbstract
                         'created_at',
                         'status',
                         'confirmed_at',
-                    ]);
+                    ])
+                    ->with('store:id,vendor_type');
             });
     }
 
@@ -90,6 +92,29 @@ class CustomerTable extends TableAbstract
                     );
                 }),
             NameColumn::make()->route('customers.edit'),
+            Column::make('store.vendor_type')
+                ->title(trans('plugins/marketplace::marketplace.vendor_type_service'))
+                ->renderUsing(function (Column $column) {
+                    $item = $column->getItem();
+                    if (! $item->store) {
+                        return '';
+                    }
+
+                    $vendorTypeLabels = [
+                        'service' => ['label' => trans('plugins/marketplace::marketplace.vendor_type_service'), 'bg' => 'bg-primary'],
+                        'products' => ['label' => trans('plugins/marketplace::marketplace.vendor_type_products'), 'bg' => 'bg-success'],
+                        'service_products' => ['label' => trans('plugins/marketplace::marketplace.vendor_type_both'), 'bg' => 'bg-info'],
+                    ];
+
+                    $vendorType = $item->store->vendor_type ?? 'products';
+                    $typeConfig = $vendorTypeLabels[$vendorType] ?? $vendorTypeLabels['products'];
+
+                    return Html::tag(
+                        'span',
+                        $typeConfig['label'],
+                        ['class' => 'badge ' . $typeConfig['bg']]
+                    );
+                }),
         ];
 
         if (EcommerceHelper::isLoginUsingPhone()) {

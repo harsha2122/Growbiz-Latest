@@ -48,6 +48,20 @@
                                     <x-core::icon name="ti ti-shield-check" />
                                     {{ trans('plugins/marketplace::marketplace.vendor_verified') }}
                                 </span>
+                            @endif
+
+                            @php
+                                $vendorTypeLabels = [
+                                    'service' => ['label' => trans('plugins/marketplace::marketplace.vendor_type_service'), 'bg' => 'bg-blue'],
+                                    'products' => ['label' => trans('plugins/marketplace::marketplace.vendor_type_products'), 'bg' => 'bg-green'],
+                                    'service_products' => ['label' => trans('plugins/marketplace::marketplace.vendor_type_both'), 'bg' => 'bg-purple'],
+                                ];
+                                $vendorType = $vendor->store?->vendor_type ?? 'products';
+                                $typeConfig = $vendorTypeLabels[$vendorType] ?? $vendorTypeLabels['products'];
+                            @endphp
+                            <span class="badge {{ $typeConfig['bg'] }} text-white">
+                                {{ $typeConfig['label'] }}
+                            </span>
                             @else
                                 <span class="badge bg-cyan text-cyan-fg">
                                     <x-core::icon name="ti ti-shield-x" />

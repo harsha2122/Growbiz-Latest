@@ -170,6 +170,11 @@ class HookServiceProvider extends ServiceProvider
             if (MarketplaceHelper::isVendorRegistrationEnabled()) {
                 add_filter('ecommerce_customer_registration_form_validation_rules', function (array $rules): array {
                     $vendorRules = [
+                        'vendor_type' => [
+                            'nullable',
+                            'required_if:is_vendor,1',
+                            'in:service,products,service_products',
+                        ],
                         'shop_name' => [
                             'nullable',
                             'required_if:is_vendor,1',
@@ -222,6 +227,7 @@ class HookServiceProvider extends ServiceProvider
 
                 add_filter('ecommerce_customer_registration_form_validation_attributes', function (array $attributes): array {
                     $vendorAttributes = [
+                        'vendor_type' => __('Type of Vendor'),
                         'shop_name' => __('Shop Name'),
                         'shop_phone' => __('Shop Phone'),
                         'shop_url' => __('Shop URL'),
@@ -381,6 +387,20 @@ class HookServiceProvider extends ServiceProvider
                     )
                     ->addAfter(
                         'openVendorWrapper',
+                        'vendor_type',
+                        RadioField::class,
+                        RadioFieldOption::make()
+                            ->label(__('Type of Vendor'))
+                            ->choices([
+                                'service' => __('Service Only'),
+                                'products' => __('Products Only'),
+                                'service_products' => __('Service + Products'),
+                            ])
+                            ->defaultValue('products')
+                            ->helperText(__('⚠️ <strong>Please choose wisely</strong> — Your product and service listings will depend entirely on this selection.'))
+                    )
+                    ->addAfter(
+                        'vendor_type',
                         'shop_name',
                         TextField::class,
                         TextFieldOption::make()

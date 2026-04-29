@@ -67,6 +67,7 @@ class Store extends BaseModel
         'sponsored_video_thumbnail',
         'sponsored_video_expires_at',
         'referral_code',
+        'vendor_type',
     ];
 
     protected $casts = [
