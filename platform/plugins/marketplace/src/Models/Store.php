@@ -68,6 +68,7 @@ class Store extends BaseModel
         'sponsored_video_expires_at',
         'referral_code',
         'vendor_type',
+        'establishment_date',
     ];
 
     protected $casts = [
@@ -345,5 +346,22 @@ class Store extends BaseModel
             'expires_at' => $subscription->expires_at,
             'is_expired' => $subscription->isExpired(),
         ];
+    }
+
+    public static function getTopVendorsByMonthlySales(int $limit = 10)
+    {
+        $currentMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
+
+        return self::query()
+            ->leftJoin('ec_orders', 'mp_stores.id', '=', 'ec_orders.store_id')
+            ->leftJoin('ec_order_products', 'ec_orders.id', '=', 'ec_order_products.order_id')
+            ->where('mp_stores.status', StoreStatusEnum::PUBLISHED)
+            ->whereBetween('ec_orders.created_at', [$currentMonth, $endOfMonth])
+            ->selectRaw('mp_stores.*, SUM(COALESCE(ec_order_products.price, 0) * COALESCE(ec_order_products.qty, 0)) as monthly_sales')
+            ->groupBy('mp_stores.id')
+            ->orderByRaw('SUM(COALESCE(ec_order_products.price, 0) * COALESCE(ec_order_products.qty, 0)) DESC')
+            ->limit($limit)
+            ->get();
     }
 }

@@ -6,6 +6,7 @@ use Botble\Base\Facades\Html;
 use Botble\Base\Forms\FieldOptions\ButtonFieldOption;
 use Botble\Base\Forms\FieldOptions\CheckboxFieldOption;
 use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
+use Botble\Base\Forms\Fields\DateField;
 use Botble\Base\Forms\Fields\OnOffCheckboxField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Forms\FormAbstract;
@@ -75,6 +76,13 @@ class BecomeVendorForm extends FormAbstract
                     ->label(__('Shop Phone'))
                     ->placeholder(__('Ex: 0943243332'))
                     ->required(),
+            )
+            ->add(
+                'establishment_date',
+                DateField::class,
+                TextFieldOption::make()
+                    ->label(__('Business Establishment Date'))
+                    ->placeholder(__('Select establishment date')),
             )
             ->when(MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true), function (): void {
                 $customer = auth('customer')->user();

@@ -85,6 +85,14 @@ class StoreForm extends FormAbstract
                     ->maxLength(255)
             )
             ->add(
+                'establishment_date',
+                DatePickerField::class,
+                DatePickerFieldOption::make()
+                    ->label(__('Business Establishment Date'))
+                    ->defaultValue($this->getModel()->establishment_date ? BaseHelper::formatDate($this->getModel()->establishment_date) : '')
+                    ->colspan(3)
+            )
+            ->add(
                 'logo',
                 MediaImageField::class,
                 MediaImageFieldOption::make()

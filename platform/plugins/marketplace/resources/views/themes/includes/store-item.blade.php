@@ -14,6 +14,13 @@
             </div>
         @endif
 
+        @if ($store->establishment_date)
+            <p class="bb-store-item-info text-muted small">
+                <x-core::icon name="ti ti-calendar" />
+                {{ __('Estd - ') }}{{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
+            </p>
+        @endif
+
         @if (! MarketplaceHelper::hideStoreAddress() && $store->full_address)
             <p class="bb-store-item-info text-truncate" title="{{ $store->full_address }}">
                 <x-core::icon name="ti ti-map-pin" />{{ $store->full_address }}
