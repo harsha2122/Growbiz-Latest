@@ -25,6 +25,7 @@ use Botble\Ecommerce\Models\Brand;
 use Botble\Ecommerce\Models\GlobalOption;
 use Botble\Ecommerce\Models\Product;
 use Botble\Ecommerce\Models\ProductAttributeSet;
+use Botble\Ecommerce\Models\ProductCategory;
 use Botble\Ecommerce\Models\ProductCollection;
 use Botble\Ecommerce\Models\ProductLabel;
 use Botble\Ecommerce\Models\ProductVariation;
@@ -52,6 +53,7 @@ class ProductForm extends BaseProductForm
         $selectedCategories = [];
         $tags = null;
         $totalProductVariations = 0;
+        $isService = request()->input('product_type') === ProductTypeEnum::SERVICE;
 
         if ($this->getModel()) {
             /**
@@ -66,6 +68,15 @@ class ProductForm extends BaseProductForm
             $totalProductVariations = ProductVariation::query()->where('configurable_product_id', $productId)->count();
 
             $tags = $product->tags()->pluck('name')->implode(',');
+
+            $isService = $product->product_type === ProductTypeEnum::SERVICE;
+        }
+
+        if ($isService && empty($selectedCategories)) {
+            $servicesCategory = ProductCategory::where('slug', 'services')->first();
+            if ($servicesCategory) {
+                $selectedCategories = [$servicesCategory->id];
+            }
         }
 
         $this
@@ -102,15 +113,22 @@ class ProductForm extends BaseProductForm
                     'value' => request()->input('product_type') ?: ProductTypeEnum::PHYSICAL,
                 ]);
             })
-            ->add(
-                'categories[]',
-                TreeCategoryField::class,
-                SelectFieldOption::make()
-                    ->label(trans('plugins/ecommerce::products.form.categories'))
-                    ->choices(ProductCategoryHelper::getActiveTreeCategories())
-                    ->selected(old('categories', $selectedCategories))
-                    ->addAttribute('card-body-class', 'p-0')
-            )
+            ->when(! $isService, function () use ($selectedCategories): void {
+                $this->add(
+                    'categories[]',
+                    TreeCategoryField::class,
+                    SelectFieldOption::make()
+                        ->label(trans('plugins/ecommerce::products.form.categories'))
+                        ->choices(ProductCategoryHelper::getActiveTreeCategories())
+                        ->selected(old('categories', $selectedCategories))
+                        ->addAttribute('card-body-class', 'p-0')
+                );
+            })
+            ->when($isService, function () use ($selectedCategories): void {
+                $this->add('categories[]', 'hidden', [
+                    'value' => implode(',', $selectedCategories),
+                ]);
+            })
             ->when($brands, function () use ($brands): void {
                 $this
                     ->add(

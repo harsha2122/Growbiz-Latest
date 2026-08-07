@@ -92,6 +92,10 @@ class PaymentMethods
                 'html' => view('plugins/payment::partials.bank-transfer')->render(),
                 'priority' => 999,
             ],
+            PaymentMethodEnum::PAY_AFTER_SERVICE => [
+                'html' => view('plugins/payment::partials.pay-after-service')->render(),
+                'priority' => 1000,
+            ],
         ] + $this->methods;
 
         $externalExcludedMethods = apply_filters('payment_methods_excluded', []);

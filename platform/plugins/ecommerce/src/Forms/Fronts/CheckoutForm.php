@@ -11,6 +11,7 @@ use Botble\Base\Forms\FieldOptions\TextFieldOption;
 use Botble\Base\Forms\Fields\CheckboxField;
 use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\TextareaField;
+use Botble\Ecommerce\Enums\ProductTypeEnum;
 use Botble\Ecommerce\Facades\EcommerceHelper;
 use Botble\Ecommerce\Http\Requests\SaveCheckoutInformationRequest;
 use Botble\Payment\Enums\PaymentMethodEnum;
@@ -388,10 +389,30 @@ class CheckoutForm extends FormFront
         return $digitalProductsCount > 0 && $digitalProductsCount === $products->count();
     }
 
+    protected function cartContainsOnlyServices(Collection $products): bool
+    {
+        if ($products->isEmpty()) {
+            return false;
+        }
+
+        $servicesCount = $products->filter(function ($product) {
+            return ($product['product_type'] ?? null) === ProductTypeEnum::SERVICE;
+        })->count();
+
+        return $servicesCount > 0 && $servicesCount === $products->count();
+    }
+
     protected function filterPaymentMethods(array $model): array
     {
         if ($this->cartContainsOnlyDigitalProducts($model['products'])) {
             PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
+        }
+
+        if ($this->cartContainsOnlyServices($model['products'])) {
+            PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
+            if (! PaymentMethods::isMethodExcluded(PaymentMethodEnum::PAY_AFTER_SERVICE)) {
+                PaymentMethods::includeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
+            }
         }
 
         return $model;

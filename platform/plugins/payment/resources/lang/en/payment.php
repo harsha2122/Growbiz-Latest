@@ -68,6 +68,7 @@ return [
         'paypal' => 'PayPal',
         'cod' => 'Cash on delivery (COD)',
         'bank_transfer' => 'Bank transfer',
+        'pay_after_service' => 'Pay after service',
     ],
     'statuses' => [
         'pending' => 'Pending',
@@ -82,6 +83,7 @@ return [
     'payment_method_description' => 'Payment guide - (Displayed on the notice of successful purchase and payment page)',
     'payment_via_cod' => 'Cash on delivery (COD)',
     'payment_via_bank_transfer' => 'Bank transfer',
+    'payment_via_pay_after_service' => 'Pay after service completion',
     'payment_pending' => 'Checkout successfully. Your payment is pending and will be checked by our staff.',
     'created_at' => 'Created At',
     'payment_channel' => 'Payment Channel',

@@ -7,11 +7,13 @@ use Botble\Base\Supports\Enum;
 /**
  * @method static PaymentMethodEnum COD()
  * @method static PaymentMethodEnum BANK_TRANSFER()
+ * @method static PaymentMethodEnum PAY_AFTER_SERVICE()
  */
 class PaymentMethodEnum extends Enum
 {
     public const COD = 'cod';
     public const BANK_TRANSFER = 'bank_transfer';
+    public const PAY_AFTER_SERVICE = 'pay_after_service';
 
     public static $langPath = 'plugins/payment::payment.methods';
 
