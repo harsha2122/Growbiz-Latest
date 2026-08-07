@@ -43,13 +43,19 @@ class SaveVendorInformationListener
             ->first();
 
         if (! $store) {
-            $store = Store::query()->create([
+            $storeData = [
                 'name' => BaseHelper::clean($this->request->input('shop_name')),
                 'phone' => BaseHelper::clean($this->request->input('shop_phone')),
                 'email' => BaseHelper::clean($this->request->input('email')),
                 'customer_id' => $customer->getAuthIdentifier(),
                 'vendor_type' => $this->request->input('vendor_type', 'products'),
-            ]);
+            ];
+
+            if ($this->request->input('establishment_date')) {
+                $storeData['establishment_date'] = $this->request->input('establishment_date');
+            }
+
+            $store = Store::query()->create($storeData);
         }
 
         if (! $store->slug) {
