@@ -9,13 +9,13 @@ window.addEventListener('load', function() {
 
     // Show/hide vendor form + init dropzones
     function showVendorForm() {
-        jQ('[data-bb-toggle="vendor-info"]').slideDown(function() {
+        jQ('.vendor-field').slideDown(function() {
             setTimeout(initDropzones, 100)
         })
     }
 
     function hideVendorForm() {
-        jQ('[data-bb-toggle="vendor-info"]').slideUp()
+        jQ('.vendor-field').slideUp()
     }
 
     function initDropzones() {
@@ -31,7 +31,7 @@ window.addEventListener('load', function() {
 
     // If vendor pre-selected (e.g. after failed submit)
     if (jQ('input[name=is_vendor]:checked').val() == 1) {
-        jQ('[data-bb-toggle="vendor-info"]').show()
+        jQ('.vendor-field').show()
         initDropzones()
     }
 
