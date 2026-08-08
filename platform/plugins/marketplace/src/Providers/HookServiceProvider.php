@@ -370,6 +370,10 @@ class HookServiceProvider extends ServiceProvider
                 }, 99);
 
                 Theme::asset()
+                    ->usePath(true)
+                    ->add('vendor-registration-css', 'vendor/core/plugins/marketplace/css/vendor-registration.css?' . $timestamp);
+
+                Theme::asset()
                     ->container('footer')
                     ->usePath(true)
                     ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js']);
@@ -550,27 +554,25 @@ class HookServiceProvider extends ServiceProvider
         });
     }
 
-    function showVendorForm() {
-        document.querySelectorAll(".vendor-field").forEach(function(el) {
-            el.style.display = "";
-        });
-        setTimeout(initDropzones, 100);
-    }
-
-    function hideVendorForm() {
-        document.querySelectorAll(".vendor-field").forEach(function(el) {
-            el.style.display = "none";
-        });
+    function toggleVendorMode(isActive) {
+        var form = document.querySelector(".js-base-form");
+        if (!form) return;
+        if (isActive) {
+            form.classList.add("vendor-active");
+        } else {
+            form.classList.remove("vendor-active");
+        }
+        if (isActive) setTimeout(initDropzones, 100);
     }
 
     document.querySelectorAll("input[name=is_vendor]").forEach(function(r) {
         r.addEventListener("change", function() {
-            this.value == "1" ? showVendorForm() : hideVendorForm();
+            toggleVendorMode(this.value == "1");
         });
     });
 
     var checked = document.querySelector("input[name=is_vendor]:checked");
-    if (checked && checked.value == "1") { showVendorForm(); } else { hideVendorForm(); }
+    toggleVendorMode(checked && checked.value == "1");
 
     document.addEventListener("change", function(e) {
         if (e.target && e.target.name === "aadhar_mode") {
@@ -591,19 +593,24 @@ class HookServiceProvider extends ServiceProvider
 (function(){
     var radios = document.querySelectorAll("input[name=is_vendor]");
 
-    function toggleVendorForm() {
-        var checked = document.querySelector("input[name=is_vendor]:checked");
-        var vendorFields = document.querySelectorAll(".vendor-field");
-        vendorFields.forEach(function(field) {
-            field.style.display = checked && checked.value == "1" ? "" : "none";
-        });
+    function toggleVendorMode(isActive) {
+        var form = document.querySelector(".js-base-form");
+        if (!form) return;
+        if (isActive) {
+            form.classList.add("vendor-active");
+        } else {
+            form.classList.remove("vendor-active");
+        }
     }
 
     radios.forEach(function(radio) {
-        radio.addEventListener("change", toggleVendorForm);
+        radio.addEventListener("change", function() {
+            toggleVendorMode(this.value == "1");
+        });
     });
 
-    toggleVendorForm();
+    var checked = document.querySelector("input[name=is_vendor]:checked");
+    toggleVendorMode(checked && checked.value == "1");
 })();
 </script>'))
                         ->addAfter('vendor_toggle_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>'])

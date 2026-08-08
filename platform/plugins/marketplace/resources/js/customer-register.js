@@ -7,32 +7,49 @@ window.addEventListener('load', function() {
     const jQ = typeof jQuery !== 'undefined' ? jQuery : (typeof $ !== 'undefined' ? $ : null)
     if (!jQ) { console.error('jQuery not found'); return }
 
-    // Show/hide vendor form + init dropzones
-    function showVendorForm() {
-        jQ('.vendor-field').slideDown(function() {
-            setTimeout(initDropzones, 100)
-        })
+    // Universal field initializer for all vendor form elements
+    function initializeFormFields(form) {
+        setTimeout(() => {
+            // Initialize date pickers
+            if (typeof flatpickr !== 'undefined') {
+                form.find('input[data-input-type="date"]').each(function() {
+                    if (!this._flatpickr) {
+                        flatpickr(this, { dateFormat: 'Y-m-d' })
+                    }
+                })
+            }
+
+            // Initialize dropzones
+            if (typeof window.initVendorDropzones === 'function') {
+                window.initVendorDropzones()
+            }
+        }, 50)
     }
 
-    function hideVendorForm() {
-        jQ('.vendor-field').slideUp()
-    }
-
-    function initDropzones() {
-        if (typeof window.initVendorDropzones === 'function') {
-            window.initVendorDropzones()
+    // Toggle vendor mode on form
+    function toggleVendorMode(form, isVendor) {
+        if (isVendor) {
+            form.addClass('vendor-active')
+        } else {
+            form.removeClass('vendor-active')
         }
+        initializeFormFields(form)
     }
 
-    // Radio: is_vendor
+    // Handle is_vendor radio change
     jQ(document).on('change', 'input[name=is_vendor]', function() {
-        jQ(this).val() == 1 ? showVendorForm() : hideVendorForm()
+        const form = jQ(this).closest('form.js-base-form')
+        const isVendor = jQ(this).val() == 1
+        toggleVendorMode(form, isVendor)
     })
 
-    // If vendor pre-selected (e.g. after failed submit)
-    if (jQ('input[name=is_vendor]:checked').val() == 1) {
-        jQ('.vendor-field').show()
-        initDropzones()
+    // Initialize on page load
+    const registrationForm = jQ('form.js-base-form')
+    if (registrationForm.length) {
+        const isVendorChecked = registrationForm.find('input[name=is_vendor]:checked').val() == 1
+        if (isVendorChecked) {
+            toggleVendorMode(registrationForm, true)
+        }
     }
 
     // Shop URL availability check
@@ -122,12 +139,14 @@ window.addEventListener('load', function() {
                         if (!input.is(':checkbox')) input.parent().append('<div class="invalid-feedback">' + msg + '</div>')
                     }
                 })
+                // Re-initialize form fields after error
+                initializeFormFields(form)
             },
         })
     }
 
     // become-vendor page
     if (jQ('.become-vendor-form').length) {
-        initDropzones()
+        initializeFormFields(jQ('.become-vendor-form'))
     }
 })
