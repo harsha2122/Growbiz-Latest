@@ -1,200 +1,128 @@
-// Disable Dropzone auto-discovery
 if (typeof Dropzone !== 'undefined') {
     Dropzone.autoDiscover = false
 }
 
-window.addEventListener('load', function() {
-    const jQ = typeof jQuery !== 'undefined' ? jQuery : (typeof $ !== 'undefined' ? $ : null)
-    if (!jQ) { console.error('jQuery not found'); return }
+document.addEventListener('DOMContentLoaded', function() {
+    const radioInputs = document.querySelectorAll('input[name="is_vendor"]')
+    const form = document.querySelector('form.js-base-form') || document.querySelector('form')
 
-    const registrationForm = jQ('form.js-base-form')
-    if (!registrationForm.length) return
+    if (!form || !radioInputs.length) return
 
-    // Direct vendor field visibility control
-    function updateVendorFieldsVisibility(isVendor) {
-        registrationForm.find('.vendor-field').each(function() {
+    // Direct vendor field toggle
+    function toggleVendorFields(isVendor) {
+        const fields = form.querySelectorAll('.vendor-field')
+        fields.forEach(el => {
             if (isVendor) {
-                jQ(this).css({
-                    'display': '',
-                    'visibility': 'visible',
-                    'height': 'auto',
-                    'overflow': 'visible'
-                }).removeClass('d-none')
-                registrationForm.addClass('vendor-active')
+                el.style.display = ''
+                form.classList.add('vendor-active')
             } else {
-                jQ(this).css({
-                    'display': 'none',
-                    'visibility': 'hidden',
-                    'height': '0',
-                    'overflow': 'hidden',
-                    'margin': '0',
-                    'padding': '0',
-                    'border': '0'
-                }).addClass('d-none')
-                registrationForm.removeClass('vendor-active')
+                el.style.display = 'none'
+                form.classList.remove('vendor-active')
             }
         })
     }
 
-    // Initialize date pickers
-    function initializeDatePickers() {
-        registrationForm.find('input[type="text"][class*="date"]').each(function() {
-            const input = jQ(this)
-            // Check if flatpickr is available
-            if (typeof flatpickr !== 'undefined' && !this._flatpickr) {
-                try {
-                    flatpickr(this, {
-                        dateFormat: 'Y-m-d',
-                        allowInput: true
-                    })
-                } catch (e) {
-                    console.warn('Flatpickr initialization failed:', e)
-                }
-            }
-            // Also try jQuery datepicker if available
-            if (typeof jQ.datepicker !== 'undefined') {
-                try {
-                    input.datepicker({
-                        dateFormat: 'yy-mm-dd'
-                    })
-                } catch (e) {
-                    console.warn('jQuery datepicker initialization failed:', e)
-                }
-            }
-        })
-    }
-
-    // Initialize dropzones
-    function initializeDropzones() {
-        if (typeof window.initVendorDropzones === 'function') {
-            window.initVendorDropzones()
-        }
-    }
-
-    // Handle is_vendor radio change
-    registrationForm.on('change', 'input[name=is_vendor]', function() {
-        const isVendor = jQ(this).val() == 1
-        updateVendorFieldsVisibility(isVendor)
-        if (isVendor) {
-            setTimeout(() => {
-                initializeDatePickers()
-                initializeDropzones()
-            }, 100)
-        }
-    })
-
-    // Initialize on page load
-    const isVendorChecked = registrationForm.find('input[name=is_vendor]:checked').val() == 1
-    updateVendorFieldsVisibility(isVendorChecked)
-    if (isVendorChecked) {
+    // Initialize date pickers after fields are visible
+    function initDatePickers() {
         setTimeout(() => {
-            initializeDatePickers()
-            initializeDropzones()
-        }, 100)
+            const dateInputs = form.querySelectorAll('input[type="text"].date, input[type="date"]')
+            dateInputs.forEach(input => {
+                if (input.offsetParent !== null) { // Check if visible
+                    if (typeof flatpickr !== 'undefined' && !input._flatpickr) {
+                        try {
+                            flatpickr(input, { dateFormat: 'Y-m-d' })
+                        } catch (e) {
+                            console.log('Flatpickr init:', e.message)
+                        }
+                    }
+                }
+            })
+        }, 50)
     }
 
-    // Shop URL availability check
-    registrationForm.on('change', 'input[name="shop_url"]', function() {
-        const input = jQ(this)
-        const url = input.val()
-        if (!url) return
-        jQ.ajax({
-            url: input.data('url'),
-            type: 'POST',
-            data: { url },
-            beforeSend: () => {
-                input.prop('disabled', true)
-                registrationForm.find('button[type=submit]').prop('disabled', true)
-            },
-            success: ({ error, message, data }) => {
-                if (error) {
-                    input.addClass('is-invalid').removeClass('is-valid')
-                    registrationForm.find('.shop-url-status').removeClass('text-success').addClass('text-danger').text(message)
-                } else {
-                    input.removeClass('is-invalid').addClass('is-valid')
-                    registrationForm.find('.shop-url-status').removeClass('text-danger').addClass('text-success').text(message)
-                    registrationForm.find('button[type=submit]').prop('disabled', false)
+    // Radio change handler
+    radioInputs.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const isVendor = this.value === '1'
+            toggleVendorFields(isVendor)
+            if (isVendor) {
+                initDatePickers()
+                if (typeof window.initVendorDropzones === 'function') {
+                    setTimeout(() => window.initVendorDropzones(), 100)
                 }
-                if (data?.slug) {
-                    registrationForm.find('[data-slug-value]').html(
-                        `${registrationForm.find('[data-slug-value]').data('base-url')}/<strong>${data.slug.substring(0, 100).toLowerCase()}</strong>`
-                    )
-                }
-            },
-            complete: () => input.prop('disabled', false),
+            }
         })
     })
 
-    // Intercept form submit for vendor registration
-    document.addEventListener('submit', function(e) {
-        const form = jQ(e.target)
-        if (!form.hasClass('become-vendor-form') && !form.hasClass('js-base-form')) return
+    // Initial state
+    const checkedRadio = form.querySelector('input[name="is_vendor"]:checked')
+    if (checkedRadio) {
+        const isVendor = checkedRadio.value === '1'
+        toggleVendorFields(isVendor)
+        if (isVendor) {
+            initDatePickers()
+        }
+    }
+})
 
-        const isVendorVal = form.find('input[name="is_vendor"]:checked').val()
-        const isVendor = isVendorVal == 1 || form.hasClass('become-vendor-form')
-        if (!isVendor) return
+window.addEventListener('load', function() {
+    const form = document.querySelector('form.js-base-form') || document.querySelector('form')
+    if (!form) return
+
+    // Shop URL check
+    const shopUrlInput = form.querySelector('input[name="shop_url"]')
+    if (shopUrlInput && shopUrlInput.dataset.url) {
+        shopUrlInput.addEventListener('change', function() {
+            const url = this.value.trim()
+            if (!url) return
+
+            fetch(this.dataset.url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const status = form.querySelector('.shop-url-status')
+                if (status) {
+                    if (data.error) {
+                        this.classList.add('is-invalid')
+                        status.classList.add('text-danger')
+                        status.textContent = data.message
+                    } else {
+                        this.classList.remove('is-invalid')
+                        status.classList.remove('text-danger')
+                        status.textContent = data.message
+                    }
+                }
+            })
+        })
+    }
+
+    // Vendor form submit handler
+    form.addEventListener('submit', function(e) {
+        const isVendor = form.querySelector('input[name="is_vendor"]:checked')?.value === '1'
+        if (!isVendor && !form.classList.contains('become-vendor-form')) return
 
         e.preventDefault()
-        e.stopPropagation()
-        e.stopImmediatePropagation()
 
-        handleVendorRegistration(form)
-    }, true)
+        const formData = new FormData(form)
+        const action = form.getAttribute('action')
 
-    function handleVendorRegistration(form) {
-        // FormData captures the hidden file inputs populated by DataTransfer in inline script
-        const formData = new FormData(form.get(0))
-
-        // Remove aadhar_file_2 if not in images mode
-        const aadharMode = form.find('input[name="aadhar_mode"]:checked').val()
-        if (aadharMode !== 'images') {
-            formData.delete('aadhar_file_2')
-        }
-
-        console.log('Submitting vendor form. aadhar_file_1 present:', formData.has('aadhar_file_1'), '| business_doc_file present:', formData.has('business_doc_file'))
-
-        jQ.ajax({
-            url: form.prop('action'),
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            cache: false,
-            success: function(response) {
-                const url = response?.data?.next_page || response?.data?.next_url ||
-                    response?.data?.redirect_url || response?.redirect_url ||
-                    response?.data?.url || '/'
-                window.location.href = url
-            },
-            error: function(xhr) {
-                console.log('ERROR:', xhr.status, xhr.responseJSON)
-                const errors = xhr.responseJSON?.errors || {}
-                form.find('input').removeClass('is-invalid')
-                form.find('.invalid-feedback').remove()
-                Object.keys(errors).forEach(function(key) {
-                    const msg = Array.isArray(errors[key]) ? errors[key][0] : errors[key]
-                    if (['aadhar_file_1', 'aadhar_file_2', 'business_doc_file', 'business_doc_type'].includes(key)) {
-                        const wrapper = form.find('[data-field-name="' + key + '"]')
-                        wrapper.append('<div class="invalid-feedback" style="display:block">' + msg + '</div>')
-                    } else {
-                        const input = form.find('input[name="' + key + '"]')
-                        input.addClass('is-invalid')
-                        if (!input.is(':checkbox')) input.parent().append('<div class="invalid-feedback">' + msg + '</div>')
-                    }
-                })
-                // Re-initialize form fields after error
-                setTimeout(() => {
-                    initializeDatePickers()
-                }, 100)
-            },
+        fetch(action, {
+            method: 'POST',
+            body: formData
         })
-    }
-
-    // become-vendor page
-    if (jQ('.become-vendor-form').length) {
-        setTimeout(() => {
-            initializeDatePickers()
-            initializeDropzones()
-        }, 100)
-    }
+        .then(r => r.json())
+        .then(data => {
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url
+            } else if (data.data?.redirect_url) {
+                window.location.href = data.data.redirect_url
+            }
+        })
+        .catch(err => {
+            console.error('Form submission error:', err)
+        })
+    })
 })

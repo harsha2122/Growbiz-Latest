@@ -1,58 +1,18 @@
-/* Vendor field visibility layer - initially hidden */
+/* Vendor field visibility - hidden by default */
 .vendor-field {
-    display: none;
-    visibility: hidden;
-    height: 0;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-    border: 0;
+    display: none !important;
 }
 
-/* Show vendor fields when vendor-active class is present on form */
+/* Show only when form has vendor-active class */
 form.vendor-active .vendor-field {
-    display: block;
-    visibility: visible;
-    height: auto;
-    overflow: visible;
-    margin: auto;
+    display: block !important;
 }
 
-/* Ensure vendor-specific content is properly styled */
-.vendor-field label {
-    font-weight: 500;
+/* Backup: data attribute based hiding */
+[data-field-vendor="true"] {
+    display: none !important;
 }
 
-.vendor-field .form-control,
-.vendor-field .form-check,
-.vendor-field input[type="radio"],
-.vendor-field input[type="checkbox"] {
-    transition: visibility 0.3s ease-in-out;
-}
-
-/* Date picker within vendor fields */
-form.vendor-active .vendor-field input[data-input-type="date"],
-form.vendor-active .vendor-field .flatpickr-calendar {
-    display: block;
-}
-
-/* Dropzone styling for vendor fields */
-.vendor-field .dropzone {
-    min-height: 200px;
-    border: 2px dashed #ccc;
-    border-radius: 4px;
-    padding: 20px;
-    text-align: center;
-    background-color: #fafafa;
-}
-
-.vendor-field .dropzone.dz-drag-hover {
-    background-color: #f0f0f0;
-    border-color: #999;
-}
-
-/* Helper text styling */
-.vendor-field .form-text {
-    font-size: 0.875rem;
-    color: #6c757d;
+form[data-vendor-active="true"] [data-field-vendor="true"] {
+    display: block !important;
 }
