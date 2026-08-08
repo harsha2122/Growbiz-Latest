@@ -3,36 +3,35 @@ if (typeof Dropzone !== 'undefined') {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const radioInputs = document.querySelectorAll('input[name="is_vendor"]')
-    const form = document.querySelector('form.js-base-form') || document.querySelector('form')
+    const form = document.querySelector('form.js-base-form') || document.querySelector('form[name="register_form"]')
+    if (!form) return
 
-    if (!form || !radioInputs.length) return
+    const radioInputs = form.querySelectorAll('input[name="is_vendor"]')
+    if (!radioInputs.length) return
 
-    // Direct vendor field toggle
     function toggleVendorFields(isVendor) {
         const fields = form.querySelectorAll('.vendor-field')
         fields.forEach(el => {
             if (isVendor) {
                 el.style.display = ''
-                form.classList.add('vendor-active')
+                el.removeAttribute('style')
             } else {
                 el.style.display = 'none'
-                form.classList.remove('vendor-active')
             }
         })
     }
 
-    // Initialize date pickers after fields are visible
     function initDatePickers() {
         setTimeout(() => {
-            const dateInputs = form.querySelectorAll('input[type="text"].date, input[type="date"]')
+            const dateInputs = form.querySelectorAll('input[type="text"].form-control')
             dateInputs.forEach(input => {
-                if (input.offsetParent !== null) { // Check if visible
+                const wrapper = input.closest('.vendor-field')
+                if (wrapper && wrapper.style.display !== 'none') {
                     if (typeof flatpickr !== 'undefined' && !input._flatpickr) {
                         try {
-                            flatpickr(input, { dateFormat: 'Y-m-d' })
+                            flatpickr(input, { dateFormat: 'Y-m-d', allowInput: true })
                         } catch (e) {
-                            console.log('Flatpickr init:', e.message)
+                            console.log('Flatpickr:', e.message)
                         }
                     }
                 }
@@ -40,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 50)
     }
 
-    // Radio change handler
     radioInputs.forEach(radio => {
         radio.addEventListener('change', function() {
             const isVendor = this.value === '1'
@@ -66,63 +64,19 @@ document.addEventListener('DOMContentLoaded', function() {
 })
 
 window.addEventListener('load', function() {
-    const form = document.querySelector('form.js-base-form') || document.querySelector('form')
+    const form = document.querySelector('form.js-base-form') || document.querySelector('form[name="register_form"]')
     if (!form) return
 
-    // Shop URL check
-    const shopUrlInput = form.querySelector('input[name="shop_url"]')
-    if (shopUrlInput && shopUrlInput.dataset.url) {
-        shopUrlInput.addEventListener('change', function() {
-            const url = this.value.trim()
-            if (!url) return
-
-            fetch(this.dataset.url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
-            })
-            .then(r => r.json())
-            .then(data => {
-                const status = form.querySelector('.shop-url-status')
-                if (status) {
-                    if (data.error) {
-                        this.classList.add('is-invalid')
-                        status.classList.add('text-danger')
-                        status.textContent = data.message
-                    } else {
-                        this.classList.remove('is-invalid')
-                        status.classList.remove('text-danger')
-                        status.textContent = data.message
-                    }
+    // Aadhar mode toggle
+    const aadharRadios = form.querySelectorAll('input[name="aadhar_mode"]')
+    if (aadharRadios.length) {
+        aadharRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const wrapper2 = document.getElementById('aadhar-file-2-wrapper')
+                if (wrapper2) {
+                    wrapper2.style.display = this.value === 'images' ? 'block' : 'none'
                 }
             })
         })
     }
-
-    // Vendor form submit handler
-    form.addEventListener('submit', function(e) {
-        const isVendor = form.querySelector('input[name="is_vendor"]:checked')?.value === '1'
-        if (!isVendor && !form.classList.contains('become-vendor-form')) return
-
-        e.preventDefault()
-
-        const formData = new FormData(form)
-        const action = form.getAttribute('action')
-
-        fetch(action, {
-            method: 'POST',
-            body: formData
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.redirect_url) {
-                window.location.href = data.redirect_url
-            } else if (data.data?.redirect_url) {
-                window.location.href = data.data.redirect_url
-            }
-        })
-        .catch(err => {
-            console.error('Form submission error:', err)
-        })
-    })
 })

@@ -408,7 +408,7 @@ class HookServiceProvider extends ServiceProvider
                             ])
                             ->defaultValue('products')
                             ->helperText(__('⚠️ <strong>Please choose wisely</strong> — Your product and service listings will depend entirely on this selection.'))
-                            ->wrapperAttributes(['class' => 'vendor-field'])
+                            ->wrapperAttributes(['class' => 'vendor-field', 'style' => 'display:none;'])
                     )
                     ->addAfter(
                         'vendor_type',
@@ -417,7 +417,7 @@ class HookServiceProvider extends ServiceProvider
                         TextFieldOption::make()
                             ->label(__('Shop Name'))
                             ->placeholder(__('Ex: My Shop'))
-                            ->wrapperAttributes(['class' => 'vendor-field'])
+                            ->wrapperAttributes(['class' => 'vendor-field', 'style' => 'display:none;'])
                     )
                     ->addAfter(
                         'shop_name',
@@ -430,7 +430,7 @@ class HookServiceProvider extends ServiceProvider
                                 'data-url' => route('public.ajax.check-store-url'),
                                 'style' => 'direction: ltr; text-align: left;',
                             ])
-                            ->wrapperAttributes(['class' => 'shop-url-wrapper mb-3 position-relative vendor-field'])
+                            ->wrapperAttributes(['class' => 'shop-url-wrapper mb-3 position-relative vendor-field', 'style' => 'display:none;'])
                             ->prepend(
                                 sprintf(
                                     '<span class="position-absolute top-0 end-0 shop-url-status"></span><div class="input-group"><span class="input-group-text">%s</span>',
@@ -448,7 +448,7 @@ class HookServiceProvider extends ServiceProvider
                         TextFieldOption::make()
                             ->label(__('Phone Number'))
                             ->placeholder(__('Ex: 0943243332'))
-                            ->wrapperAttributes(['class' => 'vendor-field'])
+                            ->wrapperAttributes(['class' => 'vendor-field', 'style' => 'display:none;'])
                     )
                     ->addAfter(
                         'shop_phone',
@@ -456,7 +456,7 @@ class HookServiceProvider extends ServiceProvider
                         DatePickerField::class,
                         DatePickerFieldOption::make()
                             ->label(__('Business Establishment Date'))
-                            ->wrapperAttributes(['class' => 'vendor-field'])
+                            ->wrapperAttributes(['class' => 'vendor-field', 'style' => 'display:none;'])
                     );
 
                 if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', 1)) {
@@ -468,7 +468,7 @@ class HookServiceProvider extends ServiceProvider
                             HtmlFieldOption::make()
                                 ->label(__('Aadhaar Card'))
                                 ->required()
-                                ->wrapperAttributes(['class' => 'mb-3 position-relative vendor-field'])
+                                ->wrapperAttributes(['class' => 'mb-3 position-relative vendor-field', 'style' => 'display:none;'])
                                 ->content(
                                     '<div class="mb-2"><div class="btn-group" role="group">' .
                                     '<input type="radio" class="btn-check" name="aadhar_mode" id="aadhar-mode-pdf" value="pdf" autocomplete="off" checked>' .
@@ -489,7 +489,7 @@ class HookServiceProvider extends ServiceProvider
                             HtmlFieldOption::make()
                                 ->label(__('Business Document'))
                                 ->required()
-                                ->wrapperAttributes(['class' => 'mb-3 position-relative vendor-field'])
+                                ->wrapperAttributes(['class' => 'mb-3 position-relative vendor-field', 'style' => 'display:none;'])
                                 ->content(
                                     '<div class="mb-2"><div class="d-flex flex-wrap gap-3">' .
                                     '<div class="form-check"><input class="form-check-input" type="radio" name="business_doc_type" id="bdt-gst" value="gst_certificate"><label class="form-check-label" for="bdt-gst">GST Certificate</label></div>' .
