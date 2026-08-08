@@ -8,11 +8,13 @@ use Botble\Base\Facades\AdminHelper;
 use Botble\Base\Facades\Assets;
 use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Facades\Html;
+use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
 use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
 use Botble\Base\Forms\FieldOptions\OnOffFieldOption;
 use Botble\Base\Forms\FieldOptions\RadioFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\FieldOptions\TextFieldOption;
+use Botble\Base\Forms\Fields\DatePickerField;
 use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\OnOffField;
 use Botble\Base\Forms\Fields\RadioField;
@@ -190,6 +192,10 @@ class HookServiceProvider extends ServiceProvider
                             'required_if:is_vendor,1',
                             'string',
                             'min:2',
+                        ],
+                        'establishment_date' => [
+                            'nullable',
+                            'date',
                         ],
                     ];
 
@@ -436,6 +442,13 @@ class HookServiceProvider extends ServiceProvider
                         TextFieldOption::make()
                             ->label(__('Phone Number'))
                             ->placeholder(__('Ex: 0943243332'))
+                    )
+                    ->addAfter(
+                        'shop_phone',
+                        'establishment_date',
+                        DatePickerField::class,
+                        DatePickerFieldOption::make()
+                            ->label(__('Business Establishment Date'))
                     );
 
                 if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', 1)) {
