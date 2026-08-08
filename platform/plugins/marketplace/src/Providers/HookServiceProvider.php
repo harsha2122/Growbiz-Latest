@@ -581,7 +581,7 @@ class HookServiceProvider extends ServiceProvider
                         ]);
                 } else {
                     $form
-                        ->addAfter('shop_phone', 'vendor_toggle_script', 'html', HtmlFieldOption::make()->content('<script>
+                        ->addAfter('establishment_date', 'vendor_toggle_script', 'html', HtmlFieldOption::make()->content('<script>
 (function(){
     var radios = document.querySelectorAll("input[name=is_vendor]");
     var vendorDiv = document.querySelector("[data-bb-toggle=\"vendor-info\"]");
