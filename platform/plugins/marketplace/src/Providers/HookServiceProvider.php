@@ -554,25 +554,36 @@ class HookServiceProvider extends ServiceProvider
         });
     }
 
-    function toggleVendorMode(isActive) {
-        var form = document.querySelector(".js-base-form");
-        if (!form) return;
-        if (isActive) {
-            form.classList.add("vendor-active");
-        } else {
-            form.classList.remove("vendor-active");
-        }
-        if (isActive) setTimeout(initDropzones, 100);
+    function updateVendorFields(isVendor) {
+        document.querySelectorAll(".vendor-field").forEach(function(el) {
+            if (isVendor) {
+                el.style.display = "";
+                el.style.visibility = "visible";
+                el.style.height = "auto";
+                el.style.overflow = "visible";
+            } else {
+                el.style.display = "none";
+                el.style.visibility = "hidden";
+                el.style.height = "0";
+                el.style.overflow = "hidden";
+                el.style.margin = "0";
+                el.style.padding = "0";
+                el.style.border = "0";
+            }
+        });
     }
 
     document.querySelectorAll("input[name=is_vendor]").forEach(function(r) {
         r.addEventListener("change", function() {
-            toggleVendorMode(this.value == "1");
+            var isVendor = this.value == "1";
+            updateVendorFields(isVendor);
+            if (isVendor) setTimeout(initDropzones, 100);
         });
     });
 
     var checked = document.querySelector("input[name=is_vendor]:checked");
-    toggleVendorMode(checked && checked.value == "1");
+    updateVendorFields(checked && checked.value == "1");
+    if (checked && checked.value == "1") setTimeout(initDropzones, 100);
 
     document.addEventListener("change", function(e) {
         if (e.target && e.target.name === "aadhar_mode") {
@@ -593,24 +604,33 @@ class HookServiceProvider extends ServiceProvider
 (function(){
     var radios = document.querySelectorAll("input[name=is_vendor]");
 
-    function toggleVendorMode(isActive) {
-        var form = document.querySelector(".js-base-form");
-        if (!form) return;
-        if (isActive) {
-            form.classList.add("vendor-active");
-        } else {
-            form.classList.remove("vendor-active");
-        }
+    function updateVendorFields(isVendor) {
+        document.querySelectorAll(".vendor-field").forEach(function(el) {
+            if (isVendor) {
+                el.style.display = "";
+                el.style.visibility = "visible";
+                el.style.height = "auto";
+                el.style.overflow = "visible";
+            } else {
+                el.style.display = "none";
+                el.style.visibility = "hidden";
+                el.style.height = "0";
+                el.style.overflow = "hidden";
+                el.style.margin = "0";
+                el.style.padding = "0";
+                el.style.border = "0";
+            }
+        });
     }
 
     radios.forEach(function(radio) {
         radio.addEventListener("change", function() {
-            toggleVendorMode(this.value == "1");
+            updateVendorFields(this.value == "1");
         });
     });
 
     var checked = document.querySelector("input[name=is_vendor]:checked");
-    toggleVendorMode(checked && checked.value == "1");
+    updateVendorFields(checked && checked.value == "1");
 })();
 </script>'))
                         ->addAfter('vendor_toggle_script', 'closeVendorWrapper', HtmlField::class, ['html' => '</div>'])

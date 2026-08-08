@@ -7,74 +7,117 @@ window.addEventListener('load', function() {
     const jQ = typeof jQuery !== 'undefined' ? jQuery : (typeof $ !== 'undefined' ? $ : null)
     if (!jQ) { console.error('jQuery not found'); return }
 
-    // Universal field initializer for all vendor form elements
-    function initializeFormFields(form) {
-        setTimeout(() => {
-            // Initialize date pickers
-            if (typeof flatpickr !== 'undefined') {
-                form.find('input[data-input-type="date"]').each(function() {
-                    if (!this._flatpickr) {
-                        flatpickr(this, { dateFormat: 'Y-m-d' })
-                    }
-                })
-            }
+    const registrationForm = jQ('form.js-base-form')
+    if (!registrationForm.length) return
 
-            // Initialize dropzones
-            if (typeof window.initVendorDropzones === 'function') {
-                window.initVendorDropzones()
+    // Direct vendor field visibility control
+    function updateVendorFieldsVisibility(isVendor) {
+        registrationForm.find('.vendor-field').each(function() {
+            if (isVendor) {
+                jQ(this).css({
+                    'display': '',
+                    'visibility': 'visible',
+                    'height': 'auto',
+                    'overflow': 'visible'
+                }).removeClass('d-none')
+                registrationForm.addClass('vendor-active')
+            } else {
+                jQ(this).css({
+                    'display': 'none',
+                    'visibility': 'hidden',
+                    'height': '0',
+                    'overflow': 'hidden',
+                    'margin': '0',
+                    'padding': '0',
+                    'border': '0'
+                }).addClass('d-none')
+                registrationForm.removeClass('vendor-active')
             }
-        }, 50)
+        })
     }
 
-    // Toggle vendor mode on form
-    function toggleVendorMode(form, isVendor) {
-        if (isVendor) {
-            form.addClass('vendor-active')
-        } else {
-            form.removeClass('vendor-active')
+    // Initialize date pickers
+    function initializeDatePickers() {
+        registrationForm.find('input[type="text"][class*="date"]').each(function() {
+            const input = jQ(this)
+            // Check if flatpickr is available
+            if (typeof flatpickr !== 'undefined' && !this._flatpickr) {
+                try {
+                    flatpickr(this, {
+                        dateFormat: 'Y-m-d',
+                        allowInput: true
+                    })
+                } catch (e) {
+                    console.warn('Flatpickr initialization failed:', e)
+                }
+            }
+            // Also try jQuery datepicker if available
+            if (typeof jQ.datepicker !== 'undefined') {
+                try {
+                    input.datepicker({
+                        dateFormat: 'yy-mm-dd'
+                    })
+                } catch (e) {
+                    console.warn('jQuery datepicker initialization failed:', e)
+                }
+            }
+        })
+    }
+
+    // Initialize dropzones
+    function initializeDropzones() {
+        if (typeof window.initVendorDropzones === 'function') {
+            window.initVendorDropzones()
         }
-        initializeFormFields(form)
     }
 
     // Handle is_vendor radio change
-    jQ(document).on('change', 'input[name=is_vendor]', function() {
-        const form = jQ(this).closest('form.js-base-form')
+    registrationForm.on('change', 'input[name=is_vendor]', function() {
         const isVendor = jQ(this).val() == 1
-        toggleVendorMode(form, isVendor)
+        updateVendorFieldsVisibility(isVendor)
+        if (isVendor) {
+            setTimeout(() => {
+                initializeDatePickers()
+                initializeDropzones()
+            }, 100)
+        }
     })
 
     // Initialize on page load
-    const registrationForm = jQ('form.js-base-form')
-    if (registrationForm.length) {
-        const isVendorChecked = registrationForm.find('input[name=is_vendor]:checked').val() == 1
-        if (isVendorChecked) {
-            toggleVendorMode(registrationForm, true)
-        }
+    const isVendorChecked = registrationForm.find('input[name=is_vendor]:checked').val() == 1
+    updateVendorFieldsVisibility(isVendorChecked)
+    if (isVendorChecked) {
+        setTimeout(() => {
+            initializeDatePickers()
+            initializeDropzones()
+        }, 100)
     }
 
     // Shop URL availability check
-    jQ(document).on('change', 'form.js-base-form input[name="shop_url"]', function() {
+    registrationForm.on('change', 'input[name="shop_url"]', function() {
         const input = jQ(this)
-        const form = input.closest('form')
         const url = input.val()
         if (!url) return
         jQ.ajax({
             url: input.data('url'),
             type: 'POST',
             data: { url },
-            beforeSend: () => { input.prop('disabled', true); form.find('button[type=submit]').prop('disabled', true) },
+            beforeSend: () => {
+                input.prop('disabled', true)
+                registrationForm.find('button[type=submit]').prop('disabled', true)
+            },
             success: ({ error, message, data }) => {
                 if (error) {
                     input.addClass('is-invalid').removeClass('is-valid')
-                    jQ('.shop-url-status').removeClass('text-success').addClass('text-danger').text(message)
+                    registrationForm.find('.shop-url-status').removeClass('text-success').addClass('text-danger').text(message)
                 } else {
                     input.removeClass('is-invalid').addClass('is-valid')
-                    jQ('.shop-url-status').removeClass('text-danger').addClass('text-success').text(message)
-                    form.find('button[type=submit]').prop('disabled', false)
+                    registrationForm.find('.shop-url-status').removeClass('text-danger').addClass('text-success').text(message)
+                    registrationForm.find('button[type=submit]').prop('disabled', false)
                 }
                 if (data?.slug) {
-                    form.find('[data-slug-value]').html(
-                        `${form.find('[data-slug-value]').data('base-url')}/<strong>${data.slug.substring(0, 100).toLowerCase()}</strong>`
+                    registrationForm.find('[data-slug-value]').html(
+                        `${registrationForm.find('[data-slug-value]').data('base-url')}/<strong>${data.slug.substring(0, 100).toLowerCase()}</strong>`
                     )
                 }
             },
@@ -140,13 +183,18 @@ window.addEventListener('load', function() {
                     }
                 })
                 // Re-initialize form fields after error
-                initializeFormFields(form)
+                setTimeout(() => {
+                    initializeDatePickers()
+                }, 100)
             },
         })
     }
 
     // become-vendor page
     if (jQ('.become-vendor-form').length) {
-        initializeFormFields(jQ('.become-vendor-form'))
+        setTimeout(() => {
+            initializeDatePickers()
+            initializeDropzones()
+        }, 100)
     }
 })

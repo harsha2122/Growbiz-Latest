@@ -1,14 +1,21 @@
 /* Vendor field visibility layer - initially hidden */
 .vendor-field {
-    display: none !important;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+    display: none;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: 0;
 }
 
 /* Show vendor fields when vendor-active class is present on form */
 form.vendor-active .vendor-field {
-    display: block !important;
-    opacity: 1;
+    display: block;
+    visibility: visible;
+    height: auto;
+    overflow: visible;
+    margin: auto;
 }
 
 /* Ensure vendor-specific content is properly styled */
