@@ -5,8 +5,9 @@ namespace Botble\Marketplace\Forms\Fronts;
 use Botble\Base\Facades\Html;
 use Botble\Base\Forms\FieldOptions\ButtonFieldOption;
 use Botble\Base\Forms\FieldOptions\CheckboxFieldOption;
+use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
 use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
-use Botble\Base\Forms\Fields\DateField;
+use Botble\Base\Forms\Fields\DatePickerField;
 use Botble\Base\Forms\Fields\OnOffCheckboxField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Forms\FormAbstract;
@@ -79,10 +80,9 @@ class BecomeVendorForm extends FormAbstract
             )
             ->add(
                 'establishment_date',
-                DateField::class,
-                TextFieldOption::make()
-                    ->label(__('Business Establishment Date'))
-                    ->placeholder(__('Select establishment date')),
+                DatePickerField::class,
+                DatePickerFieldOption::make()
+                    ->label(__('Business Establishment Date')),
             )
             ->when(MarketplaceHelper::getSetting('requires_vendor_documentations_verification', true), function (): void {
                 $customer = auth('customer')->user();
