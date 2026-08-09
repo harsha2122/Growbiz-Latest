@@ -22,28 +22,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initDatePickers() {
         setTimeout(() => {
-            // Find all text inputs that might be date pickers
-            const textInputs = form.querySelectorAll('input[type="text"]')
-            textInputs.forEach(input => {
-                const parent = input.closest('.vendor-field')
-                if (parent && parent.style.display !== 'none' && !input._flatpickr) {
-                    // Check if it looks like a date input by checking nearby labels
-                    const label = input.closest('.form-group')?.querySelector('label')
-                    if (label && label.textContent.toLowerCase().includes('date')) {
-                        if (typeof flatpickr !== 'undefined') {
-                            try {
-                                flatpickr(input, {
-                                    dateFormat: 'Y-m-d',
-                                    allowInput: true,
-                                    enableTime: false,
-                                })
-                            } catch (e) {
-                                console.log('Date picker init:', e.message)
-                            }
-                        }
-                    }
+            if (typeof flatpickr === 'undefined') return
+
+            // Directly target establishment_date and other date fields
+            const establishmentDateInput = form.querySelector('input[name="establishment_date"]')
+            if (establishmentDateInput && !establishmentDateInput._flatpickr) {
+                try {
+                    flatpickr(establishmentDateInput, {
+                        dateFormat: 'Y-m-d',
+                        allowInput: true,
+                        enableTime: false,
+                    })
+                } catch (e) {
+                    console.log('Date picker init (establishment_date):', e.message)
                 }
-            })
+            }
         }, 100)
     }
 
@@ -71,21 +64,18 @@ window.addEventListener('load', function() {
     setTimeout(() => {
         const isVendor = form.querySelector('input[name="is_vendor"]:checked')?.value === '1'
         if (isVendor && typeof flatpickr !== 'undefined') {
-            const textInputs = form.querySelectorAll('input[type="text"]')
-            textInputs.forEach(input => {
-                const label = input.closest('.form-group')?.querySelector('label')
-                if (label && label.textContent.toLowerCase().includes('date') && !input._flatpickr) {
-                    try {
-                        flatpickr(input, {
-                            dateFormat: 'Y-m-d',
-                            allowInput: true,
-                            enableTime: false,
-                        })
-                    } catch (e) {
-                        console.log('Date picker init on load:', e.message)
-                    }
+            const establishmentDateInput = form.querySelector('input[name="establishment_date"]')
+            if (establishmentDateInput && !establishmentDateInput._flatpickr) {
+                try {
+                    flatpickr(establishmentDateInput, {
+                        dateFormat: 'Y-m-d',
+                        allowInput: true,
+                        enableTime: false,
+                    })
+                } catch (e) {
+                    console.log('Date picker init on load:', e.message)
                 }
-            })
+            }
         }
     }, 500)
 

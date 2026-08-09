@@ -370,13 +370,22 @@ class HookServiceProvider extends ServiceProvider
                 }, 99);
 
                 Theme::asset()
+                    ->usePath(false)
+                    ->add('flatpickr-css', 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css');
+
+                Theme::asset()
+                    ->container('footer')
+                    ->usePath(false)
+                    ->add('flatpickr-js', 'https://cdn.jsdelivr.net/npm/flatpickr', ['jquery']);
+
+                Theme::asset()
                     ->usePath(true)
                     ->add('vendor-registration-css', 'vendor/core/plugins/marketplace/css/vendor-registration.css?' . $timestamp);
 
                 Theme::asset()
                     ->container('footer')
                     ->usePath(true)
-                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js']);
+                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js', 'flatpickr-js']);
 
                 $form
                     ->formClass('js-base-form')
