@@ -7,20 +7,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Get all products in the 'services' category and update their product_type to 'service'
-        $serviceProducts = DB::table('ec_product_categories')
-            ->where('category_id', function ($query) {
-                $query->select('id')
-                    ->from('ec_product_categories')
-                    ->where('slug', 'services');
-            })
-            ->pluck('product_id');
+        // Get the 'services' category ID
+        $servicesCategory = DB::table('ec_product_categories')
+            ->where('slug', 'services')
+            ->first();
 
-        if ($serviceProducts->count() > 0) {
-            DB::table('ec_products')
-                ->whereIn('id', $serviceProducts->toArray())
-                ->where('product_type', '!=', 'service')
-                ->update(['product_type' => 'service']);
+        if ($servicesCategory) {
+            // Get all product IDs in the services category
+            $serviceProductIds = DB::table('ec_product_categorizables')
+                ->where('category_id', $servicesCategory->id)
+                ->pluck('reference_id')
+                ->toArray();
+
+            // Update those products to have product_type = 'service'
+            if (!empty($serviceProductIds)) {
+                DB::table('ec_products')
+                    ->whereIn('id', $serviceProductIds)
+                    ->where('product_type', '!=', 'service')
+                    ->update(['product_type' => 'service']);
+            }
         }
     }
 
