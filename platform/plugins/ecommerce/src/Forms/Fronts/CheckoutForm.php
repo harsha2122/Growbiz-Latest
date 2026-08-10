@@ -440,30 +440,22 @@ class CheckoutForm extends FormFront
             'products_count' => count($model['products']),
         ]);
 
-        if ($isDigitalOnly) {
-            \Log::info('CHECKOUT_DEBUG: Digital products only - excluding COD and PAY_AFTER_SERVICE');
-            PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
-            PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
-        } elseif ($isServiceOnly) {
-            \Log::info('CHECKOUT_DEBUG: Services only - excluding COD, including PAY_AFTER_SERVICE');
-            PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
-            if (! PaymentMethods::isMethodExcluded(PaymentMethodEnum::PAY_AFTER_SERVICE)) {
-                PaymentMethods::includeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
-                \Log::info('CHECKOUT_DEBUG: PAY_AFTER_SERVICE included');
+        // Use filter hook that applies on EVERY render() call
+        add_filter('payment_methods_excluded', function (array $excluded) use ($isServiceOnly, $isDigitalOnly) {
+            if ($isDigitalOnly) {
+                \Log::info('CHECKOUT_DEBUG: Filter - Digital products only');
+                $excluded[] = PaymentMethodEnum::COD;
+                $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
+            } elseif ($isServiceOnly) {
+                \Log::info('CHECKOUT_DEBUG: Filter - Services only - excluding COD');
+                $excluded[] = PaymentMethodEnum::COD;
+            } else {
+                \Log::info('CHECKOUT_DEBUG: Filter - Regular products - excluding PAY_AFTER_SERVICE');
+                $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
             }
-        } else {
-            \Log::info('CHECKOUT_DEBUG: Regular products - excluding PAY_AFTER_SERVICE, including COD');
-            PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
-            if (! PaymentMethods::isMethodExcluded(PaymentMethodEnum::COD)) {
-                PaymentMethods::includeMethod(PaymentMethodEnum::COD);
-                \Log::info('CHECKOUT_DEBUG: COD included');
-            }
-        }
 
-        $excludedMethods = PaymentMethods::getExcludedMethods();
-        \Log::info('CHECKOUT_DEBUG: Excluded methods after filtering', [
-            'excluded' => $excludedMethods,
-        ]);
+            return array_unique($excluded);
+        });
 
         return $model;
     }
