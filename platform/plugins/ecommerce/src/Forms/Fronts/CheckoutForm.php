@@ -440,22 +440,35 @@ class CheckoutForm extends FormFront
             'products_count' => count($model['products']),
         ]);
 
-        // Use filter hook that applies on EVERY render() call
-        add_filter('payment_methods_excluded', function (array $excluded) use ($isServiceOnly, $isDigitalOnly) {
-            if ($isDigitalOnly) {
-                \Log::info('CHECKOUT_DEBUG: Filter - Digital products only');
-                $excluded[] = PaymentMethodEnum::COD;
-                $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
-            } elseif ($isServiceOnly) {
-                \Log::info('CHECKOUT_DEBUG: Filter - Services only - excluding COD');
-                $excluded[] = PaymentMethodEnum::COD;
-            } else {
-                \Log::info('CHECKOUT_DEBUG: Filter - Regular products - excluding PAY_AFTER_SERVICE');
-                $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
-            }
+        // Store in session for filter to access
+        session(['checkout_is_service_only' => $isServiceOnly, 'checkout_is_digital_only' => $isDigitalOnly]);
 
-            return array_unique($excluded);
-        });
+        // Add global filter that runs on every render() call
+        if (!has_action('payment_methods_excluded')) {
+            add_filter('payment_methods_excluded', function (array $excluded) {
+                $isServiceOnly = session('checkout_is_service_only', false);
+                $isDigitalOnly = session('checkout_is_digital_only', false);
+
+                \Log::info('CHECKOUT_DEBUG: Filter hook called', [
+                    'is_service' => $isServiceOnly,
+                    'is_digital' => $isDigitalOnly,
+                    'excluded_before' => $excluded,
+                ]);
+
+                if ($isDigitalOnly) {
+                    $excluded[] = PaymentMethodEnum::COD;
+                    $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
+                } elseif ($isServiceOnly) {
+                    $excluded[] = PaymentMethodEnum::COD;
+                } else {
+                    $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
+                }
+
+                \Log::info('CHECKOUT_DEBUG: Filter hook result', ['excluded_after' => $excluded]);
+
+                return array_unique($excluded);
+            }, 10);
+        }
 
         return $model;
     }
