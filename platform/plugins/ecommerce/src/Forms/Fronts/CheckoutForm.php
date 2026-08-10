@@ -392,16 +392,36 @@ class CheckoutForm extends FormFront
     protected function cartContainsOnlyServices(Collection $products): bool
     {
         if ($products->isEmpty()) {
+            \Log::info('CHECKOUT_DEBUG: Cart is empty');
             return false;
         }
 
-        $servicesCount = $products->filter(function ($product) {
+        $productDetails = [];
+        $servicesCount = $products->filter(function ($product) use (&$productDetails) {
             // Handle both array and object access
             $type = is_array($product) ? ($product['product_type'] ?? null) : ($product->product_type ?? null);
+            $name = is_array($product) ? ($product['product_name'] ?? 'N/A') : ($product->name ?? 'N/A');
+
+            $productDetails[] = [
+                'name' => $name,
+                'type' => $type,
+                'is_service' => $type === ProductTypeEnum::SERVICE,
+            ];
+
             return $type === ProductTypeEnum::SERVICE;
         })->count();
 
-        return $servicesCount > 0 && $servicesCount === $products->count();
+        $result = $servicesCount > 0 && $servicesCount === $products->count();
+
+        \Log::info('CHECKOUT_DEBUG: cartContainsOnlyServices check', [
+            'total_products' => $products->count(),
+            'services_count' => $servicesCount,
+            'result' => $result,
+            'products' => $productDetails,
+            'SERVICE_ENUM_VALUE' => ProductTypeEnum::SERVICE,
+        ]);
+
+        return $result;
     }
 
     protected function filterPaymentMethods(array $model): array
@@ -409,21 +429,36 @@ class CheckoutForm extends FormFront
         $isServiceOnly = $this->cartContainsOnlyServices($model['products']);
         $isDigitalOnly = $this->cartContainsOnlyDigitalProducts($model['products']);
 
+        \Log::info('CHECKOUT_DEBUG: filterPaymentMethods START', [
+            'is_service_only' => $isServiceOnly,
+            'is_digital_only' => $isDigitalOnly,
+            'products_count' => count($model['products']),
+        ]);
+
         if ($isDigitalOnly) {
+            \Log::info('CHECKOUT_DEBUG: Digital products only - excluding COD and PAY_AFTER_SERVICE');
             PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
             PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
         } elseif ($isServiceOnly) {
+            \Log::info('CHECKOUT_DEBUG: Services only - excluding COD, including PAY_AFTER_SERVICE');
             PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
             if (! PaymentMethods::isMethodExcluded(PaymentMethodEnum::PAY_AFTER_SERVICE)) {
                 PaymentMethods::includeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
+                \Log::info('CHECKOUT_DEBUG: PAY_AFTER_SERVICE included');
             }
         } else {
-            // Regular products - show COD, exclude PAY_AFTER_SERVICE
+            \Log::info('CHECKOUT_DEBUG: Regular products - excluding PAY_AFTER_SERVICE, including COD');
             PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
             if (! PaymentMethods::isMethodExcluded(PaymentMethodEnum::COD)) {
                 PaymentMethods::includeMethod(PaymentMethodEnum::COD);
+                \Log::info('CHECKOUT_DEBUG: COD included');
             }
         }
+
+        $excludedMethods = PaymentMethods::getExcludedMethods();
+        \Log::info('CHECKOUT_DEBUG: Excluded methods after filtering', [
+            'excluded' => $excludedMethods,
+        ]);
 
         return $model;
     }
