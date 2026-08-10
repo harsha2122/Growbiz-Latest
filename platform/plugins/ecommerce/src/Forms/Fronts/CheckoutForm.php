@@ -404,14 +404,22 @@ class CheckoutForm extends FormFront
 
     protected function filterPaymentMethods(array $model): array
     {
-        if ($this->cartContainsOnlyDigitalProducts($model['products'])) {
-            PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
-        }
+        $isServiceOnly = $this->cartContainsOnlyServices($model['products']);
+        $isDigitalOnly = $this->cartContainsOnlyDigitalProducts($model['products']);
 
-        if ($this->cartContainsOnlyServices($model['products'])) {
+        if ($isDigitalOnly) {
+            PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
+            PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
+        } elseif ($isServiceOnly) {
             PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
             if (! PaymentMethods::isMethodExcluded(PaymentMethodEnum::PAY_AFTER_SERVICE)) {
                 PaymentMethods::includeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
+            }
+        } else {
+            // Regular products - show COD, exclude PAY_AFTER_SERVICE
+            PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
+            if (! PaymentMethods::isMethodExcluded(PaymentMethodEnum::COD)) {
+                PaymentMethods::includeMethod(PaymentMethodEnum::COD);
             }
         }
 
