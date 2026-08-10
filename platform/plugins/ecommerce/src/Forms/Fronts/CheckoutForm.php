@@ -398,17 +398,23 @@ class CheckoutForm extends FormFront
 
         $productDetails = [];
         $servicesCount = $products->filter(function ($product) use (&$productDetails) {
-            // Handle both array and object access
+            // Get product type
             $type = is_array($product) ? ($product['product_type'] ?? null) : ($product->product_type ?? null);
             $name = is_array($product) ? ($product['product_name'] ?? 'N/A') : ($product->name ?? 'N/A');
 
+            // Handle both string and enum object
+            $typeValue = is_string($type) ? $type : (is_object($type) && method_exists($type, 'value') ? $type->value : (string) $type);
+
+            $isService = $typeValue === ProductTypeEnum::SERVICE;
+
             $productDetails[] = [
                 'name' => $name,
-                'type' => $type,
-                'is_service' => $type === ProductTypeEnum::SERVICE,
+                'type_raw' => $type,
+                'type_value' => $typeValue,
+                'is_service' => $isService,
             ];
 
-            return $type === ProductTypeEnum::SERVICE;
+            return $isService;
         })->count();
 
         $result = $servicesCount > 0 && $servicesCount === $products->count();
@@ -418,7 +424,6 @@ class CheckoutForm extends FormFront
             'services_count' => $servicesCount,
             'result' => $result,
             'products' => $productDetails,
-            'SERVICE_ENUM_VALUE' => ProductTypeEnum::SERVICE,
         ]);
 
         return $result;
