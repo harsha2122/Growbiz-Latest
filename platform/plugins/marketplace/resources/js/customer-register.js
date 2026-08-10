@@ -22,21 +22,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initDatePickers() {
         setTimeout(() => {
-            if (typeof flatpickr === 'undefined') return
-
-            // Directly target establishment_date and other date fields
-            const establishmentDateInput = form.querySelector('input[name="establishment_date"]')
-            if (establishmentDateInput && !establishmentDateInput._flatpickr) {
-                try {
-                    flatpickr(establishmentDateInput, {
-                        dateFormat: 'Y-m-d',
-                        allowInput: true,
-                        enableTime: false,
-                    })
-                } catch (e) {
-                    console.log('Date picker init (establishment_date):', e.message)
-                }
+            if (typeof flatpickr === 'undefined') {
+                console.log('Flatpickr not loaded')
+                return
             }
+
+            // Find all date picker inputs in vendor fields that are visible
+            const dateInputs = form.querySelectorAll('.datepicker input[data-input]')
+            dateInputs.forEach(input => {
+                const wrapper = input.closest('.datepicker')
+                const vendorField = input.closest('.vendor-field')
+
+                // Only init if visible and not already initialized
+                if (wrapper && (!vendorField || vendorField.offsetParent !== null) && !input._flatpickr) {
+                    try {
+                        flatpickr(input, {
+                            dateFormat: 'Y-m-d',
+                            allowInput: true,
+                            enableTime: false,
+                        })
+                        console.log('Date picker initialized:', input.name)
+                    } catch (e) {
+                        console.error('Date picker init error:', e.message)
+                    }
+                }
+            })
         }, 100)
     }
 
@@ -64,18 +74,20 @@ window.addEventListener('load', function() {
     setTimeout(() => {
         const isVendor = form.querySelector('input[name="is_vendor"]:checked')?.value === '1'
         if (isVendor && typeof flatpickr !== 'undefined') {
-            const establishmentDateInput = form.querySelector('input[name="establishment_date"]')
-            if (establishmentDateInput && !establishmentDateInput._flatpickr) {
-                try {
-                    flatpickr(establishmentDateInput, {
-                        dateFormat: 'Y-m-d',
-                        allowInput: true,
-                        enableTime: false,
-                    })
-                } catch (e) {
-                    console.log('Date picker init on load:', e.message)
+            const dateInputs = form.querySelectorAll('.datepicker input[data-input]')
+            dateInputs.forEach(input => {
+                if (!input._flatpickr) {
+                    try {
+                        flatpickr(input, {
+                            dateFormat: 'Y-m-d',
+                            allowInput: true,
+                            enableTime: false,
+                        })
+                    } catch (e) {
+                        console.error('Date picker init on load:', e.message)
+                    }
                 }
-            }
+            })
         }
     }, 500)
 

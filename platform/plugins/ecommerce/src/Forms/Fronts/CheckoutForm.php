@@ -396,7 +396,9 @@ class CheckoutForm extends FormFront
         }
 
         $servicesCount = $products->filter(function ($product) {
-            return ($product['product_type'] ?? null) === ProductTypeEnum::SERVICE;
+            // Handle both array and object access
+            $type = is_array($product) ? ($product['product_type'] ?? null) : ($product->product_type ?? null);
+            return $type === ProductTypeEnum::SERVICE;
         })->count();
 
         return $servicesCount > 0 && $servicesCount === $products->count();
