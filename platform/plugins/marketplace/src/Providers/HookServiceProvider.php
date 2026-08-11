@@ -8,13 +8,12 @@ use Botble\Base\Facades\AdminHelper;
 use Botble\Base\Facades\Assets;
 use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Facades\Html;
-use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
 use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
 use Botble\Base\Forms\FieldOptions\OnOffFieldOption;
 use Botble\Base\Forms\FieldOptions\RadioFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\FieldOptions\TextFieldOption;
-use Botble\Base\Forms\Fields\DatePickerField;
+use Botble\Base\Forms\Fields\DateField;
 use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\OnOffField;
 use Botble\Base\Forms\Fields\RadioField;
@@ -370,22 +369,13 @@ class HookServiceProvider extends ServiceProvider
                 }, 99);
 
                 Theme::asset()
-                    ->usePath(false)
-                    ->add('flatpickr-css', 'https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css');
-
-                Theme::asset()
-                    ->container('footer')
-                    ->usePath(false)
-                    ->add('flatpickr-js', 'https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js');
-
-                Theme::asset()
                     ->usePath(true)
                     ->add('vendor-registration-css', 'vendor/core/plugins/marketplace/css/vendor-registration.css?' . $timestamp);
 
                 Theme::asset()
                     ->container('footer')
                     ->usePath(true)
-                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js', 'flatpickr-js']);
+                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js']);
 
                 $form
                     ->formClass('js-base-form')
@@ -462,10 +452,11 @@ class HookServiceProvider extends ServiceProvider
                     ->addAfter(
                         'shop_phone',
                         'establishment_date',
-                        DatePickerField::class,
-                        DatePickerFieldOption::make()
+                        DateField::class,
+                        TextFieldOption::make()
                             ->label(__('Business Establishment Date'))
                             ->wrapperAttributes(['class' => 'vendor-field', 'style' => 'display:none;'])
+                            ->addAttribute('max', now()->format('Y-m-d'))
                     );
 
                 if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', 1)) {

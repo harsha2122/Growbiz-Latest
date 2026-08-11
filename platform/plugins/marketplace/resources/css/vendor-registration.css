@@ -1,18 +1,1 @@
-/* Vendor field visibility - hidden by default */
-.vendor-field {
-    display: none !important;
-}
-
-/* Show only when form has vendor-active class */
-form.vendor-active .vendor-field {
-    display: block !important;
-}
-
-/* Backup: data attribute based hiding */
-[data-field-vendor="true"] {
-    display: none !important;
-}
-
-form[data-vendor-active="true"] [data-field-vendor="true"] {
-    display: block !important;
-}
+/* Vendor field visibility is controlled via inline style toggling in customer-register.js */
