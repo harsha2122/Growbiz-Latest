@@ -182,6 +182,16 @@
                             </div>
                         @endif
 
+                        @if($store->establishment_date)
+                            <div class="hr my-2"></div>
+                            <div class="p-3">
+                                <strong>{{ __('Business Establishment Date') }}</strong>
+                                <p class="text-muted mb-0">
+                                    {{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
+                                </p>
+                            </div>
+                        @endif
+
                         <div class="hr my-2"></div>
                         <div class="p-3">
                             <strong>{{ trans('plugins/marketplace::marketplace.documents') }}</strong>

@@ -16,6 +16,13 @@
                 </div>
             @endif
 
+            @if ($store->establishment_date)
+                <div class="bb-shop-banner-established d-flex align-items-center gap-1">
+                    <x-core::icon name="ti ti-calendar" />
+                    {{ __('Estd - ') }}{{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
+                </div>
+            @endif
+
             @if ($store->full_address || $store->phone || $store->email)
                 <div class="bb-shop-banner-contact">
                     @if (!MarketplaceHelper::hideStoreAddress() && $store->full_address)

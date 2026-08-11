@@ -8,12 +8,13 @@ use Botble\Base\Facades\AdminHelper;
 use Botble\Base\Facades\Assets;
 use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Facades\Html;
+use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
 use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
 use Botble\Base\Forms\FieldOptions\OnOffFieldOption;
 use Botble\Base\Forms\FieldOptions\RadioFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\FieldOptions\TextFieldOption;
-use Botble\Base\Forms\Fields\DateField;
+use Botble\Base\Forms\Fields\DatePickerField;
 use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\OnOffField;
 use Botble\Base\Forms\Fields\RadioField;
@@ -368,6 +369,18 @@ class HookServiceProvider extends ServiceProvider
                     return $html . '<script>if(typeof Dropzone!=="undefined"){Dropzone.autoDiscover=false;}</script>';
                 }, 99);
 
+                // Self-hosted flatpickr (same files the admin panel uses) - no CDN/network dependency.
+                // Must load after jquery: flatpickr auto-registers jQuery.fn.flatpickr when jQuery is
+                // already present, which is what lets us use the same wrap-mode init as the admin panel.
+                Theme::asset()
+                    ->usePath(false)
+                    ->add('flatpickr-css', '/vendor/core/core/base/libraries/flatpickr/flatpickr.min.css');
+
+                Theme::asset()
+                    ->container('footer')
+                    ->usePath(false)
+                    ->add('flatpickr-js', '/vendor/core/core/base/libraries/flatpickr/flatpickr.min.js', ['jquery']);
+
                 Theme::asset()
                     ->usePath(true)
                     ->add('vendor-registration-css', 'vendor/core/plugins/marketplace/css/vendor-registration.css?' . $timestamp);
@@ -375,7 +388,7 @@ class HookServiceProvider extends ServiceProvider
                 Theme::asset()
                     ->container('footer')
                     ->usePath(true)
-                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js']);
+                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js', 'flatpickr-js']);
 
                 $form
                     ->formClass('js-base-form')
@@ -452,11 +465,11 @@ class HookServiceProvider extends ServiceProvider
                     ->addAfter(
                         'shop_phone',
                         'establishment_date',
-                        DateField::class,
-                        TextFieldOption::make()
+                        DatePickerField::class,
+                        DatePickerFieldOption::make()
                             ->label(__('Business Establishment Date'))
+                            ->defaultValue('')
                             ->wrapperAttributes(['class' => 'vendor-field', 'style' => 'display:none;'])
-                            ->addAttribute('max', now()->format('Y-m-d'))
                     );
 
                 if (MarketplaceHelper::getSetting('requires_vendor_documentations_verification', 1)) {
