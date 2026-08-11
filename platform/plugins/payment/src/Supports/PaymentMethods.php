@@ -83,10 +83,6 @@ class PaymentMethods
 
     public function render(): string
     {
-        \Log::info('PAYMENT_RENDER: Starting render()', [
-            'excluded_methods_before' => $this->excludedMethods,
-        ]);
-
         $this->methods = [
             PaymentMethodEnum::COD => [
                 'html' => view('plugins/payment::partials.cod')->render(),
@@ -102,24 +98,12 @@ class PaymentMethods
             ],
         ] + $this->methods;
 
-        \Log::info('PAYMENT_RENDER: Methods before exclusion', [
-            'methods_keys' => array_keys($this->methods),
-        ]);
-
         $externalExcludedMethods = apply_filters('payment_methods_excluded', []);
         $allExcludedMethods = array_merge($this->excludedMethods, (array) $externalExcludedMethods);
-
-        \Log::info('PAYMENT_RENDER: All excluded methods', [
-            'excluded' => $allExcludedMethods,
-        ]);
 
         foreach ($allExcludedMethods as $excludedMethod) {
             unset($this->methods[$excludedMethod]);
         }
-
-        \Log::info('PAYMENT_RENDER: Methods after exclusion', [
-            'methods_keys' => array_keys($this->methods),
-        ]);
 
         $methods = collect($this->methods)->sortBy('priority');
         $defaultMethod = $methods->pull(PaymentHelper::defaultPaymentMethod());
@@ -133,35 +117,20 @@ class PaymentMethods
         $country = apply_filters('payment_checkout_country', null);
 
         $html = '';
-        $renderedMethods = [];
 
         foreach ($methods as $name => $method) {
-            $status = get_payment_setting('status', $name);
-            \Log::info('PAYMENT_RENDER: Checking method', [
-                'method' => $name,
-                'status' => $status,
-                'status_check' => ($status == 1),
-            ]);
-
-            if (! $status == 1) {
-                \Log::info('PAYMENT_RENDER: Method skipped - status not 1', ['method' => $name]);
+            if (! get_payment_setting('status', $name) == 1) {
                 continue;
             }
 
             $availableCountries = PaymentHelper::getAvailableCountries($name);
 
             if ($country && ! in_array($country, $availableCountries) && ! in_array($country, array_keys($availableCountries))) {
-                \Log::info('PAYMENT_RENDER: Method skipped - country not available', ['method' => $name]);
                 continue;
             }
 
-            $renderedMethods[] = $name;
             $html .= $method['html'];
         }
-
-        \Log::info('PAYMENT_RENDER: Final rendered methods', [
-            'rendered' => $renderedMethods,
-        ]);
 
         event(new RenderedPaymentMethods($html));
 

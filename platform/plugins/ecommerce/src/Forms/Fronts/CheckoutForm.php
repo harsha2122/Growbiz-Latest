@@ -392,41 +392,17 @@ class CheckoutForm extends FormFront
     protected function cartContainsOnlyServices(Collection $products): bool
     {
         if ($products->isEmpty()) {
-            \Log::info('CHECKOUT_DEBUG: Cart is empty');
             return false;
         }
 
-        $productDetails = [];
-        $servicesCount = $products->filter(function ($product) use (&$productDetails) {
-            // Get product type
+        $servicesCount = $products->filter(function ($product) {
             $type = is_array($product) ? ($product['product_type'] ?? null) : ($product->product_type ?? null);
-            $name = is_array($product) ? ($product['product_name'] ?? 'N/A') : ($product->name ?? 'N/A');
+            $typeValue = is_object($type) ? (string) $type : $type;
 
-            // Handle both string and enum object
-            $typeValue = is_string($type) ? $type : (is_object($type) && method_exists($type, 'value') ? $type->value : (string) $type);
-
-            $isService = $typeValue === ProductTypeEnum::SERVICE;
-
-            $productDetails[] = [
-                'name' => $name,
-                'type_raw' => $type,
-                'type_value' => $typeValue,
-                'is_service' => $isService,
-            ];
-
-            return $isService;
+            return $typeValue === ProductTypeEnum::SERVICE;
         })->count();
 
-        $result = $servicesCount > 0 && $servicesCount === $products->count();
-
-        \Log::info('CHECKOUT_DEBUG: cartContainsOnlyServices check', [
-            'total_products' => $products->count(),
-            'services_count' => $servicesCount,
-            'result' => $result,
-            'products' => $productDetails,
-        ]);
-
-        return $result;
+        return $servicesCount > 0 && $servicesCount === $products->count();
     }
 
     protected function filterPaymentMethods(array $model): array
@@ -434,36 +410,14 @@ class CheckoutForm extends FormFront
         $isServiceOnly = $this->cartContainsOnlyServices($model['products']);
         $isDigitalOnly = $this->cartContainsOnlyDigitalProducts($model['products']);
 
-        \Log::info('CHECKOUT_DEBUG: filterPaymentMethods START', [
-            'is_service_only' => $isServiceOnly,
-            'is_digital_only' => $isDigitalOnly,
-            'products_count' => count($model['products']),
-        ]);
-
-        // Store in static variable that persists across the request
-        static $cartType = null;
-        $cartType = [
-            'is_service_only' => $isServiceOnly,
-            'is_digital_only' => $isDigitalOnly,
-        ];
-
-        \Log::info('CHECKOUT_DEBUG: Stored cart type', $cartType);
-
-        // Add global filter that runs on every render() call
-        add_filter('payment_methods_excluded', function (array $excluded) use (&$cartType) {
-            \Log::info('CHECKOUT_DEBUG: Filter hook executing', ['cart_type' => $cartType]);
-
-            if ($cartType && $cartType['is_digital_only']) {
-                $excluded[] = PaymentMethodEnum::COD;
-                $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
-            } elseif ($cartType && $cartType['is_service_only']) {
-                $excluded[] = PaymentMethodEnum::COD;
-            } elseif ($cartType) {
-                $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
-            }
-
-            return array_unique($excluded);
-        }, 10);
+        if ($isDigitalOnly) {
+            PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
+            PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
+        } elseif ($isServiceOnly) {
+            PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
+        } else {
+            PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
+        }
 
         return $model;
     }

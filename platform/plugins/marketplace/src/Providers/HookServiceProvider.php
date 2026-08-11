@@ -371,12 +371,12 @@ class HookServiceProvider extends ServiceProvider
 
                 Theme::asset()
                     ->usePath(false)
-                    ->add('flatpickr-css', 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css');
+                    ->add('flatpickr-css', 'https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css');
 
                 Theme::asset()
                     ->container('footer')
                     ->usePath(false)
-                    ->add('flatpickr-js', 'https://cdn.jsdelivr.net/npm/flatpickr', ['jquery']);
+                    ->add('flatpickr-js', 'https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js');
 
                 Theme::asset()
                     ->usePath(true)

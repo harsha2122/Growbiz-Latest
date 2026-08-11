@@ -3,6 +3,7 @@
 namespace Botble\Ecommerce\Http\Controllers\Fronts;
 
 use Botble\Base\Http\Controllers\BaseController;
+use Botble\Ecommerce\Enums\ProductTypeEnum;
 use Botble\Ecommerce\Facades\Cart;
 use Botble\Ecommerce\Facades\EcommerceHelper;
 use Botble\Ecommerce\Facades\OrderHelper;
@@ -39,10 +40,16 @@ class PublicUpdateCheckoutController extends BaseController
             return $checkoutOrderData->orderAmount - $checkoutOrderData->paymentFee;
         }, 120);
 
-        $hideCODPayment = $this->cartContainsOnlyDigitalProducts($products);
+        $isDigitalOnly = $this->cartContainsOnlyDigitalProducts($products);
+        $isServiceOnly = $this->cartContainsOnlyServices($products);
 
-        if ($hideCODPayment) {
+        if ($isDigitalOnly) {
             PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
+            PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
+        } elseif ($isServiceOnly) {
+            PaymentMethods::excludeMethod(PaymentMethodEnum::COD);
+        } else {
+            PaymentMethods::excludeMethod(PaymentMethodEnum::PAY_AFTER_SERVICE);
         }
 
         return $this
@@ -85,5 +92,21 @@ class PublicUpdateCheckoutController extends BaseController
         $digitalProductsCount = EcommerceHelper::countDigitalProducts($products);
 
         return $digitalProductsCount > 0 && $digitalProductsCount === $products->count();
+    }
+
+    protected function cartContainsOnlyServices(Collection $products): bool
+    {
+        if ($products->isEmpty()) {
+            return false;
+        }
+
+        $servicesCount = $products->filter(function ($product) {
+            $type = is_array($product) ? ($product['product_type'] ?? null) : ($product->product_type ?? null);
+            $typeValue = is_object($type) ? (string) $type : $type;
+
+            return $typeValue === ProductTypeEnum::SERVICE;
+        })->count();
+
+        return $servicesCount > 0 && $servicesCount === $products->count();
     }
 }
