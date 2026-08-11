@@ -440,20 +440,25 @@ class CheckoutForm extends FormFront
             'products_count' => count($model['products']),
         ]);
 
-        // Store in session for filter to access
-        session(['checkout_is_service_only' => $isServiceOnly, 'checkout_is_digital_only' => $isDigitalOnly]);
+        // Store in static variable that persists across the request
+        static $cartType = null;
+        $cartType = [
+            'is_service_only' => $isServiceOnly,
+            'is_digital_only' => $isDigitalOnly,
+        ];
+
+        \Log::info('CHECKOUT_DEBUG: Stored cart type', $cartType);
 
         // Add global filter that runs on every render() call
-        add_filter('payment_methods_excluded', function (array $excluded) {
-            $isServiceOnly = session('checkout_is_service_only', false);
-            $isDigitalOnly = session('checkout_is_digital_only', false);
+        add_filter('payment_methods_excluded', function (array $excluded) use (&$cartType) {
+            \Log::info('CHECKOUT_DEBUG: Filter hook executing', ['cart_type' => $cartType]);
 
-            if ($isDigitalOnly) {
+            if ($cartType && $cartType['is_digital_only']) {
                 $excluded[] = PaymentMethodEnum::COD;
                 $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
-            } elseif ($isServiceOnly) {
+            } elseif ($cartType && $cartType['is_service_only']) {
                 $excluded[] = PaymentMethodEnum::COD;
-            } else {
+            } elseif ($cartType) {
                 $excluded[] = PaymentMethodEnum::PAY_AFTER_SERVICE;
             }
 
