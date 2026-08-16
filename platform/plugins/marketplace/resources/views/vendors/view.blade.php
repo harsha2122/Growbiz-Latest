@@ -186,7 +186,7 @@
                             <div class="p-3">
                                 <strong>{{ __('Business Establishment Date') }}</strong>
                                 <p class="text-muted mb-0">
-                                    {{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
+                                    {{ BaseHelper::formatDate($store->establishment_date) }}
                                 </p>
                             </div>
                         @endif

@@ -2,14 +2,14 @@
 
 namespace Botble\Marketplace\Forms;
 
+use Botble\Base\Facades\BaseHelper;
+use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
 use Botble\Base\Forms\FieldOptions\EmailFieldOption;
-use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
 use Botble\Base\Forms\FieldOptions\NameFieldOption;
+use Botble\Base\Forms\Fields\DatePickerField;
 use Botble\Base\Forms\Fields\EmailField;
-use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Marketplace\Forms\Fields\CustomEditorField;
-use Botble\Base\Facades\Assets;
 use Botble\Marketplace\Http\Requests\Fronts\VendorStoreRequest;
 
 class VendorStoreForm extends StoreForm
@@ -17,12 +17,6 @@ class VendorStoreForm extends StoreForm
     public function setup(): void
     {
         parent::setup();
-
-        // The vendor dashboard layout renders via Assets::renderFooter()/renderHeader()
-        // (not Theme::asset()), and doesn't load the admin JS bundle that normally
-        // initializes flatpickr on `.datepicker` fields, so it has to be wired up here.
-        // 'datepicker' is the flatpickr library already registered in core/base's assets config.
-        Assets::addStyles(['datepicker'])->addScripts(['jquery', 'datepicker']);
 
         $this
             ->setValidatorClass(VendorStoreRequest::class)
@@ -41,36 +35,15 @@ class VendorStoreForm extends StoreForm
                 ],
                 'colspan' => 6,
             ])
-            ->addAfter('establishment_date', 'establishment_date_datepicker_init', HtmlField::class, HtmlFieldOption::make()->content('<script>
-(function () {
-    function initEstablishmentDatePicker() {
-        var wrapperEl = document.querySelector(".datepicker");
-        if (!wrapperEl || wrapperEl.dataset.flatpickrInitialized) {
-            return;
-        }
-
-        var inputEl = wrapperEl.querySelector("input[data-input]");
-        if (inputEl) {
-            inputEl.removeAttribute("readonly");
-        }
-
-        if (typeof jQuery === "undefined" || !jQuery.fn.flatpickr) {
-            return;
-        }
-
-        jQuery(wrapperEl).flatpickr({
-            dateFormat: "Y-m-d",
-            wrap: true,
-            allowInput: true,
-            maxDate: "today",
-        });
-
-        wrapperEl.dataset.flatpickrInitialized = "true";
-    }
-
-    document.addEventListener("DOMContentLoaded", initEstablishmentDatePicker);
-    window.addEventListener("load", initEstablishmentDatePicker);
-})();
-</script>'));
+            // Visible but not editable - only admin can change the establishment date
+            ->modify(
+                'establishment_date',
+                DatePickerField::class,
+                DatePickerFieldOption::make()
+                    ->label(__('Business Establishment Date'))
+                    ->defaultValue($this->getModel()->establishment_date ? BaseHelper::formatDate($this->getModel()->establishment_date) : '')
+                    ->colspan(3)
+                    ->disabled()
+            );
     }
 }
