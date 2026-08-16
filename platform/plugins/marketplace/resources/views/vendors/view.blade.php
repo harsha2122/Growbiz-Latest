@@ -48,6 +48,11 @@
                                     <x-core::icon name="ti ti-shield-check" />
                                     {{ trans('plugins/marketplace::marketplace.vendor_verified') }}
                                 </span>
+                            @else
+                                <span class="badge bg-cyan text-cyan-fg">
+                                    <x-core::icon name="ti ti-shield-x" />
+                                    {{ trans('plugins/marketplace::marketplace.vendor_not_verified') }}
+                                </span>
                             @endif
 
                             @php
@@ -62,12 +67,6 @@
                             <span class="badge {{ $typeConfig['bg'] }} text-white">
                                 {{ $typeConfig['label'] }}
                             </span>
-                            @else
-                                <span class="badge bg-cyan text-cyan-fg">
-                                    <x-core::icon name="ti ti-shield-x" />
-                                    {{ trans('plugins/marketplace::marketplace.vendor_not_verified') }}
-                                </span>
-                            @endif
                         </div>
                     </div>
 
