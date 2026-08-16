@@ -29,6 +29,7 @@ class StoreRequest extends Request
             'status' => Rule::in(BaseStatusEnum::values()),
             'company' => ['nullable', 'string', 'max:255'],
             'tax_id' => ['nullable', 'string', 'max:255'],
+            'establishment_date' => ['nullable', 'date', 'before_or_equal:today'],
             'zip_code' => ['nullable', ...BaseHelper::getZipcodeValidationRule(true)],
             'logo' => ['nullable', 'string', new MediaImageRule()],
             'logo_square' => ['nullable', 'string', new MediaImageRule()],

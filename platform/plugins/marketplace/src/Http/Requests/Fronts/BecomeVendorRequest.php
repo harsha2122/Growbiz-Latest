@@ -16,7 +16,7 @@ class BecomeVendorRequest extends Request
             'shop_name' => ['required', 'string', 'min:2'],
             'shop_phone' => ['required', 'string', ...BaseHelper::getPhoneValidationRule(true)],
             'shop_url' => ['required', 'string', 'max:200'],
-            'establishment_date' => ['sometimes', 'date'],
+            'establishment_date' => ['sometimes', 'date', 'before_or_equal:today'],
             'agree_terms_and_policy' => ['sometimes', 'accepted:1'],
             'certificate_file' => ['sometimes', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:' . $maxSize],
             'government_id_file' => ['sometimes', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:' . $maxSize],

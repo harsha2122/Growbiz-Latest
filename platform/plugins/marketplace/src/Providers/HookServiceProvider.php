@@ -196,6 +196,7 @@ class HookServiceProvider extends ServiceProvider
                         'establishment_date' => [
                             'nullable',
                             'date',
+                            'before_or_equal:today',
                         ],
                     ];
 
