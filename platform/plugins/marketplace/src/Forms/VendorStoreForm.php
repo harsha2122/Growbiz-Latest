@@ -9,8 +9,8 @@ use Botble\Base\Forms\Fields\EmailField;
 use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Marketplace\Forms\Fields\CustomEditorField;
+use Botble\Base\Facades\Assets;
 use Botble\Marketplace\Http\Requests\Fronts\VendorStoreRequest;
-use Botble\Theme\Facades\Theme;
 
 class VendorStoreForm extends StoreForm
 {
@@ -18,17 +18,11 @@ class VendorStoreForm extends StoreForm
     {
         parent::setup();
 
-        // The vendor dashboard layout doesn't load the admin JS bundle that normally
-        // initializes flatpickr on `.datepicker` fields, so it has to be wired up here
-        // (self-hosted, same files the admin panel uses - no CDN/network dependency).
-        Theme::asset()
-            ->usePath(false)
-            ->add('flatpickr-css', '/vendor/core/core/base/libraries/flatpickr/flatpickr.min.css');
-
-        Theme::asset()
-            ->container('footer')
-            ->usePath(false)
-            ->add('flatpickr-js', '/vendor/core/core/base/libraries/flatpickr/flatpickr.min.js', ['jquery']);
+        // The vendor dashboard layout renders via Assets::renderFooter()/renderHeader()
+        // (not Theme::asset()), and doesn't load the admin JS bundle that normally
+        // initializes flatpickr on `.datepicker` fields, so it has to be wired up here.
+        // 'datepicker' is the flatpickr library already registered in core/base's assets config.
+        Assets::addStyles(['datepicker'])->addScripts(['jquery', 'datepicker']);
 
         $this
             ->setValidatorClass(VendorStoreRequest::class)
