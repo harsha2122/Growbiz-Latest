@@ -3,15 +3,44 @@ if (typeof Dropzone !== 'undefined') {
     Dropzone.autoDiscover = false
 }
 
+function initEstablishmentDatePicker(wrapperEl) {
+    if (!wrapperEl || wrapperEl.dataset.flatpickrInitialized) return
+
+    // Always allow direct typing, regardless of whether flatpickr manages to load
+    const inputEl = wrapperEl.querySelector('input[data-input]')
+    if (inputEl) {
+        inputEl.removeAttribute('readonly')
+    }
+
+    if (typeof jQuery === 'undefined' || !jQuery.fn.flatpickr) return
+
+    jQuery(wrapperEl).flatpickr({
+        dateFormat: 'Y-m-d',
+        wrap: true,
+        allowInput: true,
+        maxDate: 'today',
+    })
+
+    wrapperEl.dataset.flatpickrInitialized = 'true'
+}
+
 window.addEventListener('load', function() {
     const jQ = typeof jQuery !== 'undefined' ? jQuery : (typeof $ !== 'undefined' ? $ : null)
     if (!jQ) { console.error('jQuery not found'); return }
+
+    const form = document.querySelector('form.js-base-form')
+        || document.querySelector('form[name="register_form"]')
+        || document.querySelector('form.become-vendor-form')
 
     // Show/hide vendor form + init dropzones
     function showVendorForm() {
         jQ('[data-bb-toggle="vendor-info"]').slideDown(function() {
             setTimeout(initDropzones, 100)
         })
+        if (form) {
+            const wrapperEl = form.querySelector('.vendor-field .datepicker')
+            initEstablishmentDatePicker(wrapperEl)
+        }
     }
 
     function hideVendorForm() {
@@ -33,6 +62,15 @@ window.addEventListener('load', function() {
     if (jQ('input[name=is_vendor]:checked').val() == 1) {
         jQ('[data-bb-toggle="vendor-info"]').show()
         initDropzones()
+        if (form) {
+            const wrapperEl = form.querySelector('.vendor-field .datepicker')
+            initEstablishmentDatePicker(wrapperEl)
+        }
+    }
+
+    // Become-vendor page: establishment date is always visible, not gated by a toggle
+    if (form && !form.querySelectorAll('input[name="is_vendor"]').length) {
+        initEstablishmentDatePicker(form.querySelector('.datepicker'))
     }
 
     // Shop URL availability check
@@ -91,8 +129,6 @@ window.addEventListener('load', function() {
             formData.delete('aadhar_file_2')
         }
 
-        console.log('Submitting vendor form. aadhar_file_1 present:', formData.has('aadhar_file_1'), '| business_doc_file present:', formData.has('business_doc_file'))
-
         jQ.ajax({
             url: form.prop('action'),
             type: 'POST',
@@ -107,7 +143,6 @@ window.addEventListener('load', function() {
                 window.location.href = url
             },
             error: function(xhr) {
-                console.log('ERROR:', xhr.status, xhr.responseJSON)
                 const errors = xhr.responseJSON?.errors || {}
                 form.find('input').removeClass('is-invalid')
                 form.find('.invalid-feedback').remove()
@@ -123,6 +158,19 @@ window.addEventListener('load', function() {
                     }
                 })
             },
+        })
+    }
+
+    // Aadhar mode toggle
+    const aadharRadios = form ? form.querySelectorAll('input[name="aadhar_mode"]') : []
+    if (aadharRadios.length) {
+        aadharRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const wrapper2 = document.getElementById('aadhar-file-2-wrapper')
+                if (wrapper2) {
+                    wrapper2.style.display = this.value === 'images' ? 'block' : 'none'
+                }
+            })
         })
     }
 
