@@ -382,14 +382,18 @@ class HookServiceProvider extends ServiceProvider
                     ->usePath(false)
                     ->add('flatpickr-js', '/vendor/core/core/base/libraries/flatpickr/flatpickr.min.js', ['jquery']);
 
+                // usePath(false): load from the canonical published path (public/vendor/...),
+                // not the theme-relative /themes/{theme}/vendor/... path. The latter requires a
+                // separate, unmanaged copy of the file under the active theme's public folder that
+                // `cms:publish:assets` does not refresh, so it silently goes stale on every deploy.
                 Theme::asset()
-                    ->usePath(true)
-                    ->add('vendor-registration-css', 'vendor/core/plugins/marketplace/css/vendor-registration.css?' . $timestamp);
+                    ->usePath(false)
+                    ->add('vendor-registration-css', '/vendor/core/plugins/marketplace/css/vendor-registration.css?' . $timestamp);
 
                 Theme::asset()
                     ->container('footer')
-                    ->usePath(true)
-                    ->add('marketplace-register', 'vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js', 'flatpickr-js']);
+                    ->usePath(false)
+                    ->add('marketplace-register', '/vendor/core/plugins/marketplace/js/customer-register.js?' . $timestamp, ['jquery', 'dropzone-js', 'flatpickr-js']);
 
                 $form
                     ->formClass('js-base-form')

@@ -19,6 +19,8 @@ mix
     .sass(`${source}/resources/sass/vendor-dashboard/marketplace.scss`, `${dist}/css`)
     .sass(`${source}/resources/sass/vendor-dashboard/marketplace-rtl.scss`, `${dist}/css`)
 
+    .copy(`${source}/resources/css/vendor-registration.css`, `${dist}/css`)
+
 if (mix.inProduction()) {
     mix.copy(`${dist}/js/marketplace.js`, `${source}/public/js`)
         .copy(`${dist}/js/marketplace-product.js`, `${source}/public/js`)
@@ -30,4 +32,5 @@ if (mix.inProduction()) {
         .copy(`${dist}/js/customer-register.js`, `${source}/public/js`)
         .copy(`${dist}/css/marketplace.css`, `${source}/public/css`)
         .copy(`${dist}/css/marketplace-rtl.css`, `${source}/public/css`)
+        .copy(`${dist}/css/vendor-registration.css`, `${source}/public/css`)
 }
