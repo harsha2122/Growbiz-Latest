@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use Botble\Base\Supports\DashboardMenu;
+use Botble\Base\Facades\DashboardMenu;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
