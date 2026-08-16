@@ -86,7 +86,7 @@
                                 <x-slot:title>
                                     {{ __('Business Establishment Date') }}
                                 </x-slot:title>
-                                {{ \Carbon\Carbon::parse($vendor->store->establishment_date)->format('M Y') }}
+                                {{ BaseHelper::formatDate($vendor->store->establishment_date) }}
                             </x-core::datagrid.item>
                         @endif
 
