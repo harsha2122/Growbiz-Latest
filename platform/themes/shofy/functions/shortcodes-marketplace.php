@@ -1,11 +1,14 @@
 <?php
 
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Base\Forms\FieldOptions\NumberFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\FieldOptions\TextFieldOption;
+use Botble\Base\Forms\Fields\NumberField;
 use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Ecommerce\Facades\EcommerceHelper;
+use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Models\Store;
 use Botble\Shortcode\Compilers\Shortcode;
 use Botble\Shortcode\Facades\Shortcode as ShortcodeFacade;
@@ -81,6 +84,44 @@ app()->booted(function (): void {
                     ->multiple()
                     ->searchable()
                     ->selected(ShortcodeField::parseIds(Arr::get($attributes, 'store_ids')))
+            );
+    });
+
+    add_shortcode('marketplace-top-vendors', __('Marketplace Top Vendors'), __('Show top vendors ranked by number of completed sales'), function (Shortcode $shortcode) {
+        $limit = (int) $shortcode->limit ?: 9;
+
+        $stores = MarketplaceHelper::getTopVendorsBySales($limit);
+
+        if ($stores->isEmpty()) {
+            return null;
+        }
+
+        return Theme::partial('shortcodes.marketplace.top-vendors.index', compact('shortcode', 'stores'));
+    });
+
+    shortcode()->setAdminConfig('marketplace-top-vendors', function (array $attributes) {
+        return ShortcodeForm::createFromArray($attributes)
+            ->withLazyLoading()
+            ->add(
+                'title',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(__('Title'))
+            )
+            ->add(
+                'subtitle',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(__('Subtitle'))
+            )
+            ->add(
+                'limit',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(__('Number of vendors to show'))
+                    ->defaultValue(Arr::get($attributes, 'limit', 9))
+                    ->min(1)
+                    ->max(20)
             );
     });
 

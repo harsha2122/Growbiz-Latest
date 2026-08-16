@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static array mediaMimeTypesAllowed()
  * @method static bool isEnabledVendorCategoriesFilter()
  * @method static \Illuminate\Support\Collection getCategoriesForVendor(string|int $storeId)
+ * @method static \Illuminate\Support\Collection getTopVendorsBySales(int $limit = 10)
  *
  * @see \Botble\Marketplace\Supports\MarketplaceHelper
  */

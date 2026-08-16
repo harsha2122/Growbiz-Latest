@@ -9,6 +9,7 @@ use Botble\Ecommerce\Enums\DiscountTypeOptionEnum;
 use Botble\Ecommerce\Facades\OrderHelper;
 use Botble\Ecommerce\Models\Order as OrderModel;
 use Botble\Ecommerce\Models\ProductCategory;
+use Botble\Marketplace\Models\Store;
 use Botble\Media\Facades\RvMedia;
 use Botble\Theme\Facades\Theme;
 use Illuminate\Database\Eloquent\Collection;
@@ -315,6 +316,43 @@ class MarketplaceHelper
     public function isEnabledVendorCategoriesFilter(): bool
     {
         return (bool) $this->getSetting('enable_vendor_categories_filter', true);
+    }
+
+    /**
+     * Get top vendors ranked by number of completed sales (finished orders).
+     */
+    public function getTopVendorsBySales(int $limit = 10): SupportCollection
+    {
+        $cacheKey = 'marketplace_top_vendors_by_sales_' . $limit;
+
+        return Cache::remember($cacheKey, 3600, function () use ($limit) {
+            $storeIds = DB::table('ec_orders')
+                ->join('mp_stores', 'mp_stores.id', '=', 'ec_orders.store_id')
+                ->where('ec_orders.is_finished', true)
+                ->where('mp_stores.status', BaseStatusEnum::PUBLISHED)
+                ->select('mp_stores.id', DB::raw('COUNT(ec_orders.id) as sales_count'))
+                ->groupBy('mp_stores.id')
+                ->orderByDesc('sales_count')
+                ->limit($limit)
+                ->pluck('sales_count', 'mp_stores.id');
+
+            if ($storeIds->isEmpty()) {
+                return collect();
+            }
+
+            return Store::query()
+                ->wherePublished()
+                ->whereIn('id', $storeIds->keys())
+                ->with(['slugable'])
+                ->get()
+                ->map(function (Store $store) use ($storeIds) {
+                    $store->sales_count = $storeIds->get($store->id, 0);
+
+                    return $store;
+                })
+                ->sortByDesc('sales_count')
+                ->values();
+        });
     }
 
     /**
