@@ -18,7 +18,6 @@ use Botble\Base\Facades\MetaBox;
 use Botble\Base\Http\Middleware\AdminLocaleMiddleware;
 use Botble\Base\Http\Middleware\CoreMiddleware;
 use Botble\Base\Http\Middleware\DisableInDemoModeMiddleware;
-use Botble\Base\Http\Middleware\EnsureLicenseHasBeenActivated;
 use Botble\Base\Http\Middleware\HttpSecurityHeaders;
 use Botble\Base\Http\Middleware\HttpsProtocolMiddleware;
 use Botble\Base\Http\Middleware\LocaleMiddleware;
@@ -101,9 +100,7 @@ class EventServiceProvider extends ServiceProvider
             $router->middlewareGroup('core', [CoreMiddleware::class]);
 
             $this->app->extend('core.middleware', function ($middleware) {
-                return array_merge($middleware, [
-                    EnsureLicenseHasBeenActivated::class,
-                ]);
+                return $middleware;
             });
 
             add_filter(BASE_FILTER_TOP_HEADER_LAYOUT, function ($options) {
