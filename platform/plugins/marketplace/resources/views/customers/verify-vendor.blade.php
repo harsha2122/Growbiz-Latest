@@ -81,6 +81,15 @@
                             {{ BaseHelper::formatDateTime($vendor->created_at) }}
                         </x-core::datagrid.item>
 
+                        @if($vendor->store->establishment_date)
+                            <x-core::datagrid.item>
+                                <x-slot:title>
+                                    {{ __('Business Establishment Date') }}
+                                </x-slot:title>
+                                {{ \Carbon\Carbon::parse($vendor->store->establishment_date)->format('M Y') }}
+                            </x-core::datagrid.item>
+                        @endif
+
                         @if($vendor->store->aadhar_file_1 && Storage::disk('local')->exists($vendor->store->aadhar_file_1))
                             <x-core::datagrid.item>
                                 <x-slot:title>Aadhaar (Front/PDF)</x-slot:title>
