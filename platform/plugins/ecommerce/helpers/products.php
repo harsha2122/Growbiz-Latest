@@ -290,6 +290,11 @@ if (! function_exists('get_related_products')) {
             }
         }
 
+        // Marketplace: never show other vendors' products as related to this one.
+        if (is_plugin_active('marketplace') && $product->store_id) {
+            $params['condition'][] = ['ec_products.store_id', '=', $product->store_id];
+        }
+
         return app(ProductInterface::class)->filterProducts($filters, $params);
     }
 }
