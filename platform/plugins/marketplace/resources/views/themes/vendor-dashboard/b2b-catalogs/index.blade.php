@@ -38,7 +38,7 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('marketplace.vendor.b2b-catalogs.view-pdf', $catalog->id) }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ route('marketplace.vendor.b2b-catalogs.stream-pdf', $catalog->id) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
                                     <x-core::icon name="ti ti-eye" /> {{ __('View PDF') }}
                                 </a>
                             </td>
