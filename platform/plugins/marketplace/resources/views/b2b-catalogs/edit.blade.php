@@ -70,7 +70,7 @@
                                     <div class="flex-grow-1">
                                         <strong>{{ $pdf->title }}</strong>
                                         <br>
-                                        <a href="{{ route('marketplace.b2b-catalogs.pdfs.view', [$catalog->id, $pdf->id]) }}" target="_blank" class="small text-primary">
+                                        <a href="{{ route('marketplace.b2b-catalogs.pdfs.stream', [$catalog->id, $pdf->id]) }}" target="_blank" rel="noopener" class="small text-primary">
                                             <i class="ti ti-eye"></i> {{ __('View PDF') }}
                                         </a>
                                     </div>
@@ -92,7 +92,7 @@
                     <div class="mb-3">
                         <label class="form-label">{{ __('Current PDF (legacy)') }}</label>
                         <div>
-                            <a href="{{ route('marketplace.b2b-catalogs.view-pdf', $catalog->id) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <a href="{{ route('marketplace.b2b-catalogs.stream-pdf', $catalog->id) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
                                 <i class="ti ti-eye"></i> {{ __('View') }}: {{ basename($catalog->pdf_path) }}
                             </a>
                         </div>

@@ -160,7 +160,7 @@
             'pdfs'        => $c->pdfs->map(function ($p) use ($c) {
                 return [
                     'title'    => $p->title,
-                    'view_url' => route('public.b2b-catalogs.pdf.view', [$c->id, $p->id]),
+                    'view_url' => route('public.b2b-catalogs.pdf.stream', [$c->id, $p->id]),
                 ];
             })->values()->all(),
         ];
