@@ -899,6 +899,16 @@ class Product extends BaseModel
                         $data['video_id'] = Str::afterLast($url, 'video/');
                     } elseif (preg_match('/^.*https:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/', $url)) {
                         $data['provider'] = 'twitter';
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/([a-zA-Z0-9_-]+)#', $url, $matches)) {
+                        // Instagram doesn't allow raw iframing of post/reel pages, only their
+                        // official embed widget (blockquote + embed.js) actually renders.
+                        $data['provider'] = 'instagram';
+                        $data['url'] = 'https://www.instagram.com/' . $matches[1] . '/' . $matches[2] . '/';
+                    } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $url)) {
+                        // facebook.com itself blocks framing (X-Frame-Options), but their official
+                        // plugins/video.php endpoint is explicitly iframe-able.
+                        $data['provider'] = 'facebook';
+                        $data['url'] = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($url) . '&show_text=false';
                     } elseif (in_array(Str::lower(File::extension($url)), ['mp4', 'webm', 'ogg'])) {
                         $data['provider'] = 'video';
                     } else {

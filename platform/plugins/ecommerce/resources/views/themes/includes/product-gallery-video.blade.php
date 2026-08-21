@@ -65,7 +65,32 @@
                         </blockquote>
                     </div>
                     @break
-                    
+
+                @case('instagram')
+                    <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; background: #f8f9fa; border-radius: 8px; padding: 20px;">
+                        <blockquote
+                            class="instagram-media"
+                            data-instgrm-permalink="{{ $video['url'] }}"
+                            data-instgrm-version="14"
+                            style="border: none !important; margin: 0 auto;">
+                        </blockquote>
+                    </div>
+                    @break
+
+                @case('facebook')
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 8px;">
+                        <iframe
+                            data-provider="facebook"
+                            src="{{ $video['url'] }}"
+                            allowfullscreen
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            title="{{ $product->name }} Video"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+                        ></iframe>
+                    </div>
+                    @break
+
                 @default
                     <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 8px;">
                         <iframe
@@ -87,5 +112,9 @@
     
     @if(in_array('twitter', array_column($product->video, 'provider')))
         <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    @endif
+
+    @if(in_array('instagram', array_column($product->video, 'provider')))
+        <script async src="https://www.instagram.com/embed.js"></script>
     @endif
 @endif
