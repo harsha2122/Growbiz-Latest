@@ -904,13 +904,28 @@ class Product extends BaseModel
                         // official embed widget (blockquote + embed.js) actually renders.
                         $data['provider'] = 'instagram';
                         $data['url'] = 'https://www.instagram.com/' . $matches[1] . '/' . $matches[2] . '/';
-                    } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $url)) {
+                    } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $url)
+                        || preg_match('#^https?://fb\.watch/#', $url)
+                    ) {
                         // facebook.com itself blocks framing (X-Frame-Options), but their official
-                        // plugins/video.php endpoint is explicitly iframe-able.
+                        // plugins/video.php endpoint is explicitly iframe-able. Only route actual
+                        // video permalinks through it - other Facebook URLs (pages, posts, profiles)
+                        // aren't supported by that plugin and would fail the same way.
                         $data['provider'] = 'facebook';
                         $data['url'] = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($url) . '&show_text=false';
                     } elseif (in_array(Str::lower(File::extension($url)), ['mp4', 'webm', 'ogg'])) {
                         $data['provider'] = 'video';
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/#', $url)
+                        || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $url)
+                        || preg_match('#^https?://fb\.watch/#', $url)
+                    ) {
+                        // Instagram/Facebook profile, page, or non-permalink URLs can't be embedded
+                        // at all (no widget or plugin exists for those) - link out instead of trying
+                        // to iframe them, which Instagram/Facebook always block.
+                        $data['provider'] = 'external-link';
+                        $data['site_name'] = Str::contains($url, 'instagram.com')
+                            ? 'Instagram'
+                            : 'Facebook';
                     } else {
                         $data['provider'] = 'iframe';
                     }

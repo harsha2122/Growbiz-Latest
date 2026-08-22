@@ -66,6 +66,18 @@
                     </div>
                     @break
 
+                @case('external-link')
+                    <a
+                        href="{{ $video['url'] }}"
+                        target="_blank"
+                        rel="noopener"
+                        style="display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; min-height: 400px; background: #f8f9fa; border-radius: 8px; padding: 20px; text-decoration: none; color: inherit;"
+                    >
+                        <x-core::icon name="ti ti-external-link" style="width: 32px; height: 32px;" />
+                        <span>{{ __('View on :site', ['site' => $video['site_name'] ?? __('page')]) }}</span>
+                    </a>
+                    @break
+
                 @case('instagram')
                     <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; background: #f8f9fa; border-radius: 8px; padding: 20px;">
                         <blockquote
