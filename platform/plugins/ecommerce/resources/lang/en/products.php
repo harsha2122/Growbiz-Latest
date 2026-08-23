@@ -168,6 +168,7 @@ return [
         'on_backorder' => 'On backorder',
     ],
     'stock_status' => 'Stock status',
+    'book_now_clicks' => 'Book Now Clicks',
     'processing' => 'Processing...',
     'delete_selected_variations' => 'Delete selected variations',
     'delete_variations' => 'Delete variations',

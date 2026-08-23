@@ -77,6 +77,10 @@ class ProductTable extends TableAbstract
                 Column::make('order')
                     ->title(trans('plugins/ecommerce::ecommerce.sort_order'))
                     ->width(50),
+                Column::make('book_now_clicks')
+                    ->title(trans('plugins/ecommerce::products.book_now_clicks'))
+                    ->orderable(false)
+                    ->searchable(false),
                 CreatedAtColumn::make(),
                 StatusColumn::make(),
             ])
@@ -161,6 +165,13 @@ class ProductTable extends TableAbstract
             })
             ->editColumn('stock_status', function (Product $item) {
                 return BaseHelper::clean($item->stock_status_html);
+            })
+            ->editColumn('book_now_clicks', function (Product $item) {
+                if ((string) $item->product_type !== 'service') {
+                    return '&mdash;';
+                }
+
+                return number_format($item->clicksCount());
             })
             ->filter(function ($query) {
                 $keyword = request()->input('search.value');

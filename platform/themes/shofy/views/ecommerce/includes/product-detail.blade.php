@@ -141,14 +141,24 @@
                 </div>
                 @endif
             </div>
-            @if ($isService || EcommerceHelper::isQuickBuyButtonEnabled())
+            @if ($isService)
+                <a
+                    href="{{ route('public.products.book-now', $product->id) }}"
+                    target="_blank"
+                    rel="noopener"
+                    @class(['tp-product-details-buy-now-btn w-100', 'btn-disabled' => $isOutOfStock])
+                >
+                    <x-core::icon name="ti ti-brand-whatsapp" />
+                    {{ __('Book Now') }}
+                </a>
+            @elseif (EcommerceHelper::isQuickBuyButtonEnabled())
                 <button
                     type="submit"
                     name="checkout"
                     @class(['tp-product-details-buy-now-btn w-100', 'btn-disabled' => $isOutOfStock])
                     @disabled($isOutOfStock)
                     {!! EcommerceHelper::jsAttributes('buy-now-in-form', $product) !!}
-                >{{ $isService ? __('Book Now') : __('Buy Now') }}</button>
+                >{{ __('Buy Now') }}</button>
             @endif
         </div>
     @endif

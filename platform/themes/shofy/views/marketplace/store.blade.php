@@ -11,8 +11,6 @@
         $vendorCategories = \Botble\Marketplace\Facades\MarketplaceHelper::getCategoriesForVendor($store->id);
         $showCategoriesFilter = $vendorCategories->isNotEmpty();
     }
-
-    $storeServices = $store->services()->wherePublished()->get();
 @endphp
 
 <div class="bb-shop-detail pb-50">
@@ -32,15 +30,6 @@
                     <button class="nav-link" id="about-tab" data-bs-toggle="tab" data-bs-target="#about-tab-pane" type="button" role="tab" aria-controls="about-tab-pane" aria-selected="false">
                         <x-core::icon name="ti ti-info-circle" />
                         {{ __('About the store') }}
-                    </button>
-                </li>
-            @endif
-
-            @if ($storeServices->isNotEmpty())
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services-tab-pane" type="button" role="tab" aria-controls="services-tab-pane" aria-selected="false">
-                        <x-core::icon name="ti ti-briefcase" />
-                        {{ __('Services') }}
                     </button>
                 </li>
             @endif
@@ -98,35 +87,6 @@
             <div class="tab-pane fade" id="contact-tab-pane" role="tabpanel" aria-labelledby="contact-tab" tabindex="0">
                 @include(MarketplaceHelper::viewPath('includes.contact'))
             </div>
-
-            @if ($storeServices->isNotEmpty())
-                <div class="tab-pane fade" id="services-tab-pane" role="tabpanel" aria-labelledby="services-tab" tabindex="0">
-                    <div class="row g-4">
-                        @foreach ($storeServices as $service)
-                            <div class="col-md-4 col-sm-6">
-                                <div class="card h-100">
-                                    @if ($service->image)
-                                        <img src="{{ RvMedia::getImageUrl($service->image) }}" class="card-img-top" alt="{{ $service->name }}" style="height: 180px; object-fit: cover;">
-                                    @endif
-                                    <div class="card-body d-flex flex-column">
-                                        <h5 class="card-title">{{ $service->name }}</h5>
-                                        @if ($service->description)
-                                            <p class="card-text text-muted">{{ Str::limit($service->description, 100) }}</p>
-                                        @endif
-                                        <p class="card-text fw-bold mt-auto">
-                                            {{ $service->price ? format_price($service->price) : __('Contact for price') }}
-                                        </p>
-                                        <a href="{{ route('marketplace.public.services.book', $service->id) }}" class="btn btn-success" target="_blank" rel="noopener">
-                                            <x-core::icon name="ti ti-brand-whatsapp" />
-                                            {{ __('Book Now') }}
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
         </div>
     </div>
 </div>

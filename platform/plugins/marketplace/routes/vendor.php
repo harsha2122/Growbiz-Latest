@@ -328,11 +328,6 @@ Route::group([
         ])->name('stream-pdf');
     });
 
-    Route::group(['prefix' => 'services', 'as' => 'services.'], function (): void {
-        Route::resource('', \Botble\Marketplace\Http\Controllers\Fronts\ServiceController::class)
-            ->parameters(['' => 'service']);
-    });
-
     // Meta Ads
     Route::group(['prefix' => 'meta-ads', 'as' => 'meta-ads.'], function (): void {
         Route::get('dashboard', [MetaAdsDashboardController::class, 'index'])->name('dashboard');
