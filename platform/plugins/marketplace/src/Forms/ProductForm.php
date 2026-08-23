@@ -36,6 +36,7 @@ use Botble\Marketplace\Forms\Fields\CustomEditorField;
 use Botble\Marketplace\Forms\Fields\CustomImagesField;
 use Botble\Marketplace\Http\Requests\ProductRequest;
 use Botble\Marketplace\Tables\ProductVariationTable;
+use Botble\Slug\Facades\SlugHelper;
 
 class ProductForm extends BaseProductForm
 {
@@ -73,9 +74,10 @@ class ProductForm extends BaseProductForm
         }
 
         if ($isService && empty($selectedCategories)) {
-            $servicesCategory = ProductCategory::where('slug', 'services')->first();
-            if ($servicesCategory) {
-                $selectedCategories = [$servicesCategory->id];
+            $servicesSlug = SlugHelper::getSlug('services', SlugHelper::getPrefix(ProductCategory::class));
+
+            if ($servicesSlug) {
+                $selectedCategories = [$servicesSlug->reference_id];
             }
         }
 
