@@ -10,7 +10,7 @@ class VendorServiceTable extends ProductTable
 {
     public function query(): Relation|Builder|QueryBuilder
     {
-        return parent::query()->where('product_type', 'service');
+        return $this->applyScopes($this->baseQuery()->where('product_type', 'service'));
     }
 
     public function buttons(): array

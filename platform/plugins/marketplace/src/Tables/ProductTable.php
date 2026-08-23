@@ -80,7 +80,12 @@ class ProductTable extends TableAbstract
 
     public function query(): Relation|Builder|QueryBuilder
     {
-        $query = $this->getModel()->query()
+        return $this->applyScopes($this->baseQuery()->where('product_type', '!=', 'service'));
+    }
+
+    protected function baseQuery(): Relation|Builder|QueryBuilder
+    {
+        return $this->getModel()->query()
             ->select([
                 'id',
                 'name',
@@ -100,8 +105,6 @@ class ProductTable extends TableAbstract
             ])
             ->where('is_variation', 0)
             ->where('store_id', auth('customer')->user()->store?->id);
-
-        return $this->applyScopes($query);
     }
 
     public function columns(): array

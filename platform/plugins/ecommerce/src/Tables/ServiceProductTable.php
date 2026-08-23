@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ServiceProductTable extends ProductTable
 {
+    protected bool $excludeServiceType = false;
+
     public function setup(): void
     {
         parent::setup();

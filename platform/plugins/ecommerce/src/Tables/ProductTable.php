@@ -38,6 +38,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProductTable extends TableAbstract
 {
+    protected bool $excludeServiceType = true;
+
     public function setup(): void
     {
         $this
@@ -85,7 +87,7 @@ class ProductTable extends TableAbstract
                 StatusColumn::make(),
             ])
             ->queryUsing(function (Builder $query) {
-                return $query
+                $query
                     ->select([
                         'id',
                         'name',
@@ -106,6 +108,12 @@ class ProductTable extends TableAbstract
                         'product_type',
                     ])
                     ->where('is_variation', 0);
+
+                if ($this->excludeServiceType) {
+                    $query->where('product_type', '!=', 'service');
+                }
+
+                return $query;
             });
     }
 
