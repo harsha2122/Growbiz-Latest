@@ -73,15 +73,19 @@
                     @break
 
                 @case('external-link')
-                    <a
-                        href="{{ $video['url'] }}"
-                        target="_blank"
-                        rel="noopener"
-                        style="display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; min-height: 400px; background: #f8f9fa; border-radius: 8px; padding: 20px; text-decoration: none; color: inherit;"
+                    {{-- Not an <a> tag on purpose: the gallery's lightGallery plugin is
+                    initialized with selector: 'a', so any anchor here gets hijacked into
+                    opening the (broken, empty) image lightbox instead of navigating out. --}}
+                    <div
+                        role="link"
+                        tabindex="0"
+                        onclick="window.open('{{ $video['url'] }}', '_blank', 'noopener')"
+                        onkeydown="if (event.key === 'Enter') window.open('{{ $video['url'] }}', '_blank', 'noopener')"
+                        style="display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; min-height: 400px; background: #f8f9fa; border-radius: 8px; padding: 20px; cursor: pointer; color: inherit;"
                     >
                         <x-core::icon name="ti ti-external-link" style="width: 32px; height: 32px;" />
                         <span>{{ __('View on :site', ['site' => $video['site_name'] ?? __('page')]) }}</span>
-                    </a>
+                    </div>
                     @break
 
                 @default
