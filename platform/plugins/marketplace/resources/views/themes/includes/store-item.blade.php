@@ -1,3 +1,18 @@
+@once
+    <style>
+        .bb-store-item-logo img {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, .12);
+            background-color: #fff;
+        }
+    </style>
+@endonce
+
 <div class="card bb-store-item">
     <div class="bb-store-item-content">
         <a href="{{ $store->url }}">
