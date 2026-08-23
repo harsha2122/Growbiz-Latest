@@ -212,7 +212,7 @@ AdminHelper::registerRoutes(function (): void {
             Route::group(['prefix' => 'subscription-plans', 'as' => 'subscription-plans.'], function (): void {
                 Route::resource('', 'SubscriptionPlanController')->parameters(['' => 'subscription-plan']);
             });
-            Route::get('services', [
+            Route::match(['GET', 'POST'], 'services', [
                 'as' => 'services.index',
                 'uses' => 'ServiceProductController@index',
                 'permission' => 'marketplace.services.index',

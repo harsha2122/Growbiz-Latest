@@ -111,7 +111,7 @@ Route::group([
             ->only(['index']);
     }
 
-    Route::get('services', [VendorServiceListController::class, 'index'])->name('services.index');
+    Route::match(['GET', 'POST'], 'services', [VendorServiceListController::class, 'index'])->name('services.index');
 
     Route::group(['prefix' => 'products', 'as' => 'products.'], function (): void {
         Route::resource('', 'ProductController')
