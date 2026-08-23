@@ -10,6 +10,24 @@
     $videoPosition = theme_option('ecommerce_product_gallery_video_position', 'bottom');
 @endphp
 
+@once
+    <style>
+        /* Main product image had no height cap anywhere in the codebase/theme, so a
+           large-resolution upload could render at close to full viewport height. */
+        .bb-product-gallery-images img {
+            max-height: 520px;
+            width: 100%;
+            object-fit: contain;
+        }
+
+        @media (max-width: 767px) {
+            .bb-product-gallery-images img {
+                max-height: 360px;
+            }
+        }
+    </style>
+@endonce
+
 <div class="bb-product-gallery-wrapper">
     <div @class(['bb-product-gallery', 'bb-product-gallery-' . $galleryStyle])>
         <div class="bb-product-gallery-images">
