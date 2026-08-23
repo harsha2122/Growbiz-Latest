@@ -899,29 +899,17 @@ class Product extends BaseModel
                         $data['video_id'] = Str::afterLast($url, 'video/');
                     } elseif (preg_match('/^.*https:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/', $url)) {
                         $data['provider'] = 'twitter';
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/([a-zA-Z0-9_-]+)#', $url, $matches)) {
-                        // Instagram doesn't allow raw iframing of post/reel pages, only their
-                        // official embed widget (blockquote + embed.js) actually renders.
-                        $data['provider'] = 'instagram';
-                        $data['url'] = 'https://www.instagram.com/' . $matches[1] . '/' . $matches[2] . '/';
-                    } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $url)
-                        || preg_match('#^https?://fb\.watch/#', $url)
-                    ) {
-                        // facebook.com itself blocks framing (X-Frame-Options), but their official
-                        // plugins/video.php endpoint is explicitly iframe-able. Only route actual
-                        // video permalinks through it - other Facebook URLs (pages, posts, profiles)
-                        // aren't supported by that plugin and would fail the same way.
-                        $data['provider'] = 'facebook';
-                        $data['url'] = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($url) . '&show_text=false';
                     } elseif (in_array(Str::lower(File::extension($url)), ['mp4', 'webm', 'ogg'])) {
                         $data['provider'] = 'video';
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/#', $url)
                         || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $url)
                         || preg_match('#^https?://fb\.watch/#', $url)
                     ) {
-                        // Instagram/Facebook profile, page, or non-permalink URLs can't be embedded
-                        // at all (no widget or plugin exists for those) - link out instead of trying
-                        // to iframe them, which Instagram/Facebook always block.
+                        // Instagram's free embed widget requires an approved Facebook App +
+                        // access token to render actual post/reel video - without one it
+                        // always serves a degraded "click to view" card. Facebook's main
+                        // domain also blocks direct framing. Link out to both instead of
+                        // showing an embed that's guaranteed to look broken.
                         $data['provider'] = 'external-link';
                         $data['site_name'] = Str::contains($url, 'instagram.com')
                             ? 'Instagram'

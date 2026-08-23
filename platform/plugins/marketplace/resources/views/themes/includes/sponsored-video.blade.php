@@ -10,19 +10,6 @@
         } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $matches)) {
             $provider = 'iframe';
             $embedUrl = 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1';
-        } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/([a-zA-Z0-9_-]+)#', $videoUrl)) {
-            // Instagram's free embed widget requires an approved Facebook App + access
-            // token to render the actual post/reel - without one it deliberately serves
-            // a degraded "click to view" card instead, no matter how it's embedded. Link
-            // out directly instead of showing that broken-looking card.
-            $provider = 'external';
-            $embedUrl = $videoUrl;
-        } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
-            || preg_match('#^https?://fb\.watch/#', $videoUrl)
-        ) {
-            // facebook.com blocks direct framing, but their video plugin endpoint is iframe-able.
-            $provider = 'iframe';
-            $embedUrl = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($videoUrl) . '&show_text=false&autoplay=true';
         } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/i', $videoUrl)) {
             $provider = 'direct';
             $embedUrl = $videoUrl;
@@ -30,8 +17,11 @@
             || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $videoUrl)
             || preg_match('#^https?://fb\.watch/#', $videoUrl)
         ) {
-            // Profile/page links or any non-post URL can't be embedded at all - link out
-            // instead of showing a modal that's guaranteed to fail.
+            // Instagram's free embed widget requires an approved Facebook App + access
+            // token to render actual post/reel video - without one it always serves a
+            // degraded "click to view" card, no matter how it's embedded. Facebook's
+            // main domain also blocks direct framing. Open both in a new tab instead of
+            // showing a modal that's guaranteed to look broken.
             $provider = 'external';
             $embedUrl = $videoUrl;
         } else {
