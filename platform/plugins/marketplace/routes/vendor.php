@@ -18,6 +18,7 @@ use Botble\Marketplace\Http\Controllers\Fronts\MetaCampaignController;
 use Botble\Marketplace\Http\Controllers\Fronts\SpecificationAttributeController;
 use Botble\Marketplace\Http\Controllers\Fronts\SpecificationGroupController;
 use Botble\Marketplace\Http\Controllers\Fronts\SpecificationTableController;
+use Botble\Marketplace\Http\Controllers\Fronts\VendorServiceListController;
 use Botble\Marketplace\Http\Controllers\Vendor\LanguageSettingController;
 use Botble\Marketplace\Http\Middleware\LocaleMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -109,6 +110,8 @@ Route::group([
             ->parameters(['' => 'review'])
             ->only(['index']);
     }
+
+    Route::get('services', [VendorServiceListController::class, 'index'])->name('services.index');
 
     Route::group(['prefix' => 'products', 'as' => 'products.'], function (): void {
         Route::resource('', 'ProductController')

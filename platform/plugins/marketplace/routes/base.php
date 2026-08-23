@@ -212,6 +212,11 @@ AdminHelper::registerRoutes(function (): void {
             Route::group(['prefix' => 'subscription-plans', 'as' => 'subscription-plans.'], function (): void {
                 Route::resource('', 'SubscriptionPlanController')->parameters(['' => 'subscription-plan']);
             });
+            Route::get('services', [
+                'as' => 'services.index',
+                'uses' => 'ServiceProductController@index',
+                'permission' => 'marketplace.services.index',
+            ]);
             Route::group(['prefix' => 'b2b-catalogs', 'as' => 'b2b-catalogs.'], function (): void {
                 Route::resource('', 'B2bCatalogController')->parameters(['' => 'b2b_catalog']);
                 Route::get('{b2b_catalog}/view-pdf', [
