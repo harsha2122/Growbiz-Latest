@@ -37,6 +37,7 @@ class Store extends BaseModel
         'name',
         'email',
         'phone',
+        'whatsapp_number',
         'address',
         'country',
         'state',
@@ -292,6 +293,20 @@ class Store extends BaseModel
     public function visits(): HasMany
     {
         return $this->hasMany(StoreVisit::class, 'store_id');
+    }
+
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class, 'store_id')->orderBy('order');
+    }
+
+    /**
+     * The WhatsApp number "Book Now" links use - falls back to the store's regular phone
+     * if a dedicated WhatsApp number hasn't been set.
+     */
+    public function getWhatsappNumberForBookingAttribute(): ?string
+    {
+        return $this->whatsapp_number ?: $this->phone;
     }
 
     /**

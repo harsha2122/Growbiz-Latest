@@ -64,6 +64,15 @@ class StoreForm extends FormAbstract
                 ],
                 'colspan' => 6,
             ])
+            ->add('whatsapp_number', TextField::class, [
+                'label' => trans('plugins/marketplace::store.forms.whatsapp_number'),
+                'required' => false,
+                'attr' => [
+                    'placeholder' => trans('plugins/marketplace::store.forms.whatsapp_number_placeholder'),
+                    'data-counter' => 15,
+                ],
+                'colspan' => 6,
+            ])
             ->add('description', TextareaField::class, DescriptionFieldOption::make()->colspan(6))
             ->add('content', EditorField::class, ContentFieldOption::make()->colspan(6))
             ->addLocationFields()

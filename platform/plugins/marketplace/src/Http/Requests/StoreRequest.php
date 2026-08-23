@@ -23,6 +23,7 @@ class StoreRequest extends Request
                     ->ignore($this->route('store.id')),
             ],
             'phone' => 'required|' . BaseHelper::getPhoneValidationRule(),
+            'whatsapp_number' => ['nullable', BaseHelper::getPhoneValidationRule()],
             'slug' => ['required', 'string', 'max:255'],
             'customer_id' => ['required', 'string', 'exists:ec_customers,id'],
             'description' => ['nullable', 'max:400', 'string'],

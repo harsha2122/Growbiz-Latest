@@ -148,4 +148,25 @@ return [
         'flag' => 'marketplace.subscription-plans.destroy',
         'parent_flag' => 'marketplace.subscription-plans.index',
     ],
+
+    [
+        'name' => 'Services',
+        'flag' => 'marketplace.services.index',
+        'parent_flag' => 'marketplace.index',
+    ],
+    [
+        'name' => 'Create',
+        'flag' => 'marketplace.services.create',
+        'parent_flag' => 'marketplace.services.index',
+    ],
+    [
+        'name' => 'Edit',
+        'flag' => 'marketplace.services.edit',
+        'parent_flag' => 'marketplace.services.index',
+    ],
+    [
+        'name' => 'Delete',
+        'flag' => 'marketplace.services.destroy',
+        'parent_flag' => 'marketplace.services.index',
+    ],
 ];

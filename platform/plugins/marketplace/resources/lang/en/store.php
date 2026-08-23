@@ -11,6 +11,8 @@ return [
         'email_placeholder' => 'Ex: name@store.com',
         'phone' => 'Phone',
         'phone_placeholder' => 'Phone',
+        'whatsapp_number' => 'WhatsApp Number (for Book Now)',
+        'whatsapp_number_placeholder' => 'e.g. +1234567890',
         'address' => 'Address',
         'address_placeholder' => 'Address',
         'city' => 'City',
