@@ -289,6 +289,28 @@ class Store extends BaseModel
         return $this->activeSponsoredVideos()->isNotEmpty();
     }
 
+    public function visits(): HasMany
+    {
+        return $this->hasMany(StoreVisit::class, 'store_id');
+    }
+
+    /**
+     * @param 'today'|'7days'|'30days'|null $period null = all-time
+     */
+    public function visitsCount(?string $period = null): int
+    {
+        $query = $this->visits();
+
+        match ($period) {
+            'today' => $query->whereDate('visit_date', now()->toDateString()),
+            '7days' => $query->where('visit_date', '>=', now()->subDays(7)->toDateString()),
+            '30days' => $query->where('visit_date', '>=', now()->subDays(30)->toDateString()),
+            default => null,
+        };
+
+        return $query->count();
+    }
+
     public function activeSubscription(): HasOne
     {
         return $this->hasOne(VendorSubscription::class)

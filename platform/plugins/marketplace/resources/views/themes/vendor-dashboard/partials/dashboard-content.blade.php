@@ -248,9 +248,25 @@
                     <x-core::datagrid.item class="col-6">
                         <x-slot:title>
                             <x-core::icon name="ti ti-eye" />
-                            {{ __('Store Visibility') }}
+                            {{ __('Visits Today') }}
                         </x-slot:title>
-                        <span class="badge text-bg-success text-white">{{ __('Active') }}</span>
+                        {{ number_format($store->visitsCount('today')) }}
+                    </x-core::datagrid.item>
+
+                    <x-core::datagrid.item class="col-6">
+                        <x-slot:title>
+                            <x-core::icon name="ti ti-chart-line" />
+                            {{ __('Visits (30 days)') }}
+                        </x-slot:title>
+                        {{ number_format($store->visitsCount('30days')) }}
+                    </x-core::datagrid.item>
+
+                    <x-core::datagrid.item class="col-6">
+                        <x-slot:title>
+                            <x-core::icon name="ti ti-users" />
+                            {{ __('Total Visits') }}
+                        </x-slot:title>
+                        {{ number_format($store->visitsCount()) }}
                     </x-core::datagrid.item>
                 </div>
             </x-core::card.body>
