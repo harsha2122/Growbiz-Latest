@@ -912,6 +912,14 @@ class Product extends BaseModel
                         // Keep the original URL populated - some views/checks rely on it
                         // being non-empty even though the actual render uses embed_html.
                         $data['url'] = $url;
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $url)
+                        && ($scrapedVideoUrl = get_instagram_video_url($url))
+                    ) {
+                        // Fallback when oEmbed isn't approved yet: scrape the direct video
+                        // URL from the post page (see get_instagram_video_url() for the
+                        // ToS/reliability caveats) and play it as a plain video file.
+                        $data['provider'] = 'video';
+                        $data['url'] = $scrapedVideoUrl;
                     } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $url)
                         || preg_match('#^https?://fb\.watch/#', $url)
                     ) {

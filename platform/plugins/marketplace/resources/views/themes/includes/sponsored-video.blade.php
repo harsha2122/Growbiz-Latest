@@ -28,6 +28,13 @@
                         // app_id/client_token configured).
                         $provider = 'instagram-oembed';
                         $embedHtml = $fetchedHtml;
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $videoUrl)
+                        && ($scrapedVideoUrl = get_instagram_video_url($videoUrl))
+                    ) {
+                        // Fallback when oEmbed isn't approved yet: scrape the direct video
+                        // URL from the post page and play it as a plain video file.
+                        $provider = 'direct';
+                        $embedUrl = $scrapedVideoUrl;
                     } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
                         || preg_match('#^https?://fb\.watch/#', $videoUrl)
                     ) {
