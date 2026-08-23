@@ -10,11 +10,13 @@
         } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $matches)) {
             $provider = 'iframe';
             $embedUrl = 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1';
-        } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/([a-zA-Z0-9_-]+)#', $videoUrl, $matches)) {
-            // Instagram has no iframe-only embed - only their official widget
-            // (blockquote + embed.js) actually renders a post/reel.
-            $provider = 'instagram';
-            $embedUrl = 'https://www.instagram.com/' . $matches[1] . '/' . $matches[2] . '/';
+        } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/([a-zA-Z0-9_-]+)#', $videoUrl)) {
+            // Instagram's free embed widget requires an approved Facebook App + access
+            // token to render the actual post/reel - without one it deliberately serves
+            // a degraded "click to view" card instead, no matter how it's embedded. Link
+            // out directly instead of showing that broken-looking card.
+            $provider = 'external';
+            $embedUrl = $videoUrl;
         } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
             || preg_match('#^https?://fb\.watch/#', $videoUrl)
         ) {
