@@ -65,6 +65,13 @@ class ProductTable extends TableAbstract
             })
             ->editColumn('order', function ($item) {
                 return (string) $item->order;
+            })
+            ->editColumn('book_now_clicks', function ($item) {
+                if ((string) $item->product_type !== 'service') {
+                    return '&mdash;';
+                }
+
+                return number_format($item->clicksCount());
             });
 
         return $this->toJson($data);
@@ -114,6 +121,10 @@ class ProductTable extends TableAbstract
             Column::make('order')
                 ->title(trans('core/base::tables.order'))
                 ->width(50),
+            Column::make('book_now_clicks')
+                ->title(trans('plugins/ecommerce::products.book_now_clicks'))
+                ->orderable(false)
+                ->searchable(false),
             CreatedAtColumn::make(),
             StatusColumn::make(),
         ];

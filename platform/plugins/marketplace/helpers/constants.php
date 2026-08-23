@@ -19,7 +19,3 @@ if (! defined('WITHDRAWAL_MODULE_SCREEN_NAME')) {
 if (! defined('SUBSCRIPTION_PLAN_MODULE_SCREEN_NAME')) {
     define('SUBSCRIPTION_PLAN_MODULE_SCREEN_NAME', 'subscription-plan');
 }
-
-if (! defined('SERVICE_MODULE_SCREEN_NAME')) {
-    define('SERVICE_MODULE_SCREEN_NAME', 'service');
-}
