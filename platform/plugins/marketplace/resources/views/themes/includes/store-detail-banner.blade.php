@@ -1,8 +1,15 @@
 @once
     <style>
         .bb-shop-banner-logo {
+            display: block;
+            box-sizing: border-box;
             width: 100px;
+            min-width: 100px;
+            max-width: 100px;
             height: 100px;
+            min-height: 100px;
+            max-height: 100px;
+            aspect-ratio: 1 / 1;
             border-radius: 50%;
             object-fit: cover;
             object-position: center;
@@ -15,7 +22,11 @@
         @media (max-width: 767px) {
             .bb-shop-banner-logo {
                 width: 72px;
+                min-width: 72px;
+                max-width: 72px;
                 height: 72px;
+                min-height: 72px;
+                max-height: 72px;
                 border-width: 3px;
             }
         }
