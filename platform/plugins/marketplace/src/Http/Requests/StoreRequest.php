@@ -34,9 +34,14 @@ class StoreRequest extends Request
             'logo' => ['nullable', 'string', new MediaImageRule()],
             'logo_square' => ['nullable', 'string', new MediaImageRule()],
             'cover_image' => ['nullable', 'string', new MediaImageRule()],
-            'sponsored_video_url' => ['nullable', 'string', 'url', 'max:500'],
-            'sponsored_video_thumbnail' => ['nullable', 'string', new MediaImageRule()],
-            'sponsored_video_expires_at' => ['nullable', 'date'],
+            // Not capped at MAX_SPONSORED_VIDEOS here: a single save can include existing
+            // rows marked for removal alongside new rows, temporarily exceeding the limit
+            // in the raw payload even though the final kept count won't. The controller
+            // enforces the real cap when persisting.
+            'sponsored_videos' => ['nullable', 'array', 'max:20'],
+            'sponsored_videos.*.video_url' => ['nullable', 'string', 'url', 'max:500'],
+            'sponsored_videos.*.thumbnail' => ['nullable', new MediaImageRule()],
+            'sponsored_videos.*.expires_at' => ['nullable', 'date'],
         ];
     }
 }

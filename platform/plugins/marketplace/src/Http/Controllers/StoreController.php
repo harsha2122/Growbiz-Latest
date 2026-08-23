@@ -16,9 +16,11 @@ use Botble\Marketplace\Http\Requests\PayoutInformationSettingRequest;
 use Botble\Marketplace\Http\Requests\StoreRequest;
 use Botble\Marketplace\Http\Requests\TaxInformationSettingRequest;
 use Botble\Marketplace\Models\Store;
+use Botble\Marketplace\Models\StoreSponsoredVideo;
 use Botble\Marketplace\Models\SubscriptionPlan;
 use Botble\Marketplace\Models\VendorSubscription;
 use Botble\Marketplace\Tables\StoreTable;
+use Botble\Media\Facades\RvMedia;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,6 +68,8 @@ class StoreController extends BaseController
                 MetaBox::saveMetaBoxData($store, 'social_links', $socialLinks);
             }
         }
+
+        $this->saveSponsoredVideos($store, $request);
 
         return $this
             ->httpResponse()
@@ -117,10 +121,86 @@ class StoreController extends BaseController
             }
         }
 
+        $this->saveSponsoredVideos($store, $request);
+
         return $this
             ->httpResponse()
             ->setPreviousUrl(route('marketplace.store.index'))
             ->withUpdatedSuccessMessage();
+    }
+
+    protected function saveSponsoredVideos(Store $store, Request $request): void
+    {
+        if (! $request->has('sponsored_videos')) {
+            return;
+        }
+
+        $rows = $request->input('sponsored_videos', []);
+        $files = $request->file('sponsored_videos', []);
+        $kept = 0;
+
+        foreach ($rows as $key => $row) {
+            $id = $row['id'] ?? null;
+
+            if (! empty($row['remove'])) {
+                if ($id) {
+                    StoreSponsoredVideo::query()
+                        ->where('id', $id)
+                        ->where('store_id', $store->getKey())
+                        ->delete();
+                }
+
+                continue;
+            }
+
+            $videoUrl = trim((string) ($row['video_url'] ?? ''));
+
+            if (! $videoUrl || $kept >= Store::MAX_SPONSORED_VIDEOS) {
+                continue;
+            }
+
+            $expiresAt = ! empty($row['expires_at']) ? $row['expires_at'] : null;
+
+            $thumbnailPath = null;
+            $thumbnailFile = $files[$key]['thumbnail'] ?? null;
+
+            if ($thumbnailFile) {
+                $result = RvMedia::handleUpload($thumbnailFile, 0, 'stores/sponsored-videos');
+
+                if (! $result['error']) {
+                    $thumbnailPath = $result['data']->url;
+                }
+            }
+
+            if ($id) {
+                $video = StoreSponsoredVideo::query()
+                    ->where('id', $id)
+                    ->where('store_id', $store->getKey())
+                    ->first();
+
+                if ($video) {
+                    $video->video_url = $videoUrl;
+                    $video->expires_at = $expiresAt;
+                    $video->sort_order = $kept;
+
+                    if ($thumbnailPath) {
+                        $video->thumbnail = $thumbnailPath;
+                    }
+
+                    $video->save();
+                }
+            } else {
+                StoreSponsoredVideo::query()->create([
+                    'store_id' => $store->getKey(),
+                    'video_url' => $videoUrl,
+                    'thumbnail' => $thumbnailPath,
+                    'expires_at' => $expiresAt,
+                    'sort_order' => $kept,
+                ]);
+            }
+
+            $kept++;
+        }
     }
 
     public function updateTaxInformation(Store $store, TaxInformationSettingRequest $request)
