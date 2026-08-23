@@ -282,6 +282,12 @@
             var body = document.getElementById('sponsoredVideoBody');
             body.classList.toggle('bb-video-modal-body-auto', provider === 'instagram');
 
+            // Make the modal visible BEFORE injecting the Instagram widget - it measures
+            // its container on process(), and a still-hidden (display:none) container
+            // has zero width/height, so the embed renders collapsed to just its header.
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
             if (provider === 'direct') {
                 body.innerHTML = '<video controls autoplay><source src="' + url + '"></video>';
             } else if (provider === 'instagram') {
@@ -298,9 +304,6 @@
             } else {
                 body.innerHTML = '<iframe src="' + url + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
             }
-
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
         }
 
         function closeSponsoredVideo(event) {
