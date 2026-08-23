@@ -310,10 +310,11 @@ if (! function_exists('get_instagram_oembed_html')) {
      * of an app access token) - a free Meta Developer App is enough, no App Review needed
      * for public oEmbed reads.
      *
-     * Credentials are read from, in order: services.facebook.app_id/client_token
-     * (FACEBOOK_APP_ID/FACEBOOK_CLIENT_TOKEN env vars), then - if not set - the Social
-     * Login plugin's Facebook Login app credentials, if that's already configured, so a
-     * site that already has "Login with Facebook" set up doesn't need a second app.
+     * Credentials are read from, in order, using whichever is configured first:
+     * 1. services.facebook.app_id/client_token (FACEBOOK_APP_ID/FACEBOOK_CLIENT_TOKEN env vars)
+     * 2. The Marketplace plugin's Meta Ads settings (Settings > Meta Ads Integration) -
+     *    Marketing App credentials first, then Auth App, matching that page's own priority
+     * 3. The Social Login plugin's Facebook Login app credentials
      *
      * Returns null if no credentials are available or the request fails (caller should
      * fall back to linking out in that case).
@@ -322,6 +323,15 @@ if (! function_exists('get_instagram_oembed_html')) {
     {
         $appId = config('services.facebook.app_id');
         $clientToken = config('services.facebook.client_token');
+
+        if ((! $appId || ! $clientToken) && is_plugin_active('marketplace')) {
+            $appId = $appId
+                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_marketing_app_id')
+                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_fb_auth_app_id');
+            $clientToken = $clientToken
+                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_marketing_app_secret')
+                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_fb_auth_app_secret');
+        }
 
         if ((! $appId || ! $clientToken) && is_plugin_active('social-login')) {
             $appId = $appId ?: setting('social_login_facebook_app_id');
