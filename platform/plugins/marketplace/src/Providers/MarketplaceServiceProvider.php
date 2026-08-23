@@ -573,7 +573,7 @@ class MarketplaceServiceProvider extends ServiceProvider
                 return $model->hasMany(ProductClick::class, 'product_id');
             });
 
-            Product::macro('clicksCount', function (?string $period = null) {
+            MacroableModels::addMacro(Product::class, 'clicksCount', function (?string $period = null) {
                 /** @var Product $this */
                 return ProductClick::countForProduct($this->getKey(), $period);
             });

@@ -10,6 +10,7 @@ use Botble\Ecommerce\Enums\ProductTypeEnum;
 use Botble\Ecommerce\Facades\EcommerceHelper;
 use Botble\Ecommerce\Models\Product;
 use Botble\Marketplace\Exports\ProductExport;
+use Botble\Marketplace\Models\ProductClick;
 use Botble\Marketplace\Tables\Traits\ForVendor;
 use Botble\Table\Abstracts\TableAbstract;
 use Botble\Table\Actions\DeleteAction;
@@ -71,7 +72,7 @@ class ProductTable extends TableAbstract
                     return '&mdash;';
                 }
 
-                return number_format($item->clicksCount());
+                return number_format(ProductClick::countForProduct($item->id));
             });
 
         return $this->toJson($data);

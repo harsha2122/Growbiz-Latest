@@ -167,11 +167,11 @@ class ProductTable extends TableAbstract
                 return BaseHelper::clean($item->stock_status_html);
             })
             ->editColumn('book_now_clicks', function (Product $item) {
-                if ((string) $item->product_type !== 'service') {
+                if ((string) $item->product_type !== 'service' || ! is_plugin_active('marketplace')) {
                     return '&mdash;';
                 }
 
-                return number_format($item->clicksCount());
+                return number_format(\Botble\Marketplace\Models\ProductClick::countForProduct($item->id));
             })
             ->filter(function ($query) {
                 $keyword = request()->input('search.value');
