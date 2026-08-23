@@ -10,7 +10,10 @@ use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 if (! function_exists('get_product_by_id')) {
     function get_product_by_id(int|string $productId): ?Product
@@ -296,6 +299,56 @@ if (! function_exists('get_related_products')) {
         }
 
         return app(ProductInterface::class)->filterProducts($filters, $params);
+    }
+}
+
+if (! function_exists('get_instagram_oembed_html')) {
+    /**
+     * Fetch the official Instagram embed markup for a post/reel URL via Meta's oEmbed API,
+     * so it can render inline (real video) instead of just linking out. Requires
+     * services.facebook.app_id / client_token (FACEBOOK_APP_ID / FACEBOOK_CLIENT_TOKEN env
+     * vars) - a free Meta Developer App is enough, no App Review needed for public oEmbed
+     * reads. Returns null if not configured or the request fails (caller should fall back
+     * to linking out in that case).
+     */
+    function get_instagram_oembed_html(string $url): ?string
+    {
+        $appId = config('services.facebook.app_id');
+        $clientToken = config('services.facebook.client_token');
+
+        if (! $appId || ! $clientToken) {
+            return null;
+        }
+
+        $cacheKey = 'instagram_oembed_html_' . md5($url);
+
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+
+            return $cached !== '' ? $cached : null;
+        }
+
+        try {
+            $response = Http::timeout(5)->get('https://graph.facebook.com/v19.0/instagram_oembed', [
+                'url' => $url,
+                'access_token' => $appId . '|' . $clientToken,
+                'omitscript' => 'true',
+            ]);
+
+            $html = $response->ok() ? $response->json('html') : null;
+        } catch (Exception $exception) {
+            Log::warning('Instagram oEmbed fetch failed: ' . $exception->getMessage());
+
+            $html = null;
+        }
+
+        // Cache a successful embed for a week (posts rarely change); cache a failure for
+        // only an hour so a transient API/rate-limit issue doesn't stick around for days.
+        // Empty string is the "failure" sentinel - storing a raw null isn't reliable across
+        // all cache drivers.
+        Cache::put($cacheKey, $html ?: '', $html ? 3600 * 24 * 7 : 3600);
+
+        return $html ?: null;
     }
 }
 

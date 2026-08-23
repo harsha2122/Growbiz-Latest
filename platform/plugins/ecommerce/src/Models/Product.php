@@ -901,15 +901,31 @@ class Product extends BaseModel
                         $data['provider'] = 'twitter';
                     } elseif (in_array(Str::lower(File::extension($url)), ['mp4', 'webm', 'ogg'])) {
                         $data['provider'] = 'video';
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $url)
+                        && ($embedHtml = get_instagram_oembed_html($url))
+                    ) {
+                        // Real inline embed via Meta's oEmbed API (needs services.facebook
+                        // app_id/client_token configured) - falls through to external-link
+                        // below if that's not set up or the request fails.
+                        $data['provider'] = 'instagram-oembed';
+                        $data['embed_html'] = $embedHtml;
+                        // Keep the original URL populated - some views/checks rely on it
+                        // being non-empty even though the actual render uses embed_html.
+                        $data['url'] = $url;
+                    } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $url)
+                        || preg_match('#^https?://fb\.watch/#', $url)
+                    ) {
+                        // facebook.com itself blocks framing (X-Frame-Options), but their
+                        // official plugins/video.php endpoint is explicitly iframe-able for
+                        // actual video permalinks.
+                        $data['provider'] = 'iframe';
+                        $data['url'] = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($url) . '&show_text=false';
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/#', $url)
                         || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $url)
                         || preg_match('#^https?://fb\.watch/#', $url)
                     ) {
-                        // Instagram's free embed widget requires an approved Facebook App +
-                        // access token to render actual post/reel video - without one it
-                        // always serves a degraded "click to view" card. Facebook's main
-                        // domain also blocks direct framing. Link out to both instead of
-                        // showing an embed that's guaranteed to look broken.
+                        // Profile/page links, or Instagram without oEmbed configured - no
+                        // way to embed these at all. Link out instead.
                         $data['provider'] = 'external-link';
                         $data['site_name'] = Str::contains($url, 'instagram.com')
                             ? 'Instagram'

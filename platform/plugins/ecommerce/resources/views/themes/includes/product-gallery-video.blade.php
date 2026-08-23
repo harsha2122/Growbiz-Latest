@@ -66,6 +66,12 @@
                     </div>
                     @break
 
+                @case('instagram-oembed')
+                    <div style="display: flex; justify-content: center; align-items: center; min-height: 400px; background: #f8f9fa; border-radius: 8px; padding: 20px;">
+                        {!! $video['embed_html'] !!}
+                    </div>
+                    @break
+
                 @case('external-link')
                     <a
                         href="{{ $video['url'] }}"
@@ -99,5 +105,9 @@
     
     @if(in_array('twitter', array_column($product->video, 'provider')))
         <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+    @endif
+
+    @if(in_array('instagram-oembed', array_column($product->video, 'provider')))
+        <script async src="https://www.instagram.com/embed.js"></script>
     @endif
 @endif
