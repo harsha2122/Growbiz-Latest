@@ -27,7 +27,7 @@ class MetaAdsSettingForm extends SettingForm
                     ->helperText('Turn on/off Meta Ads for vendors.')
                     ->value(MarketplaceHelper::getSetting('meta_ads_enabled', false))
             )
-            ->add('fb_auth_section', 'html', ['html' => '<hr><h5>Facebook Auth App (Facebook Login)</h5><p class="text-muted small">Used as a fallback for OAuth if Marketing App is not configured. Must have "Facebook Login" product added.</p>'])
+            ->add('fb_auth_section', 'html', ['html' => '<hr><h5>Facebook Auth App (Facebook Login)</h5><p class="text-muted small">Used as a fallback for OAuth if Marketing App is not configured. Must have "Facebook Login" product added. Also used to fetch real inline Instagram video embeds on product pages and sponsored store videos (via Meta\'s oEmbed API) - if the Marketing App below is configured, that one is used for this instead.</p>'])
             ->add('meta_ads_fb_auth_app_id', TextField::class,
                 TextFieldOption::make()->label('Auth App ID')
                     ->value(MarketplaceHelper::getSetting('meta_ads_fb_auth_app_id', ''))
@@ -42,7 +42,7 @@ class MetaAdsSettingForm extends SettingForm
                     ->helperText('Add this in Facebook App → Facebook Login → Valid OAuth Redirect URIs')
                     ->value(MarketplaceHelper::getSetting('meta_ads_fb_auth_redirect_uri', url('/vendor/meta-ads/callback')))
             )
-            ->add('marketing_api_section', 'html', ['html' => '<hr><h5>Marketing App (Primary — Recommended)</h5><p class="text-muted small">If configured, this app is used for both OAuth AND all Marketing API calls. Must have "Marketing API" + "Facebook Login" products added. Leave empty to use Auth App above.</p>'])
+            ->add('marketing_api_section', 'html', ['html' => '<hr><h5>Marketing App (Primary — Recommended)</h5><p class="text-muted small">If configured, this app is used for both OAuth AND all Marketing API calls, and takes priority over the Auth App above for Instagram video embeds too. Must have "Marketing API" + "Facebook Login" products added. Leave empty to use Auth App above.</p>'])
             ->add('meta_ads_marketing_app_id', TextField::class,
                 TextFieldOption::make()->label('Marketing App ID')
                     ->helperText('App ID of your Marketing API app (preferred for ads OAuth)')
