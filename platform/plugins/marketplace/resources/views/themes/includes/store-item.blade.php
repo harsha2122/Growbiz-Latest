@@ -1,6 +1,36 @@
 @once
     <style>
+        /* This component has no CSS anywhere else in the codebase/theme, so it's fully
+           self-contained here - including defensive resets on layout properties in case
+           some unrelated global rule happens to match these class names. */
+        .card.bb-store-item {
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100%;
+            overflow: hidden;
+            padding: 16px;
+        }
+        .bb-store-item-content {
+            position: static !important;
+            flex: 1 1 auto;
+        }
+        .bb-store-item-footer {
+            position: static !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+        .bb-store-item-logo {
+            position: static !important;
+            flex-shrink: 0;
+        }
         .bb-store-item-logo img {
+            position: static !important;
             display: block;
             box-sizing: border-box;
             width: 56px;
@@ -16,6 +46,10 @@
             border: 2px solid #fff;
             box-shadow: 0 1px 6px rgba(0, 0, 0, .12);
             background-color: #fff;
+        }
+        .bb-store-item-action {
+            position: static !important;
+            flex-shrink: 0;
         }
     </style>
 @endonce
