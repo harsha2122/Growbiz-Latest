@@ -1,3 +1,27 @@
+@once
+    <style>
+        .bb-shop-banner-logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+            border: 4px solid #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
+            background-color: #fff;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 767px) {
+            .bb-shop-banner-logo {
+                width: 72px;
+                height: 72px;
+                border-width: 3px;
+            }
+        }
+    </style>
+@endonce
+
 <div class="bb-shop-banner" @if ($coverImage) style="background-image: url('{{ RvMedia::getImageUrl($coverImage) }}');" @endif>
     <div class="bb-shop-banner-overlay"></div>
     <div class="container bb-shop-banner-content">
