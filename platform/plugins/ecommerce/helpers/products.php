@@ -380,6 +380,59 @@ if (! function_exists('get_instagram_oembed_html')) {
     }
 }
 
+if (! function_exists('get_instagram_video_url')) {
+    /**
+     * Last-resort fallback when Meta's oEmbed API isn't available (e.g. not yet
+     * App-Review-approved): fetch the public post page directly and pull the direct CDN
+     * video URL out of its og:video meta tag, so it can play in a plain <video> element.
+     *
+     * WARNING: this scrapes Instagram's page rather than using an official API. It's
+     * against Instagram's Terms of Service, breaks whenever they change their page
+     * markup, and repeated requests can get the server's IP rate-limited or blocked by
+     * Instagram. Only use this as a temporary bridge until oEmbed is approved - remove it
+     * once that's done. Returns null on any failure (caller should fall back further).
+     */
+    function get_instagram_video_url(string $url): ?string
+    {
+        $cacheKey = 'instagram_scraped_video_' . md5($url);
+
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+
+            return $cached !== '' ? $cached : null;
+        }
+
+        $videoUrl = null;
+
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            ])->timeout(8)->get($url);
+
+            if ($response->ok()) {
+                $html = $response->body();
+
+                if (preg_match('/<meta property="og:video:secure_url" content="([^"]+)"/', $html, $matches)
+                    || preg_match('/<meta property="og:video" content="([^"]+)"/', $html, $matches)
+                ) {
+                    $videoUrl = html_entity_decode($matches[1]);
+                }
+            } else {
+                Log::warning('Instagram video scrape failed for ' . $url . ': HTTP ' . $response->status());
+            }
+        } catch (Exception $exception) {
+            Log::warning('Instagram video scrape failed: ' . $exception->getMessage());
+        }
+
+        // Instagram's CDN video URLs are signed and expire after a while, so this can't be
+        // cached long-lived like the oEmbed HTML - a short cache just avoids re-scraping on
+        // every single page view.
+        Cache::put($cacheKey, $videoUrl ?: '', $videoUrl ? 1800 : 600);
+
+        return $videoUrl;
+    }
+}
+
 if (! function_exists('get_cross_sale_products')) {
     function get_cross_sale_products(Product $product, ?int $limit = null, array $with = []): EloquentCollection
     {
