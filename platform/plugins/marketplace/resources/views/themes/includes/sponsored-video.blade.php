@@ -1,37 +1,46 @@
 @if ($store->hasActiveSponsoredVideo())
     @php
         $videoUrl = $store->sponsored_video_url;
-        $embedUrl = '';
+        $provider = 'generic';
+        $embedUrl = $videoUrl;
 
-        // Convert YouTube URL to embed
         if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
+            $provider = 'iframe';
             $embedUrl = 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1';
-        }
-        // Convert Vimeo URL to embed
-        elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $matches)) {
+        } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $matches)) {
+            $provider = 'iframe';
             $embedUrl = 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1';
-        }
-        // Instagram - use original URL in iframe
-        elseif (str_contains($videoUrl, 'instagram.com')) {
-            $embedUrl = str_replace('/reel/', '/reel/', $videoUrl);
-            if (!str_contains($embedUrl, '/embed')) {
-                $embedUrl = rtrim($embedUrl, '/') . '/embed';
-            }
-        }
-        // Direct video URL (mp4, webm, etc.)
-        elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/i', $videoUrl)) {
-            $embedUrl = 'direct:' . $videoUrl;
-        }
-        // Fallback - try to embed as-is
-        else {
+        } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/([a-zA-Z0-9_-]+)#', $videoUrl, $matches)) {
+            // Instagram has no iframe-only embed - only their official widget
+            // (blockquote + embed.js) actually renders a post/reel.
+            $provider = 'instagram';
+            $embedUrl = 'https://www.instagram.com/' . $matches[1] . '/' . $matches[2] . '/';
+        } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
+            || preg_match('#^https?://fb\.watch/#', $videoUrl)
+        ) {
+            // facebook.com blocks direct framing, but their video plugin endpoint is iframe-able.
+            $provider = 'iframe';
+            $embedUrl = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($videoUrl) . '&show_text=false&autoplay=true';
+        } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/i', $videoUrl)) {
+            $provider = 'direct';
             $embedUrl = $videoUrl;
+        } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/#', $videoUrl)
+            || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $videoUrl)
+            || preg_match('#^https?://fb\.watch/#', $videoUrl)
+        ) {
+            // Profile/page links or any non-post URL can't be embedded at all - link out
+            // instead of showing a modal that's guaranteed to fail.
+            $provider = 'external';
+            $embedUrl = $videoUrl;
+        } else {
+            $provider = 'iframe';
         }
     @endphp
 
     <div class="bb-sponsored-video-section">
         <div class="bb-sponsored-video-card">
             <span class="bb-sponsored-badge">{{ __('Sponsored') }}</span>
-            <div class="bb-sponsored-video-link" onclick="openSponsoredVideo('{{ $embedUrl }}')" style="cursor: pointer;">
+            <div class="bb-sponsored-video-link" onclick="openSponsoredVideo('{{ $provider }}', '{{ $embedUrl }}')" style="cursor: pointer;">
                 <div class="bb-sponsored-video-thumbnail">
                     @if ($store->sponsored_video_thumbnail)
                         {{ RvMedia::image($store->sponsored_video_thumbnail, $store->name . ' - Sponsored Video', attributes: ['class' => 'bb-sponsored-thumb-img']) }}
@@ -220,6 +229,14 @@
             padding-bottom: 56.25%;
             height: 0;
         }
+        .bb-video-modal-body.bb-video-modal-body-auto {
+            padding-bottom: 0;
+            height: auto;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fff;
+        }
         .bb-video-modal-body iframe,
         .bb-video-modal-body video {
             position: absolute;
@@ -255,16 +272,30 @@
     </style>
 
     <script>
-        function openSponsoredVideo(url) {
+        function openSponsoredVideo(provider, url) {
+            if (provider === 'external') {
+                window.open(url, '_blank', 'noopener');
+                return;
+            }
+
             var modal = document.getElementById('sponsoredVideoModal');
             var body = document.getElementById('sponsoredVideoBody');
+            body.classList.toggle('bb-video-modal-body-auto', provider === 'instagram');
 
-            if (url.startsWith('direct:')) {
-                // Direct video file
-                var videoUrl = url.replace('direct:', '');
-                body.innerHTML = '<video controls autoplay><source src="' + videoUrl + '"></video>';
+            if (provider === 'direct') {
+                body.innerHTML = '<video controls autoplay><source src="' + url + '"></video>';
+            } else if (provider === 'instagram') {
+                body.innerHTML = '<blockquote class="instagram-media" data-instgrm-permalink="' + url + '" data-instgrm-version="14" style="margin:0 auto;"></blockquote>';
+
+                if (window.instgrm && window.instgrm.Embeds) {
+                    window.instgrm.Embeds.process();
+                } else {
+                    var script = document.createElement('script');
+                    script.async = true;
+                    script.src = 'https://www.instagram.com/embed.js';
+                    document.body.appendChild(script);
+                }
             } else {
-                // Embed URL (YouTube, Vimeo, Instagram, etc.)
                 body.innerHTML = '<iframe src="' + url + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
             }
 
