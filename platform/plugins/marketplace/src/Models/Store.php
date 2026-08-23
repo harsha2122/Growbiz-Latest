@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -29,6 +30,8 @@ class Store extends BaseModel
     use LocationTrait;
 
     protected $table = 'mp_stores';
+
+    public const MAX_SPONSORED_VIDEOS = 5;
 
     protected $fillable = [
         'name',
@@ -271,17 +274,19 @@ class Store extends BaseModel
         return parent::getMetaData($key, $single);
     }
 
+    public function sponsoredVideos(): HasMany
+    {
+        return $this->hasMany(StoreSponsoredVideo::class, 'store_id')->orderBy('sort_order');
+    }
+
+    public function activeSponsoredVideos(): Collection
+    {
+        return $this->sponsoredVideos()->get()->filter->isActive()->values();
+    }
+
     public function hasActiveSponsoredVideo(): bool
     {
-        if (empty($this->sponsored_video_url)) {
-            return false;
-        }
-
-        if ($this->sponsored_video_expires_at && $this->sponsored_video_expires_at->isPast()) {
-            return false;
-        }
-
-        return true;
+        return $this->activeSponsoredVideos()->isNotEmpty();
     }
 
     public function activeSubscription(): HasOne

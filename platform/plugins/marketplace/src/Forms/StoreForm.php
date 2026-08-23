@@ -115,37 +115,14 @@ class StoreForm extends FormAbstract
                     ->colspan(2)
             )
             ->add(
-                'sponsored_video_section',
+                'sponsored_videos_section',
                 HtmlField::class,
                 HtmlFieldOption::make()
-                    ->content('<h4 style="margin-top: 20px; margin-bottom: 10px; padding-top: 15px; border-top: 1px solid #eee;">' . __('Sponsored Video (Admin Only)') . '</h4>')
-                    ->colspan(6)
-            )
-            ->add(
-                'sponsored_video_url',
-                TextField::class,
-                TextFieldOption::make()
-                    ->label(__('Sponsored Video URL'))
-                    ->placeholder(__('Enter YouTube or Vimeo video URL'))
-                    ->helperText(__('This video will be displayed as sponsored content on the vendor store page.'))
-                    ->maxLength(500)
-                    ->colspan(3)
-            )
-            ->add(
-                'sponsored_video_expires_at',
-                DatePickerField::class,
-                DatePickerFieldOption::make()
-                    ->label(__('Video Expiry Date'))
-                    ->defaultValue($this->getModel()->sponsored_video_expires_at ? BaseHelper::formatDate($this->getModel()->sponsored_video_expires_at) : '')
-                    ->helperText(__('Leave empty for no expiration. Video will be hidden after this date.'))
-                    ->colspan(3)
-            )
-            ->add(
-                'sponsored_video_thumbnail',
-                MediaImageField::class,
-                MediaImageFieldOption::make()
-                    ->label(__('Sponsored Video Thumbnail'))
-                    ->helperText(__('Thumbnail image for the sponsored video.'))
+                    ->content(
+                        view('plugins/marketplace::stores.partials.sponsored-videos-field', [
+                            'store' => $this->getModel(),
+                        ])->render()
+                    )
                     ->colspan(6)
             )
             ->add('status', SelectField::class, [

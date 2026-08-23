@@ -1,61 +1,67 @@
 @if ($store->hasActiveSponsoredVideo())
-    @php
-        $videoUrl = $store->sponsored_video_url;
-        $provider = 'generic';
-        $embedUrl = $videoUrl;
-
-        if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
-            $provider = 'iframe';
-            $embedUrl = 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1';
-        } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $matches)) {
-            $provider = 'iframe';
-            $embedUrl = 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1';
-        } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/i', $videoUrl)) {
-            $provider = 'direct';
-            $embedUrl = $videoUrl;
-        } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/#', $videoUrl)
-            || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $videoUrl)
-            || preg_match('#^https?://fb\.watch/#', $videoUrl)
-        ) {
-            // Instagram's free embed widget requires an approved Facebook App + access
-            // token to render actual post/reel video - without one it always serves a
-            // degraded "click to view" card, no matter how it's embedded. Facebook's
-            // main domain also blocks direct framing. Open both in a new tab instead of
-            // showing a modal that's guaranteed to look broken.
-            $provider = 'external';
-            $embedUrl = $videoUrl;
-        } else {
-            $provider = 'iframe';
-        }
-    @endphp
-
     <div class="bb-sponsored-video-section">
-        <div class="bb-sponsored-video-card">
-            <span class="bb-sponsored-badge">{{ __('Sponsored') }}</span>
-            <div class="bb-sponsored-video-link" onclick="openSponsoredVideo('{{ $provider }}', '{{ $embedUrl }}')" style="cursor: pointer;">
-                <div class="bb-sponsored-video-thumbnail">
-                    @if ($store->sponsored_video_thumbnail)
-                        {{ RvMedia::image($store->sponsored_video_thumbnail, $store->name . ' - Sponsored Video', attributes: ['class' => 'bb-sponsored-thumb-img']) }}
-                    @else
-                        <div class="bb-sponsored-thumb-placeholder">
-                            <x-core::icon name="ti ti-video" />
-                        </div>
-                    @endif
-                    <div class="bb-sponsored-play-overlay">
-                        <div class="bb-sponsored-play-btn">
-                            <x-core::icon name="ti ti-player-play-filled" />
+        <div class="row g-3">
+            @foreach ($store->activeSponsoredVideos() as $sponsoredVideo)
+                @php
+                    $videoUrl = $sponsoredVideo->video_url;
+                    $provider = 'generic';
+                    $embedUrl = $videoUrl;
+
+                    if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
+                        $provider = 'iframe';
+                        $embedUrl = 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1';
+                    } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $matches)) {
+                        $provider = 'iframe';
+                        $embedUrl = 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1';
+                    } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/i', $videoUrl)) {
+                        $provider = 'direct';
+                        $embedUrl = $videoUrl;
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/#', $videoUrl)
+                        || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $videoUrl)
+                        || preg_match('#^https?://fb\.watch/#', $videoUrl)
+                    ) {
+                        // Instagram's free embed widget requires an approved Facebook App + access
+                        // token to render actual post/reel video - without one it always serves a
+                        // degraded "click to view" card, no matter how it's embedded. Facebook's
+                        // main domain also blocks direct framing. Open both in a new tab instead of
+                        // showing a modal that's guaranteed to look broken.
+                        $provider = 'external';
+                        $embedUrl = $videoUrl;
+                    } else {
+                        $provider = 'iframe';
+                    }
+                @endphp
+
+                <div class="col-md-6">
+                    <div class="bb-sponsored-video-card">
+                        <span class="bb-sponsored-badge">{{ __('Sponsored') }}</span>
+                        <div class="bb-sponsored-video-link" onclick="openSponsoredVideo('{{ $provider }}', '{{ $embedUrl }}')" style="cursor: pointer;">
+                            <div class="bb-sponsored-video-thumbnail">
+                                @if ($sponsoredVideo->thumbnail)
+                                    {{ RvMedia::image($sponsoredVideo->thumbnail, $store->name . ' - Sponsored Video', attributes: ['class' => 'bb-sponsored-thumb-img']) }}
+                                @else
+                                    <div class="bb-sponsored-thumb-placeholder">
+                                        <x-core::icon name="ti ti-video" />
+                                    </div>
+                                @endif
+                                <div class="bb-sponsored-play-overlay">
+                                    <div class="bb-sponsored-play-btn">
+                                        <x-core::icon name="ti ti-player-play-filled" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bb-sponsored-video-info">
+                                <span class="bb-sponsored-video-text">{{ __('Watch Promotional Video') }}</span>
+                                @if ($sponsoredVideo->expires_at)
+                                    <span class="bb-sponsored-video-expiry">
+                                        {{ __('Available until :date', ['date' => $sponsoredVideo->expires_at->format('M d, Y')]) }}
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="bb-sponsored-video-info">
-                    <span class="bb-sponsored-video-text">{{ __('Watch Promotional Video') }}</span>
-                    @if ($store->sponsored_video_expires_at)
-                        <span class="bb-sponsored-video-expiry">
-                            {{ __('Available until :date', ['date' => $store->sponsored_video_expires_at->format('M d, Y')]) }}
-                        </span>
-                    @endif
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
 
@@ -78,6 +84,7 @@
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             border: 1px solid #e9ecef;
+            height: 100%;
         }
         .bb-sponsored-badge {
             position: absolute;
