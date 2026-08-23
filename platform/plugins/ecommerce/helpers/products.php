@@ -347,7 +347,13 @@ if (! function_exists('get_instagram_oembed_html')) {
                 'omitscript' => 'true',
             ]);
 
-            $html = $response->ok() ? $response->json('html') : null;
+            if ($response->ok()) {
+                $html = $response->json('html');
+            } else {
+                Log::warning('Instagram oEmbed fetch failed for ' . $url . ': ' . $response->body());
+
+                $html = null;
+            }
         } catch (Exception $exception) {
             Log::warning('Instagram oEmbed fetch failed: ' . $exception->getMessage());
 
