@@ -238,6 +238,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'icon' => 'ti ti-ad',
                     'url' => fn () => route('marketplace.meta-ads-settings'),
                     'permissions' => ['marketplace.settings'],
+                ])
+                ->registerItem([
+                    'id' => 'cms-plugins-marketplace-services',
+                    'priority' => 15,
+                    'parent_id' => 'cms-plugins-ecommerce',
+                    'name' => __('Services'),
+                    'icon' => 'ti ti-briefcase',
+                    'url' => fn () => route('marketplace.services.index'),
+                    'permissions' => ['marketplace.services.index'],
                 ]);
         });
 
@@ -297,6 +306,13 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'name' => __('Orders'),
                     'url' => fn () => route('marketplace.vendor.orders.index'),
                     'icon' => 'ti ti-shopping-cart',
+                ])
+                ->registerItem([
+                    'id' => 'marketplace.vendor.services',
+                    'priority' => 3.5,
+                    'name' => __('Services'),
+                    'url' => fn () => route('marketplace.vendor.services.index'),
+                    'icon' => 'ti ti-briefcase',
                 ])
                 ->registerItem([
                     'id' => 'marketplace.vendor.discounts',

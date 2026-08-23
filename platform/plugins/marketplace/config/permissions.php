@@ -148,4 +148,10 @@ return [
         'flag' => 'marketplace.subscription-plans.destroy',
         'parent_flag' => 'marketplace.subscription-plans.index',
     ],
+
+    [
+        'name' => 'Services',
+        'flag' => 'marketplace.services.index',
+        'parent_flag' => 'marketplace.index',
+    ],
 ];
