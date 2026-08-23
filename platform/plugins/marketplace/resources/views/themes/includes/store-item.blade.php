@@ -1,8 +1,15 @@
 @once
     <style>
         .bb-store-item-logo img {
+            display: block;
+            box-sizing: border-box;
             width: 56px;
+            min-width: 56px;
+            max-width: 56px;
             height: 56px;
+            min-height: 56px;
+            max-height: 56px;
+            aspect-ratio: 1 / 1;
             border-radius: 50%;
             object-fit: cover;
             object-position: center;
