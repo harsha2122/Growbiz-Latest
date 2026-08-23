@@ -305,16 +305,28 @@ if (! function_exists('get_related_products')) {
 if (! function_exists('get_instagram_oembed_html')) {
     /**
      * Fetch the official Instagram embed markup for a post/reel URL via Meta's oEmbed API,
-     * so it can render inline (real video) instead of just linking out. Requires
-     * services.facebook.app_id / client_token (FACEBOOK_APP_ID / FACEBOOK_CLIENT_TOKEN env
-     * vars) - a free Meta Developer App is enough, no App Review needed for public oEmbed
-     * reads. Returns null if not configured or the request fails (caller should fall back
-     * to linking out in that case).
+     * so it can render inline (real video) instead of just linking out. Needs a Meta App
+     * ID + either a Client Token or App Secret (both work identically as the second half
+     * of an app access token) - a free Meta Developer App is enough, no App Review needed
+     * for public oEmbed reads.
+     *
+     * Credentials are read from, in order: services.facebook.app_id/client_token
+     * (FACEBOOK_APP_ID/FACEBOOK_CLIENT_TOKEN env vars), then - if not set - the Social
+     * Login plugin's Facebook Login app credentials, if that's already configured, so a
+     * site that already has "Login with Facebook" set up doesn't need a second app.
+     *
+     * Returns null if no credentials are available or the request fails (caller should
+     * fall back to linking out in that case).
      */
     function get_instagram_oembed_html(string $url): ?string
     {
         $appId = config('services.facebook.app_id');
         $clientToken = config('services.facebook.client_token');
+
+        if ((! $appId || ! $clientToken) && is_plugin_active('social-login')) {
+            $appId = $appId ?: setting('social_login_facebook_app_id');
+            $clientToken = $clientToken ?: setting('social_login_facebook_app_secret');
+        }
 
         if (! $appId || ! $clientToken) {
             return null;
