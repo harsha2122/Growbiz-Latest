@@ -4,6 +4,7 @@ use Botble\Base\Http\Middleware\RequiresJsonRequestMiddleware;
 use Botble\Marketplace\Http\Controllers\Fronts\BecomeVendorController;
 use Botble\Marketplace\Http\Controllers\Fronts\ContactStoreController;
 use Botble\Marketplace\Http\Controllers\Fronts\PublicB2bCatalogController;
+use Botble\Marketplace\Http\Controllers\Fronts\PublicServiceController;
 use Botble\Marketplace\Http\Controllers\Fronts\PublicStoreController;
 use Botble\Marketplace\Models\Store;
 use Botble\Slug\Facades\SlugHelper;
@@ -30,6 +31,9 @@ Route::group([
             ->group(function (): void {
                 Route::post('{id}/contact', [ContactStoreController::class, 'store'])->name('stores.contact');
             });
+
+        Route::get('services/{service}/book', [PublicServiceController::class, 'book'])
+            ->name('public.services.book');
 
         Route::prefix('b2b-catalogs')->name('public.b2b-catalogs.')->group(function (): void {
             Route::get('/', [PublicB2bCatalogController::class, 'index'])->name('index');
