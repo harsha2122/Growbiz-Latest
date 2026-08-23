@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // Meta Developer App credentials, used for the Instagram oEmbed API so
+    // Instagram post/reel videos can be embedded inline instead of just
+    // linking out. See https://developers.facebook.com/apps to create an app.
+    'facebook' => [
+        'app_id' => env('FACEBOOK_APP_ID'),
+        'client_token' => env('FACEBOOK_CLIENT_TOKEN'),
+    ],
+
 ];

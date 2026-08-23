@@ -1,4 +1,8 @@
 @if ($store->hasActiveSponsoredVideo())
+    @php
+        $sponsoredVideosData = [];
+    @endphp
+
     <div class="bb-sponsored-video-section">
         <div class="row g-3">
             @foreach ($store->activeSponsoredVideos() as $sponsoredVideo)
@@ -6,6 +10,7 @@
                     $videoUrl = $sponsoredVideo->video_url;
                     $provider = 'generic';
                     $embedUrl = $videoUrl;
+                    $embedHtml = null;
 
                     if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
                         $provider = 'iframe';
@@ -16,26 +21,43 @@
                     } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/i', $videoUrl)) {
                         $provider = 'direct';
                         $embedUrl = $videoUrl;
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $videoUrl)
+                        && ($fetchedHtml = get_instagram_oembed_html($videoUrl))
+                    ) {
+                        // Real inline embed via Meta's oEmbed API (needs services.facebook
+                        // app_id/client_token configured).
+                        $provider = 'instagram-oembed';
+                        $embedHtml = $fetchedHtml;
+                    } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
+                        || preg_match('#^https?://fb\.watch/#', $videoUrl)
+                    ) {
+                        // facebook.com blocks direct framing, but their video plugin endpoint is iframe-able.
+                        $provider = 'iframe';
+                        $embedUrl = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($videoUrl) . '&show_text=false&autoplay=true';
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/#', $videoUrl)
                         || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $videoUrl)
                         || preg_match('#^https?://fb\.watch/#', $videoUrl)
                     ) {
-                        // Instagram's free embed widget requires an approved Facebook App + access
-                        // token to render actual post/reel video - without one it always serves a
-                        // degraded "click to view" card, no matter how it's embedded. Facebook's
-                        // main domain also blocks direct framing. Open both in a new tab instead of
-                        // showing a modal that's guaranteed to look broken.
+                        // Profile/page links, or Instagram without oEmbed configured - can't
+                        // be embedded at all. Link out instead.
                         $provider = 'external';
                         $embedUrl = $videoUrl;
                     } else {
                         $provider = 'iframe';
                     }
+
+                    $videoIndex = count($sponsoredVideosData);
+                    $sponsoredVideosData[] = [
+                        'provider' => $provider,
+                        'url' => $embedUrl,
+                        'html' => $embedHtml,
+                    ];
                 @endphp
 
                 <div class="col-md-6">
                     <div class="bb-sponsored-video-card">
                         <span class="bb-sponsored-badge">{{ __('Sponsored') }}</span>
-                        <div class="bb-sponsored-video-link" onclick="openSponsoredVideo('{{ $provider }}', '{{ $embedUrl }}')" style="cursor: pointer;">
+                        <div class="bb-sponsored-video-link" onclick="openSponsoredVideo({{ $videoIndex }})" style="cursor: pointer;">
                             <div class="bb-sponsored-video-thumbnail">
                                 @if ($sponsoredVideo->thumbnail)
                                     {{ RvMedia::image($sponsoredVideo->thumbnail, $store->name . ' - Sponsored Video', attributes: ['class' => 'bb-sponsored-thumb-img']) }}
@@ -271,15 +293,22 @@
     </style>
 
     <script>
-        function openSponsoredVideo(provider, url) {
-            if (provider === 'external') {
-                window.open(url, '_blank', 'noopener');
+        var BB_SPONSORED_VIDEOS = @json($sponsoredVideosData);
+
+        function openSponsoredVideo(index) {
+            var data = BB_SPONSORED_VIDEOS[index];
+            if (!data) {
+                return;
+            }
+
+            if (data.provider === 'external') {
+                window.open(data.url, '_blank', 'noopener');
                 return;
             }
 
             var modal = document.getElementById('sponsoredVideoModal');
             var body = document.getElementById('sponsoredVideoBody');
-            body.classList.toggle('bb-video-modal-body-auto', provider === 'instagram');
+            body.classList.toggle('bb-video-modal-body-auto', data.provider === 'instagram-oembed');
 
             // Make the modal visible BEFORE injecting the Instagram widget - it measures
             // its container on process(), and a still-hidden (display:none) container
@@ -287,10 +316,10 @@
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            if (provider === 'direct') {
-                body.innerHTML = '<video controls autoplay><source src="' + url + '"></video>';
-            } else if (provider === 'instagram') {
-                body.innerHTML = '<blockquote class="instagram-media" data-instgrm-permalink="' + url + '" data-instgrm-version="14" style="margin:0 auto;"></blockquote>';
+            if (data.provider === 'direct') {
+                body.innerHTML = '<video controls autoplay><source src="' + data.url + '"></video>';
+            } else if (data.provider === 'instagram-oembed') {
+                body.innerHTML = data.html;
 
                 if (window.instgrm && window.instgrm.Embeds) {
                     window.instgrm.Embeds.process();
@@ -301,7 +330,7 @@
                     document.body.appendChild(script);
                 }
             } else {
-                body.innerHTML = '<iframe src="' + url + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+                body.innerHTML = '<iframe src="' + data.url + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
             }
         }
 
