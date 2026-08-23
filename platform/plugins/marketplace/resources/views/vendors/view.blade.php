@@ -110,6 +110,25 @@
                             <dt class="col">{{ trans('plugins/ecommerce::customer.total_spent') }}</dt>
                             <dd class="col-auto">{{ format_price($totalSpent) }}</dd>
                         </dl>
+
+                        @if ($store)
+                            <dl class="row">
+                                <dt class="col">{{ __('Store Visits (Today)') }}</dt>
+                                <dd class="col-auto">{{ number_format($store->visitsCount('today')) }}</dd>
+                            </dl>
+                            <dl class="row">
+                                <dt class="col">{{ __('Store Visits (7 days)') }}</dt>
+                                <dd class="col-auto">{{ number_format($store->visitsCount('7days')) }}</dd>
+                            </dl>
+                            <dl class="row">
+                                <dt class="col">{{ __('Store Visits (30 days)') }}</dt>
+                                <dd class="col-auto">{{ number_format($store->visitsCount('30days')) }}</dd>
+                            </dl>
+                            <dl class="row">
+                                <dt class="col">{{ __('Store Visits (All time)') }}</dt>
+                                <dd class="col-auto">{{ number_format($store->visitsCount()) }}</dd>
+                            </dl>
+                        @endif
                     </div>
 
                     <div class="hr my-2"></div>

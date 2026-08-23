@@ -11,6 +11,7 @@ use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Forms\ContactStoreForm;
 use Botble\Marketplace\Http\Requests\Fronts\CheckStoreUrlRequest;
 use Botble\Marketplace\Models\Store;
+use Botble\Marketplace\Models\StoreVisit;
 use Botble\Media\Facades\RvMedia;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\SeoHelper\SeoOpenGraph;
@@ -89,6 +90,12 @@ class PublicStoreController extends BaseController
 
         if ($store->slugable->key !== $slug->key) {
             return redirect()->to($store->url);
+        }
+
+        // Only count real page loads, not the AJAX product-filter requests this same
+        // action also serves.
+        if (! $request->ajax()) {
+            StoreVisit::track($store, $request);
         }
 
         SeoHelper::setTitle($store->name)->setDescription($store->description);
