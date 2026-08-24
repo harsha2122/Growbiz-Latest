@@ -206,12 +206,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!cat.pdfs.length) {
             list.innerHTML = '<li style="padding:12px 10px;font-size:.84rem;color:var(--tp-text-1,#767a7d);">' + @json(__('No PDFs available.')) + '</li>';
         } else {
-            cat.pdfs.forEach(function (pdf) {
+            cat.pdfs.forEach(function (pdf, idx) {
                 var li = document.createElement('li');
                 li.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 10px;border-radius:6px;';
                 li.innerHTML =
-                    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;color:var(--tp-theme-primary,#821f40)"><path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-                    + '<span style="flex:1;font-size:.88rem;font-weight:600;color:var(--tp-heading-primary,#010f1c);">' + escHtml(pdf.title) + '</span>'
+                    '<input type="checkbox" class="bb-catalog-pdf-check" data-pdf-number="' + (idx + 1) + '" data-pdf-title="' + escHtml(pdf.title) + '" style="flex-shrink:0;width:16px;height:16px;cursor:pointer;">'
+                    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;color:var(--tp-theme-primary,#821f40)"><path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                    + '<span style="flex:1;font-size:.88rem;font-weight:600;color:var(--tp-heading-primary,#010f1c);">' + @json(__('PDF')) + ' ' + (idx + 1) + ': ' + escHtml(pdf.title) + '</span>'
                     + '<a href="' + escHtml(pdf.view_url) + '" target="_blank" rel="noopener" class="tp-btn" style="font-size:.75rem;padding:6px 14px;white-space:nowrap;">' + @json(__('View')) + '</a>';
                 li.addEventListener('mouseenter', function () { this.style.background = 'var(--tp-grey-1,#f6f7f9)'; });
                 li.addEventListener('mouseleave', function () { this.style.background = ''; });
@@ -228,8 +229,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 + @json(__('Call')) + ': ' + escHtml(cat.contact) + '</a>';
         }
         if (cat.whatsapp) {
-            var digits = cat.whatsapp.replace(/\D/g, '');
-            contactHtml += '<a href="https://wa.me/' + digits + '" target="_blank" rel="noopener" style="font-size:.8rem;padding:7px 16px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:#25D366;color:#fff;border-radius:4px;font-weight:600;">'
+            contactHtml += '<a id="bbCatalogWaLink" href="#" target="_blank" rel="noopener" style="font-size:.8rem;padding:7px 16px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:#25D366;color:#fff;border-radius:4px;font-weight:600;">'
                 + '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.464 3.488z"/></svg>'
                 + 'WhatsApp</a>';
         }
@@ -238,6 +238,32 @@ document.addEventListener('DOMContentLoaded', function () {
             contactEl.style.cssText = 'display:flex!important;border-top:1px solid var(--tp-border-primary,#eaebed);padding:12px 22px;gap:8px;flex-wrap:wrap;';
         } else {
             contactEl.style.display = 'none';
+        }
+
+        // Build the WhatsApp message from whichever PDFs are checked, and keep it
+        // updated live as the visitor (un)checks rows.
+        if (cat.whatsapp) {
+            var waDigits = cat.whatsapp.replace(/\D/g, '');
+            var waLink = document.getElementById('bbCatalogWaLink');
+
+            var rebuildWaLink = function () {
+                var checked = Array.prototype.slice.call(list.querySelectorAll('.bb-catalog-pdf-check:checked'));
+                var msg = @json(__('Hi, I\'m interested in catalogue')) + ' "' + cat.title + '" (' + @json(__('Catalogue')) + ' #' + cat.id + ').';
+
+                if (checked.length) {
+                    msg += ' ' + @json(__('PDFs')) + ': ' + checked.map(function (cb) {
+                        return @json(__('PDF')) + ' ' + cb.getAttribute('data-pdf-number') + ' (' + cb.getAttribute('data-pdf-title') + ')';
+                    }).join(', ');
+                }
+
+                waLink.href = 'https://wa.me/' + waDigits + '?text=' + encodeURIComponent(msg);
+            };
+
+            list.addEventListener('change', function (e) {
+                if (e.target.classList.contains('bb-catalog-pdf-check')) rebuildWaLink();
+            });
+
+            rebuildWaLink();
         }
     });
 });
