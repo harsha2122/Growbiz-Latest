@@ -72,10 +72,7 @@
             border-top-right-radius: var(--bs-card-border-radius, 0.375rem);
         }
         .bb-store-item-cover-logo {
-            /* The store's profile logo, not a wide banner photo - contain and pad it
-               instead of cropping it edge-to-edge like a cover image. */
-            background-size: contain;
-            padding: 16px;
+            background-size: cover;
         }
         .bb-store-item-avatar {
             display: flex;
