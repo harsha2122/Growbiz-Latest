@@ -83,17 +83,61 @@
             font-size: 1rem;
             margin-bottom: 4px;
         }
-        .bb-store-item-info {
-            font-size: .8125rem;
-            margin-bottom: 4px;
-        }
-        .bb-store-item-stats {
+        .bb-store-item-chips {
             display: flex;
             flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .bb-store-item-chip {
+            display: inline-flex;
             align-items: center;
-            gap: 4px 12px;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background-color: #f1f2f4;
+            color: #495057;
+            font-size: .75rem;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+        .bb-store-item-chip-rating {
+            background-color: #fff4e5;
+            color: #92600b;
+        }
+        .bb-store-item-chip-visits {
+            background-color: #eaf2ff;
+            color: #1c5cbf;
+        }
+        .bb-store-item-address {
+            display: flex;
+            align-items: center;
+            gap: 4px;
             font-size: .8125rem;
-            margin-bottom: 4px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        .bb-store-item-address span {
+            min-width: 0;
+        }
+        .bb-store-item-contact {
+            display: flex;
+            gap: 6px;
+        }
+        .bb-store-item-contact a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #f1f2f4;
+            color: #495057;
+            flex-shrink: 0;
+        }
+        .bb-store-item-contact a:hover {
+            background-color: #e2e5e9;
+            color: #212529;
         }
         .bb-store-item-footer {
             position: static !important;
@@ -137,45 +181,48 @@
             </h4>
         </a>
 
-        <div class="bb-store-item-stats">
+        <div class="bb-store-item-chips">
             @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $store->reviews->count() > 0))
-                <div class="d-flex align-items-center gap-1 bb-store-item-rating">
-                    @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $store->reviews()->avg('star')])
-                    <a href="{{ $store->url }}" class="small">{{ __('(:count reviews)', ['count' => number_format($store->reviews->count())]) }}</a>
-                </div>
+                <a href="{{ $store->url }}" class="bb-store-item-chip bb-store-item-chip-rating">
+                    @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $store->reviews()->avg('star'), 'size' => 50])
+                    {{ number_format($store->reviews->count()) }}
+                </a>
             @endif
 
-            <div class="d-flex align-items-center gap-1 text-muted">
+            <div class="bb-store-item-chip bb-store-item-chip-visits">
                 <x-core::icon name="ti ti-eye" />
                 {{ __(':count visits', ['count' => number_format($store->visitsCount())]) }}
             </div>
+
+            @if ($store->establishment_date)
+                <div class="bb-store-item-chip">
+                    <x-core::icon name="ti ti-calendar" />
+                    {{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
+                </div>
+            @endif
         </div>
 
-        @if ($store->establishment_date)
-            <p class="bb-store-item-info text-muted">
-                <x-core::icon name="ti ti-calendar" />
-                {{ __('Estd - ') }}{{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
-            </p>
-        @endif
-
         @if (! MarketplaceHelper::hideStoreAddress() && $store->full_address)
-            <p class="bb-store-item-info text-truncate" title="{{ $store->full_address }}">
-                <x-core::icon name="ti ti-map-pin" />{{ $store->full_address }}
+            <p class="bb-store-item-address" title="{{ $store->full_address }}">
+                <x-core::icon name="ti ti-map-pin" />
+                <span class="text-truncate">{{ $store->full_address }}</span>
             </p>
         @endif
 
-        @if (! MarketplaceHelper::hideStorePhoneNumber() && $store->phone)
-            <p class="bb-store-item-info">
-                <x-core::icon name="ti ti-phone" />
-                <a href="tel:{{ $store->phone }}">{{ $store->phone }}</a>
-            </p>
-        @endif
+        @if ((! MarketplaceHelper::hideStorePhoneNumber() && $store->phone) || (! MarketplaceHelper::hideStoreEmail() && $store->email))
+            <div class="bb-store-item-contact">
+                @if (! MarketplaceHelper::hideStorePhoneNumber() && $store->phone)
+                    <a href="tel:{{ $store->phone }}" title="{{ $store->phone }}">
+                        <x-core::icon name="ti ti-phone" />
+                    </a>
+                @endif
 
-        @if (! MarketplaceHelper::hideStoreEmail() && $store->email)
-            <p class="bb-store-item-info text-truncate" title="{{ $store->email }}">
-                <x-core::icon name="ti ti-mail" />
-                {{ Html::mailto($store->email) }}
-            </p>
+                @if (! MarketplaceHelper::hideStoreEmail() && $store->email)
+                    <a href="mailto:{{ $store->email }}" title="{{ $store->email }}">
+                        <x-core::icon name="ti ti-mail" />
+                    </a>
+                @endif
+            </div>
         @endif
     </div>
 
