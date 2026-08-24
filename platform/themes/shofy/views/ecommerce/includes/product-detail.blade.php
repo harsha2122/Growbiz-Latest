@@ -188,11 +188,26 @@
                 @endif
             </div>
             @if ($isService)
+                @once
+                    <style>
+                        .tp-product-details-book-now-btn {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                            width: auto;
+                            background-color: #25d366;
+                        }
+                        .tp-product-details-book-now-btn:hover {
+                            background-color: #1da851;
+                        }
+                    </style>
+                @endonce
+
                 <a
                     href="{{ route('public.products.book-now', $product->id) }}"
                     target="_blank"
                     rel="noopener"
-                    @class(['tp-product-details-buy-now-btn w-100', 'btn-disabled' => $isOutOfStock])
+                    @class(['tp-product-details-buy-now-btn tp-product-details-book-now-btn', 'btn-disabled' => $isOutOfStock])
                 >
                     <x-core::icon name="ti ti-brand-whatsapp" />
                     {{ __('Book Now') }}
