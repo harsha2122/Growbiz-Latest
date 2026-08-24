@@ -26,6 +26,8 @@ class UpdateProductView implements ShouldQueue
                     ['product_id', 'date'],
                     ['views' => DB::raw('views + 1')],
                 );
+
+            $event->product->increment('views');
         } catch (Throwable $exception) {
             info($exception->getMessage());
         }

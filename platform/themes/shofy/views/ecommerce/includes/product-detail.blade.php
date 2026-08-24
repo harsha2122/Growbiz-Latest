@@ -27,6 +27,10 @@
             </div>
         </div>
     @endif
+
+    <div class="tp-product-details-views mb-10">
+        <span>{{ __('(:count) Customer Viewed this', ['count' => number_format($product->views)]) }}</span>
+    </div>
 </div>
 
 <div class="tp-product-details-price-block">
