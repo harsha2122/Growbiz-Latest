@@ -53,6 +53,10 @@
             flex-direction: column !important;
             height: 100%;
             padding: 0;
+            transition: box-shadow .15s ease;
+        }
+        .card.bb-store-item:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
         }
         .bb-store-item-cover {
             position: relative !important;
@@ -60,28 +64,38 @@
             align-items: center;
             justify-content: center;
             width: 100%;
-            aspect-ratio: 4 / 3;
-            background-color: #f1f2f4;
+            aspect-ratio: 16 / 9;
+            background-color: #f4f5f7;
             background-size: cover;
             background-position: center;
             border-top-left-radius: var(--bs-card-border-radius, 0.375rem);
             border-top-right-radius: var(--bs-card-border-radius, 0.375rem);
         }
-        .bb-store-item-cover-initial {
-            font-size: 2.5rem;
+        .bb-store-item-avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            font-size: 1.5rem;
             font-weight: 700;
             line-height: 1;
             text-transform: uppercase;
             user-select: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
         }
         .bb-store-item-content {
             position: static !important;
             flex: 1 1 auto;
-            padding: 14px 14px 8px;
+            padding: 14px;
         }
         .bb-store-item-content h4 {
             font-size: 1rem;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .bb-store-item-chips {
             display: flex;
@@ -109,35 +123,25 @@
             background-color: #eaf2ff;
             color: #1c5cbf;
         }
-        .bb-store-item-address {
+        .bb-store-item-info {
             display: flex;
             align-items: center;
             gap: 4px;
             font-size: .8125rem;
             color: #6c757d;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
-        .bb-store-item-address span {
+        .bb-store-item-info:last-child {
+            margin-bottom: 0;
+        }
+        .bb-store-item-info span {
             min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        .bb-store-item-contact {
-            display: flex;
-            gap: 6px;
-        }
-        .bb-store-item-contact a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: #f1f2f4;
-            color: #495057;
+        .bb-store-item-info .ti {
             flex-shrink: 0;
-        }
-        .bb-store-item-contact a:hover {
-            background-color: #e2e5e9;
-            color: #212529;
         }
         .bb-store-item-footer {
             position: static !important;
@@ -145,7 +149,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 8px 14px 14px;
+            padding: 0 14px 14px;
         }
         .bb-store-item-action {
             position: static !important;
@@ -165,17 +169,20 @@
         @if ($store->cover_image)
             style="background-image: url('{{ RvMedia::getImageUrl($store->cover_image) }}');"
         @else
-            style="background-color: hsl({{ $storeAvatarHue }}, {{ $storeAvatarSaturation }}%, {{ $storeAvatarLightness }}%);"
+            style="background-color: hsl({{ $storeAvatarHue }}, 35%, 94%);"
         @endif
     >
         @unless ($store->cover_image)
-            <span class="bb-store-item-cover-initial" style="color: {{ $storeAvatarTextColor }};">{{ mb_substr($store->name, 0, 1) }}</span>
+            <span
+                class="bb-store-item-avatar"
+                style="background-color: hsl({{ $storeAvatarHue }}, {{ $storeAvatarSaturation }}%, {{ $storeAvatarLightness }}%); color: {{ $storeAvatarTextColor }};"
+            >{{ mb_substr($store->name, 0, 1) }}</span>
         @endunless
     </a>
 
     <div class="bb-store-item-content">
         <a href="{{ $store->url }}">
-            <h4>
+            <h4 title="{{ $store->name }}">
                 {{ $store->name }}
                 {!! $store->badge !!}
             </h4>
@@ -203,26 +210,24 @@
         </div>
 
         @if (! MarketplaceHelper::hideStoreAddress() && $store->full_address)
-            <p class="bb-store-item-address" title="{{ $store->full_address }}">
+            <p class="bb-store-item-info" title="{{ $store->full_address }}">
                 <x-core::icon name="ti ti-map-pin" />
-                <span class="text-truncate">{{ $store->full_address }}</span>
+                <span>{{ $store->full_address }}</span>
             </p>
         @endif
 
-        @if ((! MarketplaceHelper::hideStorePhoneNumber() && $store->phone) || (! MarketplaceHelper::hideStoreEmail() && $store->email))
-            <div class="bb-store-item-contact">
-                @if (! MarketplaceHelper::hideStorePhoneNumber() && $store->phone)
-                    <a href="tel:{{ $store->phone }}" title="{{ $store->phone }}">
-                        <x-core::icon name="ti ti-phone" />
-                    </a>
-                @endif
+        @if (! MarketplaceHelper::hideStorePhoneNumber() && $store->phone)
+            <p class="bb-store-item-info">
+                <x-core::icon name="ti ti-phone" />
+                <a href="tel:{{ $store->phone }}" class="text-reset">{{ $store->phone }}</a>
+            </p>
+        @endif
 
-                @if (! MarketplaceHelper::hideStoreEmail() && $store->email)
-                    <a href="mailto:{{ $store->email }}" title="{{ $store->email }}">
-                        <x-core::icon name="ti ti-mail" />
-                    </a>
-                @endif
-            </div>
+        @if (! MarketplaceHelper::hideStoreEmail() && $store->email)
+            <p class="bb-store-item-info" title="{{ $store->email }}">
+                <x-core::icon name="ti ti-mail" />
+                <a href="mailto:{{ $store->email }}" class="text-reset">{{ $store->email }}</a>
+            </p>
         @endif
     </div>
 
