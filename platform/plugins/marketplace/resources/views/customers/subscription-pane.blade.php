@@ -1,4 +1,5 @@
 @php
+    $readOnly ??= false;
     $activeSub = \Botble\Marketplace\Models\VendorSubscription::getActiveForStore($store->id);
     $history   = \Botble\Marketplace\Models\VendorSubscription::query()
         ->where('store_id', $store->id)
@@ -6,7 +7,7 @@
         ->orderByDesc('id')
         ->limit(10)
         ->get();
-    $plans = \Botble\Marketplace\Models\SubscriptionPlan::getActivePlans();
+    $plans = $readOnly ? collect() : \Botble\Marketplace\Models\SubscriptionPlan::getActivePlans();
 @endphp
 
 <x-core::tab.pane id="tab_subscription">
@@ -31,42 +32,44 @@
         @endif
     </div>
 
-    <hr>
+    @unless ($readOnly)
+        <hr>
 
-    {{-- Assign / Renew form --}}
-    <div class="mb-4">
-        <h6 class="fw-semibold mb-3">{{ __('Assign / Renew Plan') }}</h6>
-        <form action="{{ route('marketplace.store.assign-plan', $store->id) }}" method="POST">
-            @csrf
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">{{ __('Plan') }} <span class="text-danger">*</span></label>
-                    <select name="plan_id" class="form-select" required>
-                        <option value="">— {{ __('Select plan') }} —</option>
-                        @foreach ($plans as $plan)
-                            <option value="{{ $plan->id }}"
-                                {{ $activeSub?->plan_id == $plan->id ? 'selected' : '' }}>
-                                {{ $plan->name }} ({{ $plan->duration_text }})
-                            </option>
-                        @endforeach
-                    </select>
+        {{-- Assign / Renew form --}}
+        <div class="mb-4">
+            <h6 class="fw-semibold mb-3">{{ __('Assign / Renew Plan') }}</h6>
+            <form action="{{ route('marketplace.store.assign-plan', $store->id) }}" method="POST">
+                @csrf
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">{{ __('Plan') }} <span class="text-danger">*</span></label>
+                        <select name="plan_id" class="form-select" required>
+                            <option value="">— {{ __('Select plan') }} —</option>
+                            @foreach ($plans as $plan)
+                                <option value="{{ $plan->id }}"
+                                    {{ $activeSub?->plan_id == $plan->id ? 'selected' : '' }}>
+                                    {{ $plan->name }} ({{ $plan->duration_text }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">{{ __('Start Date') }}</label>
+                        <input type="date" name="starts_at" class="form-control"
+                               value="{{ now()->format('Y-m-d') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">{{ __('Notes') }}</label>
+                        <input type="text" name="notes" class="form-control"
+                               placeholder="{{ __('Optional note') }}" maxlength="500">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">{{ __('Save') }}</button>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">{{ __('Start Date') }}</label>
-                    <input type="date" name="starts_at" class="form-control"
-                           value="{{ now()->format('Y-m-d') }}">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">{{ __('Notes') }}</label>
-                    <input type="text" name="notes" class="form-control"
-                           placeholder="{{ __('Optional note') }}" maxlength="500">
-                </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">{{ __('Save') }}</button>
-                </div>
-            </div>
-        </form>
-    </div>
+            </form>
+        </div>
+    @endunless
 
     <hr>
 

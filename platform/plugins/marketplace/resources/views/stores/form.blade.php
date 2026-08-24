@@ -3,6 +3,7 @@
 @section('content')
     @php
         $hasMoreThanOneLanguage = count(\Botble\Base\Supports\Language::getAvailableLocales()) > 1;
+        $isVendorSelfEdit = request()->routeIs('marketplace.vendor.settings');
     @endphp
     <x-core::card>
         <x-core::card.header>
@@ -13,8 +14,10 @@
                     :is-active="true"
                 />
                 @if($store && $store->customer->is_vendor)
-                    @include('plugins/marketplace::customers.tax-info-tab')
-                    @include('plugins/marketplace::customers.payout-info-tab')
+                    @unless ($isVendorSelfEdit)
+                        @include('plugins/marketplace::customers.tax-info-tab')
+                        @include('plugins/marketplace::customers.payout-info-tab')
+                    @endunless
                     @include('plugins/marketplace::customers.subscription-tab')
                     @if ($hasMoreThanOneLanguage)
                         <x-core::tab.item
@@ -34,9 +37,11 @@
                     {!! $form !!}
                 </x-core::tab.pane>
                 @if($store && $store->customer->is_vendor)
-                    @include('plugins/marketplace::customers.tax-form', ['model' => $store->customer])
-                    @include('plugins/marketplace::customers.payout-form', ['model' => $store->customer])
-                    @include('plugins/marketplace::customers.subscription-pane', ['store' => $store])
+                    @unless ($isVendorSelfEdit)
+                        @include('plugins/marketplace::customers.tax-form', ['model' => $store->customer])
+                        @include('plugins/marketplace::customers.payout-form', ['model' => $store->customer])
+                    @endunless
+                    @include('plugins/marketplace::customers.subscription-pane', ['store' => $store, 'readOnly' => $isVendorSelfEdit])
 
                     @if ($hasMoreThanOneLanguage)
                         <x-core::tab.pane id="tab_preferences">
