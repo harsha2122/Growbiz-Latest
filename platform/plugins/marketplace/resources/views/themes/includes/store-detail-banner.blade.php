@@ -51,6 +51,11 @@
                 </div>
             @endif
 
+            <div class="bb-shop-banner-visits d-flex align-items-center gap-1">
+                <x-core::icon name="ti ti-eye" />
+                {{ __(':count store visits', ['count' => number_format($store->visitsCount())]) }}
+            </div>
+
             @if ($store->establishment_date)
                 <div class="bb-shop-banner-established d-flex align-items-center gap-1">
                     <x-core::icon name="ti ti-calendar" />
