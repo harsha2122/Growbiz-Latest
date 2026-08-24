@@ -20,7 +20,7 @@ class ServiceBookingController extends BaseController
         $store = $product->store;
 
         if (! $store || ! $store->whatsapp_number_for_booking) {
-            return redirect()->back()->with('error_msg', __('This vendor has not set up a booking number yet.'));
+            return redirect()->back()->with('error_msg', __('This seller has not set up a booking number yet.'));
         }
 
         ProductClick::track($product, $request);

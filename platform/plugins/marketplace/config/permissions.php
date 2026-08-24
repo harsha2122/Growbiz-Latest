@@ -59,12 +59,12 @@ return [
     ],
 
     [
-        'name' => 'Vendors',
+        'name' => 'Sellers',
         'flag' => 'marketplace.vendors.index',
         'parent_flag' => 'marketplace.index',
     ],
     [
-        'name' => 'Unverified vendors',
+        'name' => 'Unverified sellers',
         'flag' => 'marketplace.unverified-vendors.index',
         'parent_flag' => 'marketplace.index',
     ],

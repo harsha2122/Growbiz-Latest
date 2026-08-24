@@ -447,7 +447,7 @@ class MarketplaceServiceProvider extends ServiceProvider
                         ->registerItem([
                             'id' => 'marketplace.vendor.dashboard',
                             'priority' => 990,
-                            'name' => __('Vendor Dashboard'),
+                            'name' => __('Seller Dashboard'),
                             'url' => fn () => route('marketplace.vendor.dashboard'),
                             'icon' => 'ti ti-building-store',
                         ]);
@@ -461,7 +461,7 @@ class MarketplaceServiceProvider extends ServiceProvider
                                     ->registerItem([
                                         'id' => 'marketplace.vendor.become-vendor',
                                         'priority' => 991,
-                                        'name' => __('Become A Vendor'),
+                                        'name' => __('Become A Seller'),
                                         'url' => fn () => route('marketplace.vendor.become-vendor'),
                                         'icon' => 'ti ti-building-store',
                                     ]);

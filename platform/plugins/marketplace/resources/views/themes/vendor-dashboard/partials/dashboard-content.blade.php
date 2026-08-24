@@ -305,7 +305,7 @@
                     >
                         <use xlink:href="#check-circle-fill" />
                     </svg>
-                    {{ __('Congratulations on being a vendor at :site_title', ['site_title' => Theme::getSiteTitle()]) }}
+                    {{ __('Congratulations on being a seller at :site_title', ['site_title' => Theme::getSiteTitle()]) }}
                 </h4>
                 <p>{{ __('Attract your customers with the best products.') }}</p>
                 <hr>

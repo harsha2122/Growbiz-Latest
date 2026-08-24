@@ -16,11 +16,11 @@ return [
         'order-return' => 'Order Return',
     ],
     'store_name' => 'Store Name',
-    'vendor_name' => 'Vendor Name',
+    'vendor_name' => 'Seller Name',
     'balance' => 'Balance',
     'store_information' => 'Store information',
     'update_balance' => 'Adjust Balance',
-    'update_balance_title' => 'Add/Subtract amount of vendor',
+    'update_balance_title' => 'Add/Subtract amount of seller',
     'statements' => 'Statements',
     'products' => 'Products',
 ];

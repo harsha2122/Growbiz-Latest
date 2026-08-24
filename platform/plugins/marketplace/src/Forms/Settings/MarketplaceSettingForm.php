@@ -300,7 +300,7 @@ class MarketplaceSettingForm extends SettingForm
                 NumberField::class,
                 NumberFieldOption::make()
                     ->label(__('Earning per referral (₹)'))
-                    ->helperText(__('Amount earned by a vendor for each successful referral. Set to 0 to disable earnings display.'))
+                    ->helperText(__('Amount earned by a seller for each successful referral. Set to 0 to disable earnings display.'))
                     ->defaultValue(MarketplaceHelper::getSetting('referral_earning_per_referral', 0))
             );
     }

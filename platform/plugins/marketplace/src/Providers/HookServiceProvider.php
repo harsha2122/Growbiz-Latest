@@ -234,7 +234,7 @@ class HookServiceProvider extends ServiceProvider
 
                 add_filter('ecommerce_customer_registration_form_validation_attributes', function (array $attributes): array {
                     $vendorAttributes = [
-                        'vendor_type' => __('Type of Vendor'),
+                        'vendor_type' => __('Type of Seller'),
                         'shop_name' => __('Shop Name'),
                         'shop_phone' => __('Shop Phone'),
                         'shop_url' => __('Shop URL'),
@@ -403,7 +403,7 @@ class HookServiceProvider extends ServiceProvider
                         RadioField::class,
                         RadioFieldOption::make()
                             ->label(__('Register as'))
-                            ->choices([0 => __('I am a customer'), 1 => __('I am a vendor')])
+                            ->choices([0 => __('I am a customer'), 1 => __('I am a seller')])
                             ->defaultValue(0)
                     )
                     ->addAfter(
@@ -417,7 +417,7 @@ class HookServiceProvider extends ServiceProvider
                         'vendor_type',
                         RadioField::class,
                         RadioFieldOption::make()
-                            ->label(__('Type of Vendor'))
+                            ->label(__('Type of Seller'))
                             ->choices([
                                 'service' => __('Service Only'),
                                 'products' => __('Products Only'),

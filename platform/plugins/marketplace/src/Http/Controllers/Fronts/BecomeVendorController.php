@@ -46,10 +46,10 @@ class BecomeVendorController extends BaseController
     {
         $customer = auth('customer')->user();
 
-        SeoHelper::setTitle(__('Become Vendor'));
+        SeoHelper::setTitle(__('Become Seller'));
 
         Theme::breadcrumb()
-            ->add(__('Become Vendor'), route('marketplace.vendor.become-vendor'));
+            ->add(__('Become Seller'), route('marketplace.vendor.become-vendor'));
 
         if ($customer->is_vendor) {
             $store = $customer->store;

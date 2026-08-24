@@ -8,8 +8,8 @@
         <div class="container">
             <div class="row mb-3">
                 <div class="col-lg-12">
-                    <h3 class="mb-0">{{ __('Top Vendors') }}</h3>
-                    <p class="text-muted">{{ __('Discover our best performing vendors this month') }}</p>
+                    <h3 class="mb-0">{{ __('Top Sellers') }}</h3>
+                    <p class="text-muted">{{ __('Discover our best performing sellers this month') }}</p>
                 </div>
             </div>
 

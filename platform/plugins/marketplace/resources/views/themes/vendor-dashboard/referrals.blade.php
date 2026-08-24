@@ -51,7 +51,7 @@
 
     <div class="card">
         <div class="card-header">
-            <h6 class="mb-0">{{ __('Vendors Referred by You') }}</h6>
+            <h6 class="mb-0">{{ __('Sellers Referred by You') }}</h6>
         </div>
         <div class="card-body p-0">
             @if ($referrals->isEmpty())

@@ -12,7 +12,7 @@ return [
     ],
     'amount' => 'Amount',
     'customer' => 'Customer',
-    'vendor' => 'Vendor',
+    'vendor' => 'Seller',
     'currency' => 'Currency',
     'fee' => 'Fee',
     'status' => 'Status',
