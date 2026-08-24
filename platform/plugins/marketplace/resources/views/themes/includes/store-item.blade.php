@@ -139,7 +139,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        .bb-store-item-info .ti {
+        .bb-store-item-info svg {
             flex-shrink: 0;
         }
         .bb-store-item-footer {
