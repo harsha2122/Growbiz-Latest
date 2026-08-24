@@ -66,10 +66,16 @@
             width: 100%;
             aspect-ratio: 16 / 9;
             background-color: #f4f5f7;
-            background-size: cover;
+            background-repeat: no-repeat;
             background-position: center;
             border-top-left-radius: var(--bs-card-border-radius, 0.375rem);
             border-top-right-radius: var(--bs-card-border-radius, 0.375rem);
+        }
+        .bb-store-item-cover-logo {
+            /* The store's profile logo, not a wide banner photo - contain and pad it
+               instead of cropping it edge-to-edge like a cover image. */
+            background-size: contain;
+            padding: 16px;
         }
         .bb-store-item-avatar {
             display: flex;
@@ -176,9 +182,9 @@
 <div class="card bb-store-item">
     <a
         href="{{ $store->url }}"
-        class="bb-store-item-cover"
-        @if ($store->cover_image)
-            style="background-image: url('{{ RvMedia::getImageUrl($store->cover_image) }}');"
+        class="bb-store-item-cover @if ($store->logo) bb-store-item-cover-logo @endif"
+        @if ($store->logo)
+            style="background-image: url('{{ RvMedia::getImageUrl($store->logo) }}');"
         @else
             style="background-color: hsl({{ $storeAvatarHue }}, 35%, 94%);"
         @endif
@@ -195,7 +201,7 @@
             {{ number_format($store->visitsCount()) }}
         </span>
 
-        @unless ($store->cover_image)
+        @unless ($store->logo)
             <span
                 class="bb-store-item-avatar"
                 style="background-color: hsl({{ $storeAvatarHue }}, {{ $storeAvatarSaturation }}%, {{ $storeAvatarLightness }}%); color: {{ $storeAvatarTextColor }};"
