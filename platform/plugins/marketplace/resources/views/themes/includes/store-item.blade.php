@@ -85,6 +85,31 @@
             user-select: none;
             box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
         }
+        /* Overlay badges sit on top of a photo, a color fallback, or the avatar bubble -
+           an unpredictable mix of backgrounds - so instead of computing contrast per
+           store like the avatar does, use a translucent dark scrim + white text, which
+           reads clearly against any of them. */
+        .bb-store-item-badge {
+            position: absolute !important;
+            top: 8px;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background-color: rgba(0, 0, 0, .55);
+            color: #fff;
+            font-size: .75rem;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+        .bb-store-item-badge-rating {
+            left: 8px;
+        }
+        .bb-store-item-badge-visits {
+            right: 8px;
+        }
         .bb-store-item-content {
             position: static !important;
             flex: 1 1 auto;
@@ -92,36 +117,10 @@
         }
         .bb-store-item-content h4 {
             font-size: 1rem;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-        }
-        .bb-store-item-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        .bb-store-item-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 9px;
-            border-radius: 999px;
-            background-color: #f1f2f4;
-            color: #495057;
-            font-size: .75rem;
-            line-height: 1.4;
-            white-space: nowrap;
-        }
-        .bb-store-item-chip-rating {
-            background-color: #fff4e5;
-            color: #92600b;
-        }
-        .bb-store-item-chip-visits {
-            background-color: #eaf2ff;
-            color: #1c5cbf;
         }
         .bb-store-item-info {
             display: flex;
@@ -159,6 +158,18 @@
         .bb-store-item-action .btn {
             width: 100%;
         }
+
+        @media (max-width: 575.98px) {
+            .bb-store-item-badge {
+                font-size: .6875rem;
+                padding: 2px 7px;
+            }
+            .bb-store-item-avatar {
+                width: 52px;
+                height: 52px;
+                font-size: 1.25rem;
+            }
+        }
     </style>
 @endonce
 
@@ -172,6 +183,18 @@
             style="background-color: hsl({{ $storeAvatarHue }}, 35%, 94%);"
         @endif
     >
+        @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $store->reviews->count() > 0))
+            <span class="bb-store-item-badge bb-store-item-badge-rating">
+                @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $store->reviews()->avg('star'), 'size' => 50])
+                {{ number_format($store->reviews->count()) }}
+            </span>
+        @endif
+
+        <span class="bb-store-item-badge bb-store-item-badge-visits">
+            <x-core::icon name="ti ti-eye" />
+            {{ number_format($store->visitsCount()) }}
+        </span>
+
         @unless ($store->cover_image)
             <span
                 class="bb-store-item-avatar"
@@ -188,26 +211,12 @@
             </h4>
         </a>
 
-        <div class="bb-store-item-chips">
-            @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $store->reviews->count() > 0))
-                <a href="{{ $store->url }}" class="bb-store-item-chip bb-store-item-chip-rating">
-                    @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $store->reviews()->avg('star'), 'size' => 50])
-                    {{ number_format($store->reviews->count()) }}
-                </a>
-            @endif
-
-            <div class="bb-store-item-chip bb-store-item-chip-visits">
-                <x-core::icon name="ti ti-eye" />
-                {{ __(':count visits', ['count' => number_format($store->visitsCount())]) }}
-            </div>
-
-            @if ($store->establishment_date)
-                <div class="bb-store-item-chip">
-                    <x-core::icon name="ti ti-calendar" />
-                    {{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
-                </div>
-            @endif
-        </div>
+        @if ($store->establishment_date)
+            <p class="bb-store-item-info">
+                <x-core::icon name="ti ti-calendar" />
+                {{ __('Estd - ') }}{{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
+            </p>
+        @endif
 
         @if (! MarketplaceHelper::hideStoreAddress() && $store->full_address)
             <p class="bb-store-item-info" title="{{ $store->full_address }}">
