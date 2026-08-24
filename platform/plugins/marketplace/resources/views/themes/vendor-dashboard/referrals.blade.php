@@ -44,8 +44,8 @@
             </button>
         </div>
         <div class="mt-2">
-            <span class="badge bg-secondary">{{ __('Code') }}: {{ $store->referral_code }}</span>
-            <span class="badge bg-primary ms-2">{{ $referrals->total() }} {{ __('Referral(s)') }}</span>
+            <span class="badge bg-secondary text-white">{{ __('Code') }}: {{ $store->referral_code }}</span>
+            <span class="badge bg-primary text-white ms-2">{{ $referrals->total() }} {{ __('Referral(s)') }}</span>
         </div>
     </div>
 
