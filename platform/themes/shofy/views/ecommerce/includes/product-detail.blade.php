@@ -29,7 +29,49 @@
     @endif
 </div>
 
-<div class="tp-product-details-views mb-10">
+@once
+    <style>
+        .bb-live-dot {
+            position: relative;
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            flex-shrink: 0;
+        }
+        .bb-live-dot::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            transform: translate(-50%, -50%);
+            animation: bb-live-dot-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        @keyframes bb-live-dot-ping {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: .7;
+            }
+            75%, 100% {
+                transform: translate(-50%, -50%) scale(3);
+                opacity: 0;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .bb-live-dot::before {
+                animation: none;
+            }
+        }
+    </style>
+@endonce
+
+<div class="tp-product-details-views mb-10 d-flex align-items-center gap-2">
+    <span class="bb-live-dot"></span>
     <span>{{ __('(:count) Customer Viewed this', ['count' => number_format($product->views)]) }}</span>
 </div>
 
