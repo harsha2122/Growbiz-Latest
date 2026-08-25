@@ -54,8 +54,8 @@
                     <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
                         <div class="card bb-catalog-card h-100" style="border:1px solid var(--tp-border-primary,#eaebed);border-radius:8px;overflow:hidden;">
 
-                            {{-- Card header: PDF page preview, Excel/Sheet icon, or fallback PDF icon --}}
-                            <div class="bb-catalog-cover" style="background:var(--tp-grey-1,#f6f7f9);position:relative;{{ $firstThumbnail ? '' : 'padding:28px 20px 20px;' }}text-align:center;border-bottom:1px solid var(--tp-border-primary,#eaebed);">
+                            {{-- Card header: PDF page preview, Excel/Sheet icon, or fallback PDF icon — always the same size across cards --}}
+                            <div class="bb-catalog-cover" style="background:var(--tp-grey-1,#f6f7f9);position:relative;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-bottom:1px solid var(--tp-border-primary,#eaebed);overflow:hidden;">
 
                                 @if ($discount > 0)
                                     <span style="position:absolute;top:12px;right:12px;z-index:2;background:#1a7f43;color:#fff;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;">
@@ -68,7 +68,7 @@
                                     <img
                                         src="{{ Storage::disk('public')->url($firstThumbnail) }}"
                                         alt="{{ $catalog->title }}"
-                                        style="width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top;display:block;"
+                                        style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;"
                                         loading="lazy"
                                     >
                                     <span style="position:absolute;left:10px;bottom:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;background:#e02424;color:#fff;font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.25);">
