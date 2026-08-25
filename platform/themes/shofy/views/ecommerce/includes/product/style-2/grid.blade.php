@@ -27,6 +27,8 @@
             @include(Theme::getThemeNamespace('views.ecommerce.includes.product.style-2.price'))
         </div>
 
+        @include(EcommerceHelper::viewPath('includes.product-views-count'))
+
         {!! apply_filters('ecommerce_after_product_item_content_renderer', null, $product) !!}
     </div>
 </div>

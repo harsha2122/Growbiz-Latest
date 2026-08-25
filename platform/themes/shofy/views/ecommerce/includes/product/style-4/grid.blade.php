@@ -30,6 +30,8 @@
                 @include(Theme::getThemeNamespace('views.ecommerce.includes.product.style-4.price'))
             </div>
 
+            @include(EcommerceHelper::viewPath('includes.product-views-count'))
+
             @if (EcommerceHelper::isCartEnabled())
                 <div class="tp-product-price-add-to-cart">
                     <button

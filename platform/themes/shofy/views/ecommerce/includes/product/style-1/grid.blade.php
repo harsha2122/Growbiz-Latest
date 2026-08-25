@@ -29,6 +29,8 @@
             @include(Theme::getThemeNamespace('views.ecommerce.includes.product.style-1.price'))
         </div>
 
+        @include(EcommerceHelper::viewPath('includes.product-views-count'))
+
         @if ($withCountdown ?? false)
             @include(Theme::getThemeNamespace('views.ecommerce.includes.product.countdown'), compact('endDate'))
         @endif
