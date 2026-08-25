@@ -901,25 +901,14 @@ class Product extends BaseModel
                         $data['provider'] = 'twitter';
                     } elseif (in_array(Str::lower(File::extension($url)), ['mp4', 'webm', 'ogg'])) {
                         $data['provider'] = 'video';
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $url)
-                        && ($embedHtml = get_instagram_oembed_html($url))
-                    ) {
-                        // Real inline embed via Meta's oEmbed API (needs services.facebook
-                        // app_id/client_token configured) - falls through to external-link
-                        // below if that's not set up or the request fails.
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $url)) {
+                        // Instagram's own embed.js widget fetches and renders the post
+                        // client-side from this blockquote - no API credentials needed.
                         $data['provider'] = 'instagram-oembed';
-                        $data['embed_html'] = $embedHtml;
+                        $data['embed_html'] = build_instagram_embed_html($url);
                         // Keep the original URL populated - some views/checks rely on it
                         // being non-empty even though the actual render uses embed_html.
                         $data['url'] = $url;
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $url)
-                        && ($scrapedVideoUrl = get_instagram_video_url($url))
-                    ) {
-                        // Fallback when oEmbed isn't approved yet: scrape the direct video
-                        // URL from the post page (see get_instagram_video_url() for the
-                        // ToS/reliability caveats) and play it as a plain video file.
-                        $data['provider'] = 'video';
-                        $data['url'] = $scrapedVideoUrl;
                     } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $url)
                         || preg_match('#^https?://fb\.watch/#', $url)
                     ) {
@@ -932,8 +921,8 @@ class Product extends BaseModel
                         || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $url)
                         || preg_match('#^https?://fb\.watch/#', $url)
                     ) {
-                        // Profile/page links, or Instagram without oEmbed configured - no
-                        // way to embed these at all. Link out instead.
+                        // Instagram/Facebook profile or page links (not a single post/reel/
+                        // video) - no single piece of content to embed. Link out instead.
                         $data['provider'] = 'external-link';
                         $data['site_name'] = Str::contains($url, 'instagram.com')
                             ? 'Instagram'

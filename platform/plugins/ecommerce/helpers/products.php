@@ -10,10 +10,7 @@ use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 if (! function_exists('get_product_by_id')) {
     function get_product_by_id(int|string $productId): ?Product
@@ -302,134 +299,18 @@ if (! function_exists('get_related_products')) {
     }
 }
 
-if (! function_exists('get_instagram_oembed_html')) {
+if (! function_exists('build_instagram_embed_html')) {
     /**
-     * Fetch the official Instagram embed markup for a post/reel URL via Meta's oEmbed API,
-     * so it can render inline (real video) instead of just linking out. Needs a Meta App
-     * ID + either a Client Token or App Secret (both work identically as the second half
-     * of an app access token) - a free Meta Developer App is enough, no App Review needed
-     * for public oEmbed reads.
-     *
-     * Credentials are read from, in order, using whichever is configured first:
-     * 1. services.facebook.app_id/client_token (FACEBOOK_APP_ID/FACEBOOK_CLIENT_TOKEN env vars)
-     * 2. The Marketplace plugin's Meta Ads settings (Settings > Meta Ads Integration) -
-     *    Marketing App credentials first, then Auth App, matching that page's own priority
-     * 3. The Social Login plugin's Facebook Login app credentials
-     *
-     * Returns null if no credentials are available or the request fails (caller should
-     * fall back to linking out in that case).
+     * Instagram's own public embed widget (embed.js) fetches and renders the actual post
+     * content client-side straight from this blockquote - no Meta Developer App, API
+     * credentials, or server-side scraping required, unlike the Graph API oEmbed call and
+     * page-scraping fallback this replaces (both of which need setup most site owners
+     * never do, so links silently fell back to "open in a new tab" instead of embedding).
+     * Works for any public Instagram post/reel/TV URL.
      */
-    function get_instagram_oembed_html(string $url): ?string
+    function build_instagram_embed_html(string $url): string
     {
-        $appId = config('services.facebook.app_id');
-        $clientToken = config('services.facebook.client_token');
-
-        if ((! $appId || ! $clientToken) && is_plugin_active('marketplace')) {
-            $appId = $appId
-                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_marketing_app_id')
-                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_fb_auth_app_id');
-            $clientToken = $clientToken
-                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_marketing_app_secret')
-                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_fb_auth_app_secret');
-        }
-
-        if ((! $appId || ! $clientToken) && is_plugin_active('social-login')) {
-            $appId = $appId ?: setting('social_login_facebook_app_id');
-            $clientToken = $clientToken ?: setting('social_login_facebook_app_secret');
-        }
-
-        if (! $appId || ! $clientToken) {
-            return null;
-        }
-
-        $cacheKey = 'instagram_oembed_html_' . md5($url);
-
-        if (Cache::has($cacheKey)) {
-            $cached = Cache::get($cacheKey);
-
-            return $cached !== '' ? $cached : null;
-        }
-
-        try {
-            $response = Http::timeout(5)->get('https://graph.facebook.com/v19.0/instagram_oembed', [
-                'url' => $url,
-                'access_token' => $appId . '|' . $clientToken,
-                'omitscript' => 'true',
-            ]);
-
-            if ($response->ok()) {
-                $html = $response->json('html');
-            } else {
-                Log::warning('Instagram oEmbed fetch failed for ' . $url . ': ' . $response->body());
-
-                $html = null;
-            }
-        } catch (Exception $exception) {
-            Log::warning('Instagram oEmbed fetch failed: ' . $exception->getMessage());
-
-            $html = null;
-        }
-
-        // Cache a successful embed for a week (posts rarely change); cache a failure for
-        // only an hour so a transient API/rate-limit issue doesn't stick around for days.
-        // Empty string is the "failure" sentinel - storing a raw null isn't reliable across
-        // all cache drivers.
-        Cache::put($cacheKey, $html ?: '', $html ? 3600 * 24 * 7 : 3600);
-
-        return $html ?: null;
-    }
-}
-
-if (! function_exists('get_instagram_video_url')) {
-    /**
-     * Last-resort fallback when Meta's oEmbed API isn't available (e.g. not yet
-     * App-Review-approved): fetch the public post page directly and pull the direct CDN
-     * video URL out of its og:video meta tag, so it can play in a plain <video> element.
-     *
-     * WARNING: this scrapes Instagram's page rather than using an official API. It's
-     * against Instagram's Terms of Service, breaks whenever they change their page
-     * markup, and repeated requests can get the server's IP rate-limited or blocked by
-     * Instagram. Only use this as a temporary bridge until oEmbed is approved - remove it
-     * once that's done. Returns null on any failure (caller should fall back further).
-     */
-    function get_instagram_video_url(string $url): ?string
-    {
-        $cacheKey = 'instagram_scraped_video_' . md5($url);
-
-        if (Cache::has($cacheKey)) {
-            $cached = Cache::get($cacheKey);
-
-            return $cached !== '' ? $cached : null;
-        }
-
-        $videoUrl = null;
-
-        try {
-            $response = Http::withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            ])->timeout(8)->get($url);
-
-            if ($response->ok()) {
-                $html = $response->body();
-
-                if (preg_match('/<meta property="og:video:secure_url" content="([^"]+)"/', $html, $matches)
-                    || preg_match('/<meta property="og:video" content="([^"]+)"/', $html, $matches)
-                ) {
-                    $videoUrl = html_entity_decode($matches[1]);
-                }
-            } else {
-                Log::warning('Instagram video scrape failed for ' . $url . ': HTTP ' . $response->status());
-            }
-        } catch (Exception $exception) {
-            Log::warning('Instagram video scrape failed: ' . $exception->getMessage());
-        }
-
-        // Instagram's CDN video URLs are signed and expire after a while, so this can't be
-        // cached long-lived like the oEmbed HTML - a short cache just avoids re-scraping on
-        // every single page view.
-        Cache::put($cacheKey, $videoUrl ?: '', $videoUrl ? 1800 : 600);
-
-        return $videoUrl;
+        return '<blockquote class="instagram-media" data-instgrm-permalink="' . e($url) . '" data-instgrm-version="14" style="background:#FFF; border:0; border-radius:3px; margin: 1px; max-width:540px; min-width:326px; padding:0; width:99%;"></blockquote>';
     }
 }
 

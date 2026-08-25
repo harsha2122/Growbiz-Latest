@@ -21,20 +21,11 @@
                     } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/i', $videoUrl)) {
                         $provider = 'direct';
                         $embedUrl = $videoUrl;
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $videoUrl)
-                        && ($fetchedHtml = get_instagram_oembed_html($videoUrl))
-                    ) {
-                        // Real inline embed via Meta's oEmbed API (needs services.facebook
-                        // app_id/client_token configured).
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $videoUrl)) {
+                        // Instagram's own embed.js widget fetches and renders the post
+                        // client-side from this blockquote - no API credentials needed.
                         $provider = 'instagram-oembed';
-                        $embedHtml = $fetchedHtml;
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $videoUrl)
-                        && ($scrapedVideoUrl = get_instagram_video_url($videoUrl))
-                    ) {
-                        // Fallback when oEmbed isn't approved yet: scrape the direct video
-                        // URL from the post page and play it as a plain video file.
-                        $provider = 'direct';
-                        $embedUrl = $scrapedVideoUrl;
+                        $embedHtml = build_instagram_embed_html($videoUrl);
                     } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
                         || preg_match('#^https?://fb\.watch/#', $videoUrl)
                     ) {
@@ -45,8 +36,8 @@
                         || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $videoUrl)
                         || preg_match('#^https?://fb\.watch/#', $videoUrl)
                     ) {
-                        // Profile/page links, or Instagram without oEmbed configured - can't
-                        // be embedded at all. Link out instead.
+                        // Profile/page links (not a single post/reel/video) - no single
+                        // piece of content to embed. Link out instead.
                         $provider = 'external';
                         $embedUrl = $videoUrl;
                     } else {
