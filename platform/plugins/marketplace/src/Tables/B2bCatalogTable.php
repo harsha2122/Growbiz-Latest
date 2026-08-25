@@ -60,7 +60,7 @@ class B2bCatalogTable extends TableAbstract
                         if ($value > 0) {
                             $formatted = rtrim(rtrim(number_format($value, 2), '0'), '.');
 
-                            return '<span class="badge bg-danger">' . $formatted . '% OFF</span>';
+                            return '<span class="badge" style="background-color:#dc3545;color:#fff;">' . $formatted . '% OFF</span>';
                         }
 
                         return '<span class="text-muted">-</span>';

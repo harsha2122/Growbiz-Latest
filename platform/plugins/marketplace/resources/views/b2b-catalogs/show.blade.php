@@ -17,7 +17,7 @@
                     {{ $isSheet ? __('Google Sheet') : __('PDF') }}
                 </span>
                 @if ($catalog->discount_percentage > 0)
-                    <span class="badge bg-danger">
+                    <span class="badge" style="background-color:#dc3545;color:#fff;">
                         {{ rtrim(rtrim(number_format($catalog->discount_percentage, 2), '0'), '.') }}% OFF
                     </span>
                 @endif
