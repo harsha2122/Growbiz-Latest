@@ -25,6 +25,7 @@ use Botble\Ecommerce\Models\SpecificationTable;
 use Botble\Ecommerce\PanelSections\SettingEcommercePanelSection;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Botble\Marketplace\Commands\DiagnoseVendorDocuments;
+use Botble\Marketplace\Commands\GenerateB2bCatalogThumbnailsCommand;
 use Botble\Marketplace\Commands\RefreshMetaTokensCommand;
 use Botble\Marketplace\Commands\SyncMetaInsightsCommand;
 use Botble\Marketplace\Commands\SyncVendorDocuments;
@@ -115,6 +116,7 @@ class MarketplaceServiceProvider extends ServiceProvider
                 DiagnoseVendorDocuments::class,
                 SyncMetaInsightsCommand::class,
                 RefreshMetaTokensCommand::class,
+                GenerateB2bCatalogThumbnailsCommand::class,
             ]);
         }
 

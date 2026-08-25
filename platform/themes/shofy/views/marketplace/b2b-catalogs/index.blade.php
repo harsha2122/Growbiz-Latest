@@ -58,7 +58,7 @@
                             <div class="bb-catalog-cover" style="background:var(--tp-grey-1,#f6f7f9);position:relative;{{ $firstThumbnail ? '' : 'padding:28px 20px 20px;' }}text-align:center;border-bottom:1px solid var(--tp-border-primary,#eaebed);">
 
                                 @if ($discount > 0)
-                                    <span style="position:absolute;top:12px;right:12px;z-index:2;background:var(--tp-pink-1,#fd4b6b);color:#fff;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;">
+                                    <span style="position:absolute;top:12px;right:12px;z-index:2;background:#1a7f43;color:#fff;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;">
                                         {{ $discount }}% OFF
                                     </span>
                                 @endif
@@ -173,7 +173,7 @@
                 {{-- Description + discount --}}
                 <div id="modalMeta" style="padding:14px 22px 0;display:none;">
                     <div id="modalDesc" style="font-size:.84rem;color:var(--tp-text-body,#55585b);margin-bottom:8px;display:none;"></div>
-                    <span id="modalDiscount" style="display:none;font-size:.75rem;font-weight:700;background:#fff0f3;color:var(--tp-pink-1,#fd4b6b);border:1px solid #ffd6de;padding:3px 10px;border-radius:20px;"></span>
+                    <span id="modalDiscount" style="display:none;font-size:.75rem;font-weight:700;background:#e8f8ee;color:#1a7f43;border:1px solid #b7e4c7;padding:3px 10px;border-radius:20px;"></span>
                 </div>
 
                 {{-- PDF instruction message --}}
@@ -193,7 +193,7 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 13H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 17H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 13V19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                         {{ __('Open Google Sheet') }}
                     </a>
-                    <div style="font-size:.78rem;color:var(--tp-text-1,#767a7d);margin-top:8px;text-align:center;">
+                    <div id="modalSheetContactHint" style="display:none;font-size:.78rem;color:var(--tp-text-1,#767a7d);margin-top:8px;text-align:center;">
                         {{ __('Have a question about this catalogue? Contact us on WhatsApp below.') }}
                     </div>
                 </div>
@@ -318,6 +318,11 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             contactEl.style.display = 'none';
         }
+
+        // Only point the visitor to "Contact us on WhatsApp below" when a contact
+        // button will actually be there — otherwise the sheet section shouldn't promise one.
+        var sheetContactHint = document.getElementById('modalSheetContactHint');
+        sheetContactHint.style.display = contactHtml ? '' : 'none';
 
         // Build the WhatsApp message from whichever PDFs are checked, and keep it
         // updated live as the visitor (un)checks rows.
