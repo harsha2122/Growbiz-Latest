@@ -44,8 +44,8 @@ class B2bCatalogTable extends TableAbstract
                     ->width(120)
                     ->renderUsing(function (Column $column) {
                         return $column->getItem()->type === 'google_sheet'
-                            ? '<span class="badge bg-info">' . __('Google Sheet') . '</span>'
-                            : '<span class="badge bg-secondary">' . __('PDF') . '</span>';
+                            ? '<span class="badge" style="background-color:#17a2b8;color:#fff;">' . __('Google Sheet') . '</span>'
+                            : '<span class="badge" style="background-color:#6c757d;color:#fff;">' . __('PDF') . '</span>';
                     }),
                 Column::make('description')
                     ->title(__('Description'))

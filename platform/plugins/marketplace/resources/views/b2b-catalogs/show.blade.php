@@ -13,7 +13,7 @@
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div>
                 <h4 class="card-title mb-1">{{ $catalog->title }}</h4>
-                <span class="badge {{ $isSheet ? 'bg-info' : 'bg-secondary' }}">
+                <span class="badge" style="background-color:{{ $isSheet ? '#17a2b8' : '#6c757d' }};color:#fff;">
                     {{ $isSheet ? __('Google Sheet') : __('PDF') }}
                 </span>
                 @if ($catalog->discount_percentage > 0)
