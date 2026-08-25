@@ -1,19 +1,22 @@
 /**
  * Custom CSS Overrides
  * Product image cover mode - fills card completely
- * Fixed height 250px for all product cards
+ * Square (1:1) for all product cards, at every screen size
  */
 
-/* ALL product thumb variants - fixed height */
+/* ALL product thumb variants - square, responsive to card width instead of a
+   fixed pixel height (a fixed height made images look portrait once mobile's
+   narrower columns shrank the width but not the height). */
 .tp-product-thumb,
 .tp-product-thumb-2,
 .tp-product-thumb-3,
 .tp-product-thumb-4,
 .tp-product-thumb-5,
 [class*="tp-product-thumb"] {
-    height: 250px !important;
-    max-height: 250px !important;
-    min-height: 250px !important;
+    aspect-ratio: 1 / 1 !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
     overflow: hidden !important;
 }
 

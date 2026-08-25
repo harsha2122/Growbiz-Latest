@@ -48,12 +48,12 @@
            otherwise wrap the theme's default 15-20px titles awkwardly. */
         @media (max-width: 575.98px) {
             .tp-product-title {
-                font-size: 12px;
+                font-size: 11px;
             }
             .tp-product-title-2,
             .tp-product-title-3,
             .tp-product-title-4 {
-                font-size: 13px;
+                font-size: 12px;
             }
         }
     </style>
