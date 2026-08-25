@@ -901,13 +901,13 @@ class Product extends BaseModel
                         $data['provider'] = 'twitter';
                     } elseif (in_array(Str::lower(File::extension($url)), ['mp4', 'webm', 'ogg'])) {
                         $data['provider'] = 'video';
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $url)
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $url)
                         && ($scrapedVideoUrl = get_instagram_video_url($url))
                     ) {
                         // Real, guaranteed-correct playback of the actual video.
                         $data['provider'] = 'video';
                         $data['url'] = $scrapedVideoUrl;
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $url)) {
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $url)) {
                         // Fallback for non-video posts (or if scraping fails): Instagram's
                         // own embed widget, best-effort without an oEmbed API token.
                         $data['provider'] = 'instagram-oembed';
