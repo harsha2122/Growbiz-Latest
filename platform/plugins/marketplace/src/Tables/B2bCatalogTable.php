@@ -6,6 +6,7 @@ use Botble\Marketplace\Models\B2bCatalog;
 use Botble\Table\Abstracts\TableAbstract;
 use Botble\Table\Actions\DeleteAction;
 use Botble\Table\Actions\EditAction;
+use Botble\Table\Actions\ViewAction;
 use Botble\Table\BulkActions\DeleteBulkAction;
 use Botble\Table\Columns\Column;
 use Botble\Table\Columns\CreatedAtColumn;
@@ -20,6 +21,7 @@ class B2bCatalogTable extends TableAbstract
             ->model(B2bCatalog::class)
             ->addHeaderAction(CreateHeaderAction::make()->route('marketplace.b2b-catalogs.create'))
             ->addActions([
+                ViewAction::make()->route('marketplace.b2b-catalogs.show'),
                 EditAction::make()->route('marketplace.b2b-catalogs.edit'),
                 DeleteAction::make()->route('marketplace.b2b-catalogs.destroy'),
             ])

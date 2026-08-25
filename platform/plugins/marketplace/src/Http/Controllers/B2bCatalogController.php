@@ -31,6 +31,15 @@ class B2bCatalogController extends BaseController
         return $table->renderTable();
     }
 
+    public function show(B2bCatalog $b2b_catalog)
+    {
+        $this->pageTitle(__('View B2B Catalog: :title', ['title' => $b2b_catalog->title]));
+
+        return view('plugins/marketplace::b2b-catalogs.show', [
+            'catalog' => $b2b_catalog->load('pdfs', 'store:id,name'),
+        ]);
+    }
+
     public function create()
     {
         $this->pageTitle(__('Create B2B Catalog'));
