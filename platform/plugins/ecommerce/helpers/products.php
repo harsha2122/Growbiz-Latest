@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 if (! function_exists('get_product_by_id')) {
     function get_product_by_id(int|string $productId): ?Product
@@ -332,6 +333,8 @@ if (! function_exists('get_instagram_video_url')) {
         try {
             $response = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.9',
             ])->timeout(8)->get($url);
 
             if ($response->ok()) {
@@ -341,6 +344,10 @@ if (! function_exists('get_instagram_video_url')) {
                     || preg_match('/<meta property="og:video" content="([^"]+)"/', $html, $matches)
                 ) {
                     $videoUrl = html_entity_decode($matches[1]);
+                } elseif (Str::contains((string) $response->effectiveUri(), 'login')) {
+                    Log::warning('Instagram video scrape redirected to login for ' . $url);
+                } else {
+                    Log::warning('Instagram video scrape got 200 OK but no og:video tag for ' . $url);
                 }
             } else {
                 Log::warning('Instagram video scrape failed for ' . $url . ': HTTP ' . $response->status());
