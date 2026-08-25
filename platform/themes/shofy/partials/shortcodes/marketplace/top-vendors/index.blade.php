@@ -8,7 +8,7 @@
 
         <div class="row g-4 mb-40">
             @foreach ($stores as $store)
-                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-6">
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
                     @include('plugins/marketplace::themes.includes.store-item')
                 </div>
             @endforeach
