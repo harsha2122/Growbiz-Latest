@@ -59,19 +59,35 @@
                     </div>
                 </div>
 
-                {{-- PDF Files --}}
+                {{-- Catalog Type --}}
                 <div class="mb-3">
+                    <label class="form-label">{{ __('Catalog Type') }} <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" id="type_pdf" value="pdf" checked>
+                            <label class="form-check-label" for="type_pdf">{{ __('PDF Catalog') }}</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" id="type_google_sheet" value="google_sheet">
+                            <label class="form-check-label" for="type_google_sheet">{{ __('Google Sheet Link') }}</label>
+                        </div>
+                    </div>
+                    @error('type') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
+
+                {{-- PDF Files --}}
+                <div class="mb-3" id="pdf-type-section">
                     <label class="form-label">{{ __('PDF Files') }} <span class="text-danger">*</span></label>
                     <div id="pdf-rows">
                         <div class="pdf-row border rounded p-3 mb-2 bg-light">
                             <div class="row g-2 align-items-end">
                                 <div class="col-md-5">
                                     <label class="form-label small mb-1">{{ __('PDF Title') }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="pdf_titles[]" placeholder="{{ __('e.g. Product Catalogue 2026') }}" required>
+                                    <input type="text" class="form-control" name="pdf_titles[]" placeholder="{{ __('e.g. Product Catalogue 2026') }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small mb-1">{{ __('PDF File') }} <span class="text-danger">*</span></label>
-                                    <input type="file" class="form-control" name="pdf_files[]" accept=".pdf" required>
+                                    <input type="file" class="form-control" name="pdf_files[]" accept=".pdf">
                                 </div>
                                 <div class="col-md-1 text-end">
                                     <button type="button" class="btn btn-sm btn-outline-danger remove-pdf-row" style="display:none;" title="{{ __('Remove') }}">
@@ -84,6 +100,14 @@
                     <button type="button" class="btn btn-sm btn-outline-primary mt-1" id="add-pdf-row">
                         <i class="ti ti-plus"></i> {{ __('Add Another PDF') }}
                     </button>
+                </div>
+
+                {{-- Google Sheet URL --}}
+                <div class="mb-3" id="google-sheet-type-section" style="display:none;">
+                    <label for="google_sheet_url" class="form-label">{{ __('Google Sheet Link') }} <span class="text-danger">*</span></label>
+                    <input type="url" class="form-control @error('google_sheet_url') is-invalid @enderror" id="google_sheet_url" name="google_sheet_url" value="{{ old('google_sheet_url') }}" placeholder="https://docs.google.com/spreadsheets/d/...">
+                    <small class="text-muted">{{ __('Make sure the sheet\'s share setting is "Anyone with the link can view" so every visitor can open it.') }}</small>
+                    @error('google_sheet_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <button type="submit" class="btn btn-primary" id="b2b-submit-btn">{{ __('Save') }}</button>
@@ -100,6 +124,26 @@
     @push('footer')
         <script>
             (function () {
+                const pdfSection  = document.getElementById('pdf-type-section');
+                const sheetSection = document.getElementById('google-sheet-type-section');
+                const sheetInput  = document.getElementById('google_sheet_url');
+                const typeRadios  = document.querySelectorAll('input[name="type"]');
+
+                function toggleType() {
+                    const isPdf = document.getElementById('type_pdf').checked;
+                    pdfSection.style.display = isPdf ? '' : 'none';
+                    sheetSection.style.display = isPdf ? 'none' : '';
+                    pdfSection.querySelectorAll('input[name="pdf_titles[]"], input[name="pdf_files[]"]').forEach(function (el) {
+                        el.required = isPdf;
+                    });
+                    sheetInput.required = ! isPdf;
+                }
+
+                typeRadios.forEach(function (radio) {
+                    radio.addEventListener('change', toggleType);
+                });
+                toggleType();
+
                 const container = document.getElementById('pdf-rows');
                 const addBtn    = document.getElementById('add-pdf-row');
 

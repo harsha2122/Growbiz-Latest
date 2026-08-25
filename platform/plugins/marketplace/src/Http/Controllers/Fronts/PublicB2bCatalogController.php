@@ -18,7 +18,8 @@ class PublicB2bCatalogController extends BaseController
             ->with(['store:id,name', 'pdfs'])
             ->where(function ($q) {
                 $q->whereHas('pdfs')
-                    ->orWhereNotNull('pdf_path');
+                    ->orWhereNotNull('pdf_path')
+                    ->orWhereNotNull('google_sheet_url');
             });
 
         if ($search = $request->query('q')) {

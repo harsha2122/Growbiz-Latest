@@ -59,53 +59,79 @@
                     </div>
                 </div>
 
-                {{-- Existing PDFs --}}
-                @if ($catalog->pdfs->isNotEmpty())
-                    <div class="mb-4">
-                        <label class="form-label">{{ __('Current PDFs') }}</label>
-                        <div id="existing-pdfs">
-                            @foreach ($catalog->pdfs as $pdf)
-                                <div class="existing-pdf-row d-flex align-items-center gap-3 border rounded p-2 mb-2 bg-light" id="pdf-row-{{ $pdf->id }}">
-                                    <i class="ti ti-file-type-pdf text-danger fs-4"></i>
-                                    <div class="flex-grow-1">
-                                        <strong>{{ $pdf->title }}</strong>
-                                        <br>
-                                        <a href="{{ route('marketplace.b2b-catalogs.pdfs.stream', [$catalog->id, $pdf->id]) }}" target="_blank" rel="noopener" class="small text-primary">
-                                            <i class="ti ti-eye"></i> {{ __('View PDF') }}
-                                        </a>
-                                    </div>
-                                    <button type="button"
-                                        class="btn btn-sm btn-outline-danger delete-pdf-btn"
-                                        data-url="{{ route('marketplace.b2b-catalogs.pdfs.destroy', [$catalog->id, $pdf->id]) }}"
-                                        data-row="pdf-row-{{ $pdf->id }}"
-                                        title="{{ __('Delete this PDF') }}">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Legacy single pdf_path (backward compat) --}}
-                @if ($catalog->pdf_path && $catalog->pdfs->isEmpty())
-                    <div class="mb-3">
-                        <label class="form-label">{{ __('Current PDF (legacy)') }}</label>
-                        <div>
-                            <a href="{{ route('marketplace.b2b-catalogs.stream-pdf', $catalog->id) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
-                                <i class="ti ti-eye"></i> {{ __('View') }}: {{ basename($catalog->pdf_path) }}
-                            </a>
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Add new PDFs --}}
+                {{-- Catalog Type --}}
                 <div class="mb-3">
-                    <label class="form-label">{{ __('Add New PDFs') }}</label>
-                    <div id="new-pdf-rows"></div>
-                    <button type="button" class="btn btn-sm btn-outline-primary mt-1" id="add-new-pdf-row">
-                        <i class="ti ti-plus"></i> {{ __('Add PDF') }}
-                    </button>
+                    <label class="form-label">{{ __('Catalog Type') }} <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" id="type_pdf" value="pdf" {{ old('type', $catalog->type ?? 'pdf') === 'pdf' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="type_pdf">{{ __('PDF Catalog') }}</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" id="type_google_sheet" value="google_sheet" {{ old('type', $catalog->type ?? 'pdf') === 'google_sheet' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="type_google_sheet">{{ __('Google Sheet Link') }}</label>
+                        </div>
+                    </div>
+                    @error('type') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
+
+                <div id="pdf-type-section">
+                    {{-- Existing PDFs --}}
+                    @if ($catalog->pdfs->isNotEmpty())
+                        <div class="mb-4">
+                            <label class="form-label">{{ __('Current PDFs') }}</label>
+                            <div id="existing-pdfs">
+                                @foreach ($catalog->pdfs as $pdf)
+                                    <div class="existing-pdf-row d-flex align-items-center gap-3 border rounded p-2 mb-2 bg-light" id="pdf-row-{{ $pdf->id }}">
+                                        <i class="ti ti-file-type-pdf text-danger fs-4"></i>
+                                        <div class="flex-grow-1">
+                                            <strong>{{ $pdf->title }}</strong>
+                                            <br>
+                                            <a href="{{ route('marketplace.b2b-catalogs.pdfs.stream', [$catalog->id, $pdf->id]) }}" target="_blank" rel="noopener" class="small text-primary">
+                                                <i class="ti ti-eye"></i> {{ __('View PDF') }}
+                                            </a>
+                                        </div>
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-danger delete-pdf-btn"
+                                            data-url="{{ route('marketplace.b2b-catalogs.pdfs.destroy', [$catalog->id, $pdf->id]) }}"
+                                            data-row="pdf-row-{{ $pdf->id }}"
+                                            title="{{ __('Delete this PDF') }}">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Legacy single pdf_path (backward compat) --}}
+                    @if ($catalog->pdf_path && $catalog->pdfs->isEmpty())
+                        <div class="mb-3">
+                            <label class="form-label">{{ __('Current PDF (legacy)') }}</label>
+                            <div>
+                                <a href="{{ route('marketplace.b2b-catalogs.stream-pdf', $catalog->id) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
+                                    <i class="ti ti-eye"></i> {{ __('View') }}: {{ basename($catalog->pdf_path) }}
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Add new PDFs --}}
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('Add New PDFs') }}</label>
+                        <div id="new-pdf-rows"></div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-1" id="add-new-pdf-row">
+                            <i class="ti ti-plus"></i> {{ __('Add PDF') }}
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Google Sheet URL --}}
+                <div class="mb-3" id="google-sheet-type-section" style="display:none;">
+                    <label for="google_sheet_url" class="form-label">{{ __('Google Sheet Link') }} <span class="text-danger">*</span></label>
+                    <input type="url" class="form-control @error('google_sheet_url') is-invalid @enderror" id="google_sheet_url" name="google_sheet_url" value="{{ old('google_sheet_url', $catalog->google_sheet_url) }}" placeholder="https://docs.google.com/spreadsheets/d/...">
+                    <small class="text-muted">{{ __('Make sure the sheet\'s share setting is "Anyone with the link can view" so every visitor can open it.') }}</small>
+                    @error('google_sheet_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
 
                 <button type="submit" class="btn btn-primary" id="b2b-submit-btn">{{ __('Update') }}</button>
@@ -122,6 +148,23 @@
     @push('footer')
         <script>
             (function () {
+                const pdfSection   = document.getElementById('pdf-type-section');
+                const sheetSection = document.getElementById('google-sheet-type-section');
+                const sheetInput   = document.getElementById('google_sheet_url');
+                const typeRadios   = document.querySelectorAll('input[name="type"]');
+
+                function toggleType() {
+                    const isPdf = document.getElementById('type_pdf').checked;
+                    pdfSection.style.display = isPdf ? '' : 'none';
+                    sheetSection.style.display = isPdf ? 'none' : '';
+                    sheetInput.required = ! isPdf;
+                }
+
+                typeRadios.forEach(function (radio) {
+                    radio.addEventListener('change', toggleType);
+                });
+                toggleType();
+
                 // Add new PDF rows
                 const newContainer = document.getElementById('new-pdf-rows');
                 const addNewBtn    = document.getElementById('add-new-pdf-row');

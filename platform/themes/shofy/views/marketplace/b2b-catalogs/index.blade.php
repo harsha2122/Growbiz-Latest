@@ -47,6 +47,7 @@
                         $pdfCount  = $catalog->pdfs->count();
                         $totalPdfs = $pdfCount ?: ($catalog->pdf_path ? 1 : 0);
                         $discount  = (float) $catalog->discount_percentage;
+                        $isSheet   = ($catalog->type ?? 'pdf') === 'google_sheet';
                     @endphp
 
                     <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
@@ -61,16 +62,30 @@
                                     </span>
                                 @endif
 
-                                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--tp-theme-primary,#821f40);opacity:.7;margin-bottom:10px;">
-                                    <path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M9 13H15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                    <path d="M9 17H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                </svg>
+                                @if ($isSheet)
+                                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--tp-theme-primary,#821f40);opacity:.7;margin-bottom:10px;">
+                                        <path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M8 13H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        <path d="M8 17H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        <path d="M11 13V19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
 
-                                <div style="font-size:.78rem;color:var(--tp-text-1,#767a7d);font-weight:600;">
-                                    {{ $totalPdfs }} {{ $totalPdfs === 1 ? __('PDF') : __('PDFs') }}
-                                </div>
+                                    <div style="font-size:.78rem;color:var(--tp-text-1,#767a7d);font-weight:600;">
+                                        {{ __('Google Sheet') }}
+                                    </div>
+                                @else
+                                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--tp-theme-primary,#821f40);opacity:.7;margin-bottom:10px;">
+                                        <path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M9 13H15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        <path d="M9 17H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+
+                                    <div style="font-size:.78rem;color:var(--tp-text-1,#767a7d);font-weight:600;">
+                                        {{ $totalPdfs }} {{ $totalPdfs === 1 ? __('PDF') : __('PDFs') }}
+                                    </div>
+                                @endif
                             </div>
 
                             {{-- Card body --}}
@@ -134,11 +149,27 @@
                     <span id="modalDiscount" style="display:none;font-size:.75rem;font-weight:700;background:#fff0f3;color:var(--tp-pink-1,#fd4b6b);border:1px solid #ffd6de;padding:3px 10px;border-radius:20px;"></span>
                 </div>
 
+                {{-- PDF instruction message --}}
+                <div id="modalPdfInstruction" style="display:none;margin:14px 22px 0;padding:10px 14px;background:var(--tp-grey-1,#f6f7f9);border-radius:6px;font-size:.82rem;color:var(--tp-text-body,#55585b);">
+                    {{ __('Select the PDF(s) you want to enquire about, then tap WhatsApp below to send your query.') }}
+                </div>
+
                 {{-- PDF list header --}}
                 <div id="modalPdfHeader" style="padding:16px 22px 8px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--tp-text-1,#767a7d);border-bottom:1px solid var(--tp-border-primary,#eaebed);"></div>
 
                 {{-- PDF rows --}}
                 <ul id="modalPdfList" style="list-style:none;margin:0;padding:8px 12px 12px;"></ul>
+
+                {{-- Google Sheet link --}}
+                <div id="modalSheetSection" style="display:none;padding:16px 22px 4px;">
+                    <a id="modalSheetLink" href="#" target="_blank" rel="noopener" class="tp-btn w-100" style="font-size:.85rem;padding:10px 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 13H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 17H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M11 13V19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        {{ __('Open Google Sheet') }}
+                    </a>
+                    <div style="font-size:.78rem;color:var(--tp-text-1,#767a7d);margin-top:8px;text-align:center;">
+                        {{ __('Have a question about this catalogue? Contact us on WhatsApp below.') }}
+                    </div>
+                </div>
             </div>
 
             {{-- Contact buttons --}}
@@ -152,6 +183,8 @@
         return [
             'id'          => $c->id,
             'title'       => $c->title,
+            'type'        => $c->type ?? 'pdf',
+            'sheetUrl'    => $c->google_sheet_url,
             'store'       => $c->store?->id ? $c->store->name : null,
             'description' => $c->description,
             'discount'    => (float) $c->discount_percentage,
@@ -196,28 +229,47 @@ document.addEventListener('DOMContentLoaded', function () {
         else                  { discountEl.style.display = 'none'; }
         metaEl.style.display = hasMeta ? '' : 'none';
 
-        // PDF list header
-        document.getElementById('modalPdfHeader').textContent =
-            @json(__('Available Catalogues')) + ' (' + cat.pdfs.length + ')';
+        var instructionEl = document.getElementById('modalPdfInstruction');
+        var headerEl      = document.getElementById('modalPdfHeader');
+        var list          = document.getElementById('modalPdfList');
+        var sheetSection  = document.getElementById('modalSheetSection');
 
-        // PDF rows
-        var list = document.getElementById('modalPdfList');
-        list.innerHTML = '';
-        if (!cat.pdfs.length) {
-            list.innerHTML = '<li style="padding:12px 10px;font-size:.84rem;color:var(--tp-text-1,#767a7d);">' + @json(__('No PDFs available.')) + '</li>';
+        if (cat.type === 'google_sheet') {
+            // Google Sheet catalogue: just the sheet link + contact, no PDF picker.
+            instructionEl.style.display = 'none';
+            headerEl.style.display = 'none';
+            list.style.display = 'none';
+            list.innerHTML = '';
+
+            document.getElementById('modalSheetLink').href = cat.sheetUrl || '#';
+            sheetSection.style.display = '';
         } else {
-            cat.pdfs.forEach(function (pdf, idx) {
-                var li = document.createElement('li');
-                li.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 10px;border-radius:6px;';
-                li.innerHTML =
-                    '<input type="checkbox" class="bb-catalog-pdf-check" data-pdf-number="' + (idx + 1) + '" data-pdf-title="' + escHtml(pdf.title) + '" style="flex-shrink:0;width:16px;height:16px;cursor:pointer;">'
-                    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;color:var(--tp-theme-primary,#821f40)"><path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-                    + '<span style="flex:1;font-size:.88rem;font-weight:600;color:var(--tp-heading-primary,#010f1c);">' + @json(__('PDF')) + ' ' + (idx + 1) + ': ' + escHtml(pdf.title) + '</span>'
-                    + '<a href="' + escHtml(pdf.view_url) + '" target="_blank" rel="noopener" class="tp-btn" style="font-size:.75rem;padding:6px 14px;white-space:nowrap;">' + @json(__('View')) + '</a>';
-                li.addEventListener('mouseenter', function () { this.style.background = 'var(--tp-grey-1,#f6f7f9)'; });
-                li.addEventListener('mouseleave', function () { this.style.background = ''; });
-                list.appendChild(li);
-            });
+            // PDF catalogue: show the enquiry instruction + selectable PDF list.
+            sheetSection.style.display = 'none';
+            headerEl.style.display = '';
+            list.style.display = '';
+
+            headerEl.textContent = @json(__('Available Catalogues')) + ' (' + cat.pdfs.length + ')';
+
+            list.innerHTML = '';
+            if (!cat.pdfs.length) {
+                instructionEl.style.display = 'none';
+                list.innerHTML = '<li style="padding:12px 10px;font-size:.84rem;color:var(--tp-text-1,#767a7d);">' + @json(__('No PDFs available.')) + '</li>';
+            } else {
+                instructionEl.style.display = '';
+                cat.pdfs.forEach(function (pdf, idx) {
+                    var li = document.createElement('li');
+                    li.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 10px;border-radius:6px;';
+                    li.innerHTML =
+                        '<input type="checkbox" class="bb-catalog-pdf-check" data-pdf-number="' + (idx + 1) + '" data-pdf-title="' + escHtml(pdf.title) + '" style="flex-shrink:0;width:16px;height:16px;cursor:pointer;">'
+                        + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;color:var(--tp-theme-primary,#821f40)"><path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                        + '<span style="flex:1;font-size:.88rem;font-weight:600;color:var(--tp-heading-primary,#010f1c);">' + @json(__('PDF')) + ' ' + (idx + 1) + ': ' + escHtml(pdf.title) + '</span>'
+                        + '<a href="' + escHtml(pdf.view_url) + '" target="_blank" rel="noopener" class="tp-btn" style="font-size:.75rem;padding:6px 14px;white-space:nowrap;">' + @json(__('View')) + '</a>';
+                    li.addEventListener('mouseenter', function () { this.style.background = 'var(--tp-grey-1,#f6f7f9)'; });
+                    li.addEventListener('mouseleave', function () { this.style.background = ''; });
+                    list.appendChild(li);
+                });
+            }
         }
 
         // Contact

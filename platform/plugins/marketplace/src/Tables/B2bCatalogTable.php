@@ -36,6 +36,15 @@ class B2bCatalogTable extends TableAbstract
                         $store = $column->getItem()->store;
                         return $store->id ? e($store->name) : '<span class="text-muted">—</span>';
                     }),
+                Column::make('type')
+                    ->title(__('Type'))
+                    ->alignCenter()
+                    ->width(120)
+                    ->renderUsing(function (Column $column) {
+                        return $column->getItem()->type === 'google_sheet'
+                            ? '<span class="badge bg-info">' . __('Google Sheet') . '</span>'
+                            : '<span class="badge bg-secondary">' . __('PDF') . '</span>';
+                    }),
                 Column::make('description')
                     ->title(__('Description'))
                     ->alignStart()
@@ -64,7 +73,7 @@ class B2bCatalogTable extends TableAbstract
             ->queryUsing(function ($query) {
                 return $query
                     ->with('store:id,name')
-                    ->select(['id', 'store_id', 'title', 'description', 'discount_percentage', 'pdf_path', 'uploaded_by', 'uploaded_by_type', 'created_at'])
+                    ->select(['id', 'store_id', 'title', 'type', 'description', 'discount_percentage', 'pdf_path', 'uploaded_by', 'uploaded_by_type', 'created_at'])
                     ->latest();
             });
     }

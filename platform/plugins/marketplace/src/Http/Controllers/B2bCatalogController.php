@@ -41,7 +41,7 @@ class B2bCatalogController extends BaseController
 
     public function store(B2bCatalogRequest $request)
     {
-        $data = $request->only(['title', 'description', 'discount_percentage', 'contact_number', 'whatsapp_number', 'store_id']);
+        $data = $request->only(['title', 'type', 'description', 'discount_percentage', 'contact_number', 'whatsapp_number', 'store_id', 'google_sheet_url']);
         $data['uploaded_by'] = auth()->id();
         $data['uploaded_by_type'] = 'admin';
 
@@ -76,7 +76,7 @@ class B2bCatalogController extends BaseController
 
     public function update(B2bCatalog $b2b_catalog, B2bCatalogRequest $request)
     {
-        $data = $request->only(['title', 'description', 'discount_percentage', 'contact_number', 'whatsapp_number', 'store_id']);
+        $data = $request->only(['title', 'type', 'description', 'discount_percentage', 'contact_number', 'whatsapp_number', 'store_id', 'google_sheet_url']);
 
         $b2b_catalog->update($data);
 

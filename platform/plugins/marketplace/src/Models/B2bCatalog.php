@@ -13,9 +13,11 @@ class B2bCatalog extends BaseModel
     protected $fillable = [
         'store_id',
         'title',
+        'type',
         'description',
         'discount_percentage',
         'pdf_path',
+        'google_sheet_url',
         'contact_number',
         'whatsapp_number',
         'uploaded_by',
