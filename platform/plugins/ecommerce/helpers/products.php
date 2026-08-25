@@ -10,7 +10,10 @@ use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 if (! function_exists('get_product_by_id')) {
     function get_product_by_id(int|string $productId): ?Product
@@ -299,14 +302,69 @@ if (! function_exists('get_related_products')) {
     }
 }
 
+if (! function_exists('get_instagram_video_url')) {
+    /**
+     * Fetch the public post page directly and pull the direct CDN video URL out of its
+     * og:video meta tag, so it can play in a plain <video> element - this is the primary
+     * embed method since it renders real, guaranteed-correct-looking playback, unlike
+     * Instagram's public embed widget (build_instagram_embed_html() below), which
+     * frequently degrades to just a "view profile" card without a Meta oEmbed API access
+     * token (which needs a Developer App most site owners don't have).
+     *
+     * WARNING: this scrapes Instagram's page rather than using an official API. It's
+     * against Instagram's Terms of Service, breaks whenever they change their page
+     * markup, and repeated requests can get the server's IP rate-limited or blocked by
+     * Instagram. Returns null on any failure or for non-video posts (caller should fall
+     * back to the embed widget in that case).
+     */
+    function get_instagram_video_url(string $url): ?string
+    {
+        $cacheKey = 'instagram_scraped_video_' . md5($url);
+
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+
+            return $cached !== '' ? $cached : null;
+        }
+
+        $videoUrl = null;
+
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            ])->timeout(8)->get($url);
+
+            if ($response->ok()) {
+                $html = $response->body();
+
+                if (preg_match('/<meta property="og:video:secure_url" content="([^"]+)"/', $html, $matches)
+                    || preg_match('/<meta property="og:video" content="([^"]+)"/', $html, $matches)
+                ) {
+                    $videoUrl = html_entity_decode($matches[1]);
+                }
+            } else {
+                Log::warning('Instagram video scrape failed for ' . $url . ': HTTP ' . $response->status());
+            }
+        } catch (Exception $exception) {
+            Log::warning('Instagram video scrape failed: ' . $exception->getMessage());
+        }
+
+        // Instagram's CDN video URLs are signed and expire after a while, so this can't be
+        // cached long-lived - a short cache just avoids re-scraping on every page view.
+        Cache::put($cacheKey, $videoUrl ?: '', $videoUrl ? 1800 : 600);
+
+        return $videoUrl;
+    }
+}
+
 if (! function_exists('build_instagram_embed_html')) {
     /**
-     * Instagram's own public embed widget (embed.js) fetches and renders the actual post
-     * content client-side straight from this blockquote - no Meta Developer App, API
-     * credentials, or server-side scraping required, unlike the Graph API oEmbed call and
-     * page-scraping fallback this replaces (both of which need setup most site owners
-     * never do, so links silently fell back to "open in a new tab" instead of embedding).
-     * Works for any public Instagram post/reel/TV URL.
+     * Fallback for when get_instagram_video_url() can't find a direct video (e.g. an
+     * image/carousel post, or Instagram changed their page markup): Instagram's own
+     * public embed widget (embed.js) attempts to fetch and render the post client-side
+     * from this blockquote. No Meta Developer App or API credentials required, but
+     * without a real oEmbed API access token it can degrade to just a "view profile"
+     * card rather than the full post - it's a best-effort fallback, not a guarantee.
      */
     function build_instagram_embed_html(string $url): string
     {

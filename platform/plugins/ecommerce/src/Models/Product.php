@@ -901,9 +901,15 @@ class Product extends BaseModel
                         $data['provider'] = 'twitter';
                     } elseif (in_array(Str::lower(File::extension($url)), ['mp4', 'webm', 'ogg'])) {
                         $data['provider'] = 'video';
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $url)
+                        && ($scrapedVideoUrl = get_instagram_video_url($url))
+                    ) {
+                        // Real, guaranteed-correct playback of the actual video.
+                        $data['provider'] = 'video';
+                        $data['url'] = $scrapedVideoUrl;
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $url)) {
-                        // Instagram's own embed.js widget fetches and renders the post
-                        // client-side from this blockquote - no API credentials needed.
+                        // Fallback for non-video posts (or if scraping fails): Instagram's
+                        // own embed widget, best-effort without an oEmbed API token.
                         $data['provider'] = 'instagram-oembed';
                         $data['embed_html'] = build_instagram_embed_html($url);
                         // Keep the original URL populated - some views/checks rely on it

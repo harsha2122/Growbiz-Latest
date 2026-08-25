@@ -21,9 +21,15 @@
                     } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/i', $videoUrl)) {
                         $provider = 'direct';
                         $embedUrl = $videoUrl;
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $videoUrl)
+                        && ($scrapedVideoUrl = get_instagram_video_url($videoUrl))
+                    ) {
+                        // Real, guaranteed-correct playback of the actual video.
+                        $provider = 'direct';
+                        $embedUrl = $scrapedVideoUrl;
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|tv)/#', $videoUrl)) {
-                        // Instagram's own embed.js widget fetches and renders the post
-                        // client-side from this blockquote - no API credentials needed.
+                        // Fallback for non-video posts (or if scraping fails): Instagram's
+                        // own embed widget, best-effort without an oEmbed API token.
                         $provider = 'instagram-oembed';
                         $embedHtml = build_instagram_embed_html($videoUrl);
                     } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
