@@ -219,6 +219,13 @@ AdminHelper::registerRoutes(function (): void {
             ]);
             Route::group(['prefix' => 'b2b-catalogs', 'as' => 'b2b-catalogs.'], function (): void {
                 Route::resource('', 'B2bCatalogController')->parameters(['' => 'b2b_catalog']);
+                // Botble's resource route registrar doesn't include "show" by default, so it
+                // needs to be added explicitly for the admin table's View action to work.
+                Route::get('{b2b_catalog}', [
+                    'as' => 'show',
+                    'uses' => 'B2bCatalogController@show',
+                    'permission' => 'marketplace.b2b-catalogs.index',
+                ])->wherePrimaryKey('b2b_catalog');
                 Route::get('{b2b_catalog}/view-pdf', [
                     'as' => 'view-pdf',
                     'uses' => 'B2bCatalogController@viewPdf',
