@@ -201,6 +201,8 @@
 
                 <a
                     href="{{ route('public.products.book-now', $product->id) }}"
+                    id="tp-book-now-link"
+                    data-book-now-url-template="{{ route('public.products.book-now', ':id') }}"
                     target="_blank"
                     rel="noopener"
                     @class(['tp-product-details-buy-now-btn tp-product-details-book-now-btn', 'btn-disabled' => $isOutOfStock])
@@ -208,6 +210,30 @@
                     <x-core::icon name="ti ti-brand-whatsapp" />
                     {{ __('Book Now') }}
                 </a>
+
+                @once
+                    @push('footer')
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                var link = document.getElementById('tp-book-now-link');
+                                if (!link) return;
+
+                                link.addEventListener('click', function () {
+                                    var template = link.getAttribute('data-book-now-url-template');
+                                    if (!template) return;
+
+                                    var form = link.closest('form');
+                                    var idInput = form ? form.querySelector('input[name="id"]') : null;
+                                    var currentId = idInput && idInput.value ? idInput.value : null;
+
+                                    if (currentId) {
+                                        link.href = template.replace(':id', currentId);
+                                    }
+                                });
+                            });
+                        </script>
+                    @endpush
+                @endonce
             @elseif (EcommerceHelper::isQuickBuyButtonEnabled())
                 <button
                     type="submit"

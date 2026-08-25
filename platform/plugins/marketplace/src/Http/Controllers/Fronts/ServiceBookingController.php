@@ -27,7 +27,9 @@ class ServiceBookingController extends BaseController
 
         $number = preg_replace('/[^0-9]/', '', $store->whatsapp_number_for_booking);
 
-        $message = rawurlencode(__('Hi, I would like to book :service.', ['service' => $product->name]));
+        $serviceName = trim($product->name . ' ' . $product->variation_attributes);
+
+        $message = rawurlencode(__('Hi, I would like to book :service.', ['service' => $serviceName]));
 
         return redirect()->away("https://wa.me/$number?text=$message");
     }
