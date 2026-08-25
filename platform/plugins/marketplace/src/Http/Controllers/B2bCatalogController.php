@@ -12,7 +12,10 @@ use Botble\Marketplace\Models\Store;
 use Botble\Marketplace\Tables\B2bCatalogTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\Process\ExecutableFinder;
+use Symfony\Component\Process\Process;
 
 class B2bCatalogController extends BaseController
 {
@@ -50,9 +53,10 @@ class B2bCatalogController extends BaseController
         foreach ($request->file('pdf_files', []) as $i => $file) {
             $path = $file->store('b2b-catalogs', 'public');
             $catalog->pdfs()->create([
-                'title'      => $request->input("pdf_titles.$i"),
-                'pdf_path'   => $path,
-                'sort_order' => $i,
+                'title'          => $request->input("pdf_titles.$i"),
+                'pdf_path'       => $path,
+                'thumbnail_path' => $i === 0 ? $this->generatePdfThumbnail($path) : null,
+                'sort_order'     => $i,
             ]);
         }
 
@@ -60,6 +64,54 @@ class B2bCatalogController extends BaseController
             ->httpResponse()
             ->setNextUrl(route('marketplace.b2b-catalogs.index'))
             ->withCreatedSuccessMessage();
+    }
+
+    /**
+     * Render the first page of an uploaded PDF as a small JPEG thumbnail, the same way
+     * WhatsApp/link previews show a preview of a shared document, so catalog cards can
+     * show a glimpse of the PDF instead of a generic icon. Requires the "pdftoppm"
+     * binary (poppler-utils); silently skipped (falling back to the icon in the view)
+     * when it isn't available on the server.
+     */
+    protected function generatePdfThumbnail(string $pdfPath): ?string
+    {
+        static $pdftoppmAvailable;
+        $pdftoppmAvailable ??= (new ExecutableFinder())->find('pdftoppm') !== null;
+
+        if (! $pdftoppmAvailable) {
+            return null;
+        }
+
+        $disk = Storage::disk('public');
+        $disk->makeDirectory('b2b-catalogs/thumbnails');
+
+        $prefix = 'b2b-catalogs/thumbnails/' . Str::random(40);
+
+        $process = new Process([
+            'pdftoppm', '-jpeg', '-f', '1', '-l', '1',
+            '-scale-to-x', '640', '-scale-to-y', '-1',
+            '-jpegopt', 'quality=82',
+            $disk->path($pdfPath), $disk->path($prefix),
+        ]);
+        $process->setTimeout(30);
+
+        try {
+            $process->run();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if (! $process->isSuccessful()) {
+            return null;
+        }
+
+        $generated = glob($disk->path($prefix) . '*.jpg');
+
+        if (empty($generated)) {
+            return null;
+        }
+
+        return 'b2b-catalogs/thumbnails/' . basename($generated[0]);
     }
 
     public function edit(B2bCatalog $b2b_catalog)
@@ -81,13 +133,16 @@ class B2bCatalogController extends BaseController
         $b2b_catalog->update($data);
 
         $maxOrder = $b2b_catalog->pdfs()->max('sort_order') ?? -1;
+        $catalogHasNoPdfsYet = $maxOrder < 0;
 
         foreach ($request->file('pdf_files', []) as $i => $file) {
             $path = $file->store('b2b-catalogs', 'public');
+            $isFirstPdfOfCatalog = $catalogHasNoPdfsYet && $i === 0;
             $b2b_catalog->pdfs()->create([
-                'title'      => $request->input("new_pdf_titles.$i"),
-                'pdf_path'   => $path,
-                'sort_order' => $maxOrder + $i + 1,
+                'title'          => $request->input("new_pdf_titles.$i"),
+                'pdf_path'       => $path,
+                'thumbnail_path' => $isFirstPdfOfCatalog ? $this->generatePdfThumbnail($path) : null,
+                'sort_order'     => $maxOrder + $i + 1,
             ]);
         }
 
@@ -102,6 +157,9 @@ class B2bCatalogController extends BaseController
         abort_unless($b2b_catalog_pdf->b2b_catalog_id === $b2b_catalog->id, 404);
 
         Storage::disk('public')->delete($b2b_catalog_pdf->pdf_path);
+        if ($b2b_catalog_pdf->thumbnail_path) {
+            Storage::disk('public')->delete($b2b_catalog_pdf->thumbnail_path);
+        }
         $b2b_catalog_pdf->delete();
 
         return $this->httpResponse()->setMessage(__('PDF deleted successfully.'));
@@ -218,6 +276,9 @@ class B2bCatalogController extends BaseController
     {
         foreach ($b2b_catalog->pdfs as $pdf) {
             Storage::disk('public')->delete($pdf->pdf_path);
+            if ($pdf->thumbnail_path) {
+                Storage::disk('public')->delete($pdf->thumbnail_path);
+            }
         }
 
         if ($b2b_catalog->pdf_path && Storage::disk('public')->exists($b2b_catalog->pdf_path)) {

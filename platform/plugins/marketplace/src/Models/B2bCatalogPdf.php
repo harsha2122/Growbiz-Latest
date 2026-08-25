@@ -13,6 +13,7 @@ class B2bCatalogPdf extends BaseModel
         'b2b_catalog_id',
         'title',
         'pdf_path',
+        'thumbnail_path',
         'sort_order',
     ];
 

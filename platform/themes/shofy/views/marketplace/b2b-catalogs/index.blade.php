@@ -44,31 +44,58 @@
             <div class="row g-4 mb-40">
                 @foreach ($catalogs as $catalog)
                     @php
-                        $pdfCount  = $catalog->pdfs->count();
-                        $totalPdfs = $pdfCount ?: ($catalog->pdf_path ? 1 : 0);
-                        $discount  = (float) $catalog->discount_percentage;
-                        $isSheet   = ($catalog->type ?? 'pdf') === 'google_sheet';
+                        $pdfCount        = $catalog->pdfs->count();
+                        $totalPdfs       = $pdfCount ?: ($catalog->pdf_path ? 1 : 0);
+                        $discount        = (float) $catalog->discount_percentage;
+                        $isSheet         = ($catalog->type ?? 'pdf') === 'google_sheet';
+                        $firstThumbnail  = $isSheet ? null : $catalog->pdfs->first()?->thumbnail_path;
                     @endphp
 
                     <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
                         <div class="card bb-catalog-card h-100" style="border:1px solid var(--tp-border-primary,#eaebed);border-radius:8px;overflow:hidden;">
 
-                            {{-- Card header: neutral bg with PDF icon --}}
-                            <div class="bb-catalog-cover" style="background:var(--tp-grey-1,#f6f7f9);padding:28px 20px 20px;position:relative;text-align:center;border-bottom:1px solid var(--tp-border-primary,#eaebed);">
+                            {{-- Card header: PDF page preview, Excel/Sheet icon, or fallback PDF icon --}}
+                            <div class="bb-catalog-cover" style="background:var(--tp-grey-1,#f6f7f9);position:relative;{{ $firstThumbnail ? '' : 'padding:28px 20px 20px;' }}text-align:center;border-bottom:1px solid var(--tp-border-primary,#eaebed);">
 
                                 @if ($discount > 0)
-                                    <span style="position:absolute;top:12px;right:12px;background:var(--tp-pink-1,#fd4b6b);color:#fff;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;">
+                                    <span style="position:absolute;top:12px;right:12px;z-index:2;background:var(--tp-pink-1,#fd4b6b);color:#fff;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:20px;">
                                         {{ $discount }}% OFF
                                     </span>
                                 @endif
 
-                                @if ($isSheet)
-                                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color:var(--tp-theme-primary,#821f40);opacity:.7;margin-bottom:10px;">
-                                        <path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M14 2V8H20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M8 13H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                        <path d="M8 17H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                        <path d="M11 13V19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                @if ($firstThumbnail)
+                                    {{-- Real preview of the first PDF's first page, like a WhatsApp document preview --}}
+                                    <img
+                                        src="{{ Storage::disk('public')->url($firstThumbnail) }}"
+                                        alt="{{ $catalog->title }}"
+                                        style="width:100%;aspect-ratio:4/3;object-fit:cover;object-position:top;display:block;"
+                                        loading="lazy"
+                                    >
+                                    <span style="position:absolute;left:10px;bottom:10px;z-index:2;display:inline-flex;align-items:center;gap:4px;background:#e02424;color:#fff;font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.25);">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2Z" stroke="currentColor" stroke-width="2"/></svg>
+                                        PDF
+                                    </span>
+                                    <span style="position:absolute;right:10px;bottom:10px;z-index:2;background:rgba(0,0,0,.6);color:#fff;font-size:.68rem;font-weight:600;padding:3px 8px;border-radius:4px;">
+                                        {{ $totalPdfs }} {{ $totalPdfs === 1 ? __('PDF') : __('PDFs') }}
+                                    </span>
+                                @elseif ($isSheet)
+                                    {{-- Glossy "3D" app-icon-style spreadsheet graphic --}}
+                                    <svg width="56" height="56" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:10px;filter:drop-shadow(0 6px 10px rgba(13,92,44,.35));">
+                                        <defs>
+                                            <linearGradient id="bbExcelBody{{ $catalog->id }}" x1="4" y1="4" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+                                                <stop offset="0" stop-color="#22a556"/>
+                                                <stop offset="1" stop-color="#0d5c2c"/>
+                                            </linearGradient>
+                                            <linearGradient id="bbExcelShine{{ $catalog->id }}" x1="28" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+                                                <stop offset="0" stop-color="#ffffff" stop-opacity=".35"/>
+                                                <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+                                            </linearGradient>
+                                        </defs>
+                                        <rect x="2" y="2" width="52" height="52" rx="13" fill="url(#bbExcelBody{{ $catalog->id }})"/>
+                                        <rect x="2" y="2" width="52" height="52" rx="13" fill="url(#bbExcelShine{{ $catalog->id }})"/>
+                                        <rect x="14" y="12" width="28" height="32" rx="2.5" fill="#ffffff"/>
+                                        <rect x="14" y="12" width="28" height="8" rx="2.5" fill="#dcf1e3"/>
+                                        <path d="M14 20H42M14 27.3H42M14 34.7H42M22.6 12V44M31.2 12V44" stroke="#178a44" stroke-width="1.1"/>
                                     </svg>
 
                                     <div style="font-size:.78rem;color:var(--tp-text-1,#767a7d);font-weight:600;">
