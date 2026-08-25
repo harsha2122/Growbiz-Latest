@@ -59,7 +59,7 @@
             @if ($store->establishment_date)
                 <div class="bb-shop-banner-established d-flex align-items-center gap-1">
                     <x-core::icon name="ti ti-calendar" />
-                    {{ __('Estd - ') }}{{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
+                    {{ __('Since ') }}{{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
                 </div>
             @endif
 
