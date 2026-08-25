@@ -157,7 +157,14 @@
                     const isPdf = document.getElementById('type_pdf').checked;
                     pdfSection.style.display = isPdf ? '' : 'none';
                     sheetSection.style.display = isPdf ? 'none' : '';
+                    // Disabled fields are excluded from the submitted form entirely (unlike
+                    // merely hidden ones), so switching to Google Sheet mode after adding
+                    // new PDF rows can't leak an empty field that fails "required" server-side.
+                    pdfSection.querySelectorAll('input[name^="new_pdf_titles"], input[name^="pdf_files"]').forEach(function (el) {
+                        el.disabled = ! isPdf;
+                    });
                     sheetInput.required = ! isPdf;
+                    sheetInput.disabled = isPdf;
                 }
 
                 typeRadios.forEach(function (radio) {

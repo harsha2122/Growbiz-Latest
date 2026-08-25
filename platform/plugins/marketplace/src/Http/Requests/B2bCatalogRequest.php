@@ -24,9 +24,9 @@ class B2bCatalogRequest extends Request
             'google_sheet_url'    => [$isPdfType ? 'nullable' : 'required', 'nullable', 'url', 'max:2000'],
 
             'pdf_files'           => [$isPdfType && ! $isEdit && ! $hasExistingPdfs ? 'required' : 'nullable', 'array', 'min:1'],
-            'pdf_files.*'         => ['required', 'file', 'mimes:pdf', 'max:524288'],
+            'pdf_files.*'         => [$isPdfType ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:524288'],
             'pdf_titles'          => [$isPdfType && ! $isEdit && ! $hasExistingPdfs ? 'required' : 'nullable', 'array'],
-            'pdf_titles.*'        => ['required', 'string', 'max:255'],
+            'pdf_titles.*'        => [$isPdfType ? 'required' : 'nullable', 'string', 'max:255'],
 
             'new_pdf_titles'      => ['nullable', 'array'],
             'new_pdf_titles.*'    => ['nullable', 'string', 'max:255'],

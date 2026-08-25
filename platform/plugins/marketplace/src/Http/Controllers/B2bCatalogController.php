@@ -51,6 +51,10 @@ class B2bCatalogController extends BaseController
         $catalog = B2bCatalog::query()->create($data);
 
         foreach ($request->file('pdf_files', []) as $i => $file) {
+            if (! $file) {
+                continue;
+            }
+
             $path = $file->store('b2b-catalogs', 'public');
             $catalog->pdfs()->create([
                 'title'          => $request->input("pdf_titles.$i"),
@@ -136,6 +140,10 @@ class B2bCatalogController extends BaseController
         $catalogHasNoPdfsYet = $maxOrder < 0;
 
         foreach ($request->file('pdf_files', []) as $i => $file) {
+            if (! $file) {
+                continue;
+            }
+
             $path = $file->store('b2b-catalogs', 'public');
             $isFirstPdfOfCatalog = $catalogHasNoPdfsYet && $i === 0;
             $b2b_catalog->pdfs()->create([
