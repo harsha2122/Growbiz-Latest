@@ -215,8 +215,8 @@
             'store'       => $c->store?->id ? $c->store->name : null,
             'description' => $c->description,
             'discount'    => (float) $c->discount_percentage,
-            'contact'     => $c->contact_number,
-            'whatsapp'    => $c->whatsapp_number,
+            'contact'     => $c->contact_number ?: MarketplaceHelper::getSetting('b2b_contact_call_number', ''),
+            'whatsapp'    => $c->whatsapp_number ?: MarketplaceHelper::getSetting('b2b_contact_whatsapp_number', ''),
             'pdfs'        => $c->pdfs->map(function ($p) use ($c) {
                 return [
                     'title'    => $p->title,
