@@ -902,14 +902,24 @@ class Product extends BaseModel
                     } elseif (in_array(Str::lower(File::extension($url)), ['mp4', 'webm', 'ogg'])) {
                         $data['provider'] = 'video';
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $url)
+                        && ($embedHtml = get_instagram_oembed_html($url))
+                    ) {
+                        // Real inline embed via Meta's oEmbed API - most reliable, needs
+                        // an approved Meta Developer App (see get_instagram_oembed_html()).
+                        $data['provider'] = 'instagram-oembed';
+                        $data['embed_html'] = $embedHtml;
+                        // Keep the original URL populated - some views/checks rely on it
+                        // being non-empty even though the actual render uses embed_html.
+                        $data['url'] = $url;
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $url)
                         && ($scrapedVideoUrl = get_instagram_video_url($url))
                     ) {
-                        // Real, guaranteed-correct playback of the actual video.
+                        // Fallback: real, guaranteed-correct playback of the actual video.
                         $data['provider'] = 'video';
                         $data['url'] = $scrapedVideoUrl;
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $url)) {
-                        // Fallback for non-video posts (or if scraping fails): Instagram's
-                        // own embed widget, best-effort without an oEmbed API token.
+                        // Last-resort fallback: Instagram's own embed widget, best-effort
+                        // without an oEmbed API token.
                         $data['provider'] = 'instagram-oembed';
                         $data['embed_html'] = build_instagram_embed_html($url);
                         // Keep the original URL populated - some views/checks rely on it

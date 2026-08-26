@@ -303,14 +303,92 @@ if (! function_exists('get_related_products')) {
     }
 }
 
+if (! function_exists('get_instagram_oembed_html')) {
+    /**
+     * Fetch the official Instagram embed markup for a post/reel URL via Meta's oEmbed API -
+     * this is the most reliable method (a real, guaranteed-correct embed) when it works,
+     * but requires a Meta Developer App with credentials configured AND that app's
+     * "oEmbed Read" feature to have been reviewed and approved by Facebook (Graph API
+     * error code #10 if it's configured but not yet approved). Falls back to
+     * get_instagram_video_url()/build_instagram_embed_html() below when unavailable.
+     *
+     * Credentials are read from, in order, using whichever is configured first:
+     * 1. services.facebook.app_id/client_token (FACEBOOK_APP_ID/FACEBOOK_CLIENT_TOKEN env vars)
+     * 2. The Marketplace plugin's Meta Ads settings (Settings > Meta Ads Integration) -
+     *    Marketing App credentials first, then Auth App, matching that page's own priority
+     * 3. The Social Login plugin's Facebook Login app credentials
+     *
+     * Returns null if no credentials are available, the app isn't approved, or the
+     * request fails (caller should fall back further in that case).
+     */
+    function get_instagram_oembed_html(string $url): ?string
+    {
+        $appId = config('services.facebook.app_id');
+        $clientToken = config('services.facebook.client_token');
+
+        if ((! $appId || ! $clientToken) && is_plugin_active('marketplace')) {
+            $appId = $appId
+                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_marketing_app_id')
+                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_fb_auth_app_id');
+            $clientToken = $clientToken
+                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_marketing_app_secret')
+                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('meta_ads_fb_auth_app_secret');
+        }
+
+        if ((! $appId || ! $clientToken) && is_plugin_active('social-login')) {
+            $appId = $appId ?: setting('social_login_facebook_app_id');
+            $clientToken = $clientToken ?: setting('social_login_facebook_app_secret');
+        }
+
+        if (! $appId || ! $clientToken) {
+            return null;
+        }
+
+        $cacheKey = 'instagram_oembed_html_' . md5($url);
+
+        if (Cache::has($cacheKey)) {
+            $cached = Cache::get($cacheKey);
+
+            return $cached !== '' ? $cached : null;
+        }
+
+        try {
+            $response = Http::timeout(5)->get('https://graph.facebook.com/v19.0/instagram_oembed', [
+                'url' => $url,
+                'access_token' => $appId . '|' . $clientToken,
+                'omitscript' => 'true',
+            ]);
+
+            if ($response->ok()) {
+                $html = $response->json('html');
+            } else {
+                Log::warning('Instagram oEmbed fetch failed for ' . $url . ': ' . $response->body());
+
+                $html = null;
+            }
+        } catch (Exception $exception) {
+            Log::warning('Instagram oEmbed fetch failed: ' . $exception->getMessage());
+
+            $html = null;
+        }
+
+        // Cache a successful embed for a week (posts rarely change); cache a failure for
+        // only an hour so a transient API/rate-limit issue doesn't stick around for days.
+        // Empty string is the "failure" sentinel - storing a raw null isn't reliable across
+        // all cache drivers.
+        Cache::put($cacheKey, $html ?: '', $html ? 3600 * 24 * 7 : 3600);
+
+        return $html ?: null;
+    }
+}
+
 if (! function_exists('get_instagram_video_url')) {
     /**
      * Fetch the public post page directly and pull the direct CDN video URL out of its
-     * og:video meta tag, so it can play in a plain <video> element - this is the primary
-     * embed method since it renders real, guaranteed-correct-looking playback, unlike
-     * Instagram's public embed widget (build_instagram_embed_html() below), which
-     * frequently degrades to just a "view profile" card without a Meta oEmbed API access
-     * token (which needs a Developer App most site owners don't have).
+     * og:video meta tag, so it can play in a plain <video> element - a fallback for when
+     * the oEmbed API above isn't available. Modern Instagram reel pages increasingly
+     * render this data client-side via JS rather than a static og:video tag, so this
+     * fallback is itself unreliable and may return null even for a valid reel.
      *
      * WARNING: this scrapes Instagram's page rather than using an official API. It's
      * against Instagram's Terms of Service, breaks whenever they change their page

@@ -22,14 +22,21 @@
                         $provider = 'direct';
                         $embedUrl = $videoUrl;
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)
+                        && ($fetchedHtml = get_instagram_oembed_html($videoUrl))
+                    ) {
+                        // Real inline embed via Meta's oEmbed API - most reliable, needs
+                        // an approved Meta Developer App (see get_instagram_oembed_html()).
+                        $provider = 'instagram-oembed';
+                        $embedHtml = $fetchedHtml;
+                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)
                         && ($scrapedVideoUrl = get_instagram_video_url($videoUrl))
                     ) {
-                        // Real, guaranteed-correct playback of the actual video.
+                        // Fallback: real, guaranteed-correct playback of the actual video.
                         $provider = 'direct';
                         $embedUrl = $scrapedVideoUrl;
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)) {
-                        // Fallback for non-video posts (or if scraping fails): Instagram's
-                        // own embed widget, best-effort without an oEmbed API token.
+                        // Last-resort fallback: Instagram's own embed widget, best-effort
+                        // without an oEmbed API token.
                         $provider = 'instagram-oembed';
                         $embedHtml = build_instagram_embed_html($videoUrl);
                     } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
