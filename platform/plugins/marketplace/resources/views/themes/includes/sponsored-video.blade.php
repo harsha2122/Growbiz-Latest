@@ -312,14 +312,9 @@
                 return;
             }
 
-            if (data.provider === 'external') {
-                window.open(data.url, '_blank', 'noopener');
-                return;
-            }
-
             var modal = document.getElementById('sponsoredVideoModal');
             var body = document.getElementById('sponsoredVideoBody');
-            body.classList.toggle('bb-video-modal-body-auto', data.provider === 'instagram-oembed');
+            body.classList.toggle('bb-video-modal-body-auto', data.provider === 'instagram-oembed' || data.provider === 'external');
 
             // Make the modal visible BEFORE injecting the Instagram widget - it measures
             // its container on process(), and a still-hidden (display:none) container
@@ -340,6 +335,16 @@
                     script.src = 'https://www.instagram.com/embed.js';
                     document.body.appendChild(script);
                 }
+            } else if (data.provider === 'external') {
+                // Not a link to a single post/reel (e.g. a profile/page URL) - there's
+                // nothing to embed, so explain that instead of leaving the site
+                // automatically. Opening Instagram/Facebook from here is the visitor's
+                // own deliberate choice, not something that happens on its own.
+                body.innerHTML =
+                    '<div style="text-align:center;padding:10px;">'
+                    + '<p style="margin-bottom:16px;color:var(--tp-text-body,#55585b);">' + @json(__("This link doesn't point to a specific video, so it can't be shown here.")) + '</p>'
+                    + '<a href="' + data.url.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" class="tp-btn">' + @json(__('Open Link')) + '</a>'
+                    + '</div>';
             } else {
                 body.innerHTML = '<iframe src="' + data.url + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
             }

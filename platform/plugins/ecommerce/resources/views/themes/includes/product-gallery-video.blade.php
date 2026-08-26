@@ -79,8 +79,8 @@
                     <div
                         role="link"
                         tabindex="0"
-                        onclick="window.open('{{ $video['url'] }}', '_blank', 'noopener')"
-                        onkeydown="if (event.key === 'Enter') window.open('{{ $video['url'] }}', '_blank', 'noopener')"
+                        onclick="bbOpenProductVideoExternalModal('{{ e($video['url']) }}', '{{ e($video['site_name'] ?? __('page')) }}')"
+                        onkeydown="if (event.key === 'Enter') bbOpenProductVideoExternalModal('{{ e($video['url']) }}', '{{ e($video['site_name'] ?? __('page')) }}')"
                         style="display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; min-height: 400px; background: #f8f9fa; border-radius: 8px; padding: 20px; cursor: pointer; color: inherit;"
                     >
                         <x-core::icon name="ti ti-external-link" style="width: 32px; height: 32px;" />
@@ -113,5 +113,37 @@
 
     @if(in_array('instagram-oembed', array_column($product->video, 'provider')))
         <script async src="https://www.instagram.com/embed.js"></script>
+    @endif
+
+    @if(in_array('external-link', array_column($product->video, 'provider')))
+        @once
+            <div class="bb-video-external-modal" id="bbProductVideoExternalModal" onclick="bbCloseProductVideoExternalModal(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;align-items:center;justify-content:center;">
+                <div style="position:relative;width:90%;max-width:420px;background:#fff;border-radius:12px;padding:28px 24px;text-align:center;" onclick="event.stopPropagation()">
+                    <button type="button" onclick="bbCloseProductVideoExternalModal(event)" style="position:absolute;top:8px;right:12px;background:none;border:none;font-size:24px;line-height:1;cursor:pointer;color:#888;">&times;</button>
+                    <p style="margin-bottom:18px;color:#55585b;">{{ __("This link doesn't point to a specific video, so it can't be shown here.") }}</p>
+                    <a id="bbProductVideoExternalLink" href="#" target="_blank" rel="noopener" class="tp-btn">{{ __('Open Link') }}</a>
+                </div>
+            </div>
+
+            <script>
+                function bbOpenProductVideoExternalModal(url, siteName) {
+                    var modal = document.getElementById('bbProductVideoExternalModal');
+                    var link = document.getElementById('bbProductVideoExternalLink');
+                    link.href = url;
+                    modal.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function bbCloseProductVideoExternalModal(event) {
+                    if (event) event.preventDefault();
+                    document.getElementById('bbProductVideoExternalModal').style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') bbCloseProductVideoExternalModal();
+                });
+            </script>
+        @endonce
     @endif
 @endif
