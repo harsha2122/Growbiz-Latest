@@ -59,6 +59,7 @@
 
                     $videoIndex = count($sponsoredVideosData);
                     $sponsoredVideosData[] = [
+                        'id' => $sponsoredVideo->id,
                         'provider' => $provider,
                         'url' => $embedUrl,
                         'html' => $embedHtml,
@@ -310,6 +311,20 @@
             var data = BB_SPONSORED_VIDEOS[index];
             if (!data) {
                 return;
+            }
+
+            // Fire-and-forget click tracking - never blocks or affects opening the video.
+            if (data.id) {
+                var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                var clickUrl = '{{ route('public.ajax.sponsored-videos.click', ':id') }}'.replace(':id', data.id);
+                fetch(clickUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfMeta ? csrfMeta.getAttribute('content') : '',
+                        'Accept': 'application/json',
+                    },
+                    keepalive: true,
+                }).catch(function () {});
             }
 
             var modal = document.getElementById('sponsoredVideoModal');

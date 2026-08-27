@@ -16,7 +16,12 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-2">
-                        <label class="form-label">{{ __('Video URL') }}</label>
+                        <label class="form-label">
+                            {{ __('Video URL') }}
+                            <span class="badge" style="background-color:#6c757d;color:#fff;font-weight:normal;" title="{{ __('Times this video has been clicked/opened') }}">
+                                {{ __(':count clicks', ['count' => number_format($video->clicks)]) }}
+                            </span>
+                        </label>
                         <input
                             type="text"
                             class="form-control"

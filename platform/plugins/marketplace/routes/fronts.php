@@ -6,6 +6,7 @@ use Botble\Marketplace\Http\Controllers\Fronts\ContactStoreController;
 use Botble\Marketplace\Http\Controllers\Fronts\PublicB2bCatalogController;
 use Botble\Marketplace\Http\Controllers\Fronts\PublicStoreController;
 use Botble\Marketplace\Http\Controllers\Fronts\ServiceBookingController;
+use Botble\Marketplace\Http\Controllers\Fronts\SponsoredVideoClickController;
 use Botble\Marketplace\Models\Store;
 use Botble\Slug\Facades\SlugHelper;
 use Botble\Theme\Facades\Theme;
@@ -30,6 +31,13 @@ Route::group([
             ->middleware(RequiresJsonRequestMiddleware::class)
             ->group(function (): void {
                 Route::post('{id}/contact', [ContactStoreController::class, 'store'])->name('stores.contact');
+            });
+
+        Route::prefix('ajax/sponsored-videos')
+            ->name('public.ajax.sponsored-videos.')
+            ->middleware(RequiresJsonRequestMiddleware::class)
+            ->group(function (): void {
+                Route::post('{id}/click', [SponsoredVideoClickController::class, 'store'])->name('click');
             });
 
         Route::get('products/{product}/book-now', [ServiceBookingController::class, 'book'])
