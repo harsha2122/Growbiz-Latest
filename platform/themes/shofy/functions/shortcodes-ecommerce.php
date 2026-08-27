@@ -371,12 +371,15 @@ app()->booted(function (): void {
                 $condition['ec_products.is_featured'] = 1;
             }
 
+            $isRandom = $shortcode->sort_by === 'random';
+
             $products = app(ProductInterface::class)->filterProducts([
                 'categories' => $categoryIds = Shortcode::fields()->getIds('category_ids', $shortcode),
                 'collections' => Shortcode::fields()->getIds('collection_ids', $shortcode),
+                'random' => $isRandom,
             ], [
                 'take' => (int) $shortcode->limit ?: 12,
-                'order_by' => [
+                'order_by' => $isRandom ? [] : [
                     'order' => 'ASC',
                     'created_at' => 'DESC',
                 ],
@@ -512,6 +515,15 @@ app()->booted(function (): void {
                     ->label(__('Show featured products only?'))
                     ->helperText(__('If yes, only featured products will be shown, it is helpful if you want to add a section for featured products.'))
                     ->choices(['no' => __('No'), 'yes' => __('Yes')])
+            )
+            ->add(
+                'sort_by',
+                SelectField::class,
+                SelectFieldOption::make()
+                    ->label(__('Sort by'))
+                    ->helperText(__('"Random mix" shows a different set of products on every page load, instead of always the same newest ones.'))
+                    ->choices(['latest' => __('Latest'), 'random' => __('Random mix')])
+                    ->selected(Arr::get($attributes, 'sort_by', 'latest'))
             )
             ->add(
                 'limit',

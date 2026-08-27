@@ -335,6 +335,7 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
             'collections' => [],
             'collection' => null,
             'discounted_only' => false,
+            'random' => false,
         ], $filters);
 
         $isUsingDefaultCurrency = get_application_currency_id() == cms_currency()->getDefaultCurrency()->getKey();
@@ -461,8 +462,14 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
                 END ASC
             ', [StockStatusEnum::OUT_OF_STOCK]);
 
-        // Prioritize key account store products
-        if (is_plugin_active('marketplace') && Schema::hasColumn('mp_stores', 'is_key_account')) {
+        if ($filters['random']) {
+            // Callers asking for a randomized mix (e.g. the homepage products
+            // shortcode) explicitly don't want the key-account priority or
+            // whatever order_by they'd otherwise pass to win out - skip both so
+            // every published product gets an equal chance to surface.
+            $this->model = $this->model->inRandomOrder();
+        } elseif (is_plugin_active('marketplace') && Schema::hasColumn('mp_stores', 'is_key_account')) {
+            // Prioritize key account store products
             $this->model = $this->model
                 ->orderByRaw('COALESCE((SELECT mp_stores.is_key_account FROM mp_stores WHERE mp_stores.id = ec_products.store_id), 0) DESC');
         }
