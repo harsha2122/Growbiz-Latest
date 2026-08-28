@@ -636,6 +636,21 @@ app()->booted(function (): void {
 
             $params = ['take' => $limit];
 
+            $isRandom = $shortcode->sort_by === 'random';
+
+            $getAllProducts = function () use ($params, $isRandom) {
+                $productParams = $params + EcommerceHelper::withReviewsParams();
+
+                if ($isRandom) {
+                    // Skip the default "latest first" ordering (and the key-account
+                    // priority ordering) so every published product gets an equal
+                    // chance to surface here, mixed differently on every page load.
+                    $productParams['order_by'] = [];
+                }
+
+                return get_products($productParams, ['random' => $isRandom]);
+            };
+
             if ($style === 'columns') {
                 foreach ($selectedTabs as $tab) {
                     $groups[$tab] = match ($tab) {
@@ -658,7 +673,7 @@ app()->booted(function (): void {
                         ],
                         default => [
                             'title' => __('All Products'),
-                            'products' => get_products($params + EcommerceHelper::withReviewsParams()),
+                            'products' => $getAllProducts(),
                         ],
                     };
 
@@ -678,7 +693,7 @@ app()->booted(function (): void {
                     'on-sale' => get_products_on_sale($params),
                     'trending' => get_trending_products($params),
                     'top-rated' => get_top_rated_products($limit),
-                    default => get_products($params + EcommerceHelper::withReviewsParams()),
+                    default => $getAllProducts(),
                 };
 
                 $groups[$firstTab] = [
@@ -745,6 +760,15 @@ app()->booted(function (): void {
                     ->label(__('Limit'))
                     ->placeholder(__('Number of products to show'))
                     ->defaultValue(8)
+            )
+            ->add(
+                'sort_by',
+                SelectField::class,
+                SelectFieldOption::make()
+                    ->label(__('Sort by (All tab only)'))
+                    ->helperText(__('"Random mix" shows a different set of products on every page load, instead of always the same newest ones. Only applies to the "All" group/tab - Featured, On Sale, Trending, and Top Rated keep their own ordering.'))
+                    ->choices(['latest' => __('Latest'), 'random' => __('Random mix')])
+                    ->selected(Arr::get($attributes, 'sort_by', 'latest'))
             )
             ->add(
                 'tabs[]',
