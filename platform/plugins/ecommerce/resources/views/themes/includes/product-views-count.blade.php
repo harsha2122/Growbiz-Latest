@@ -56,6 +56,21 @@
                 font-size: 12px;
             }
         }
+
+        /* Clamp the store name on product cards to a single line so a long
+           store name doesn't wrap to 2 lines and throw off the height of
+           every other card in the same grid row. */
+        .tp-product-category.tp-store-name,
+        .tp-product-tag-2,
+        .tp-product-tag-3,
+        .tp-product-tag-5,
+        .tp-product-info-4 {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     </style>
 @endonce
 
