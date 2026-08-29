@@ -51,6 +51,11 @@ class SubscriptionPlanTable extends TableAbstract
                 return $item->is_active
                     ? '<span class="badge bg-success">' . __('Active') . '</span>'
                     : '<span class="badge bg-danger">' . __('Inactive') . '</span>';
+            })
+            ->editColumn('include_meta_ads', function ($item) {
+                return $item->include_meta_ads
+                    ? '<span class="badge" style="background-color:#198754;color:#fff;">' . __('Yes') . '</span>'
+                    : '<span class="badge" style="background-color:#6c757d;color:#fff;">' . __('No') . '</span>';
             });
 
         return $this->toJson($data);
@@ -69,6 +74,7 @@ class SubscriptionPlanTable extends TableAbstract
                 'price',
                 'is_default',
                 'is_active',
+                'include_meta_ads',
                 'created_at',
             ]);
 
@@ -95,6 +101,9 @@ class SubscriptionPlanTable extends TableAbstract
             Column::make('is_active')
                 ->title(trans('plugins/marketplace::subscription-plan.status'))
                 ->width(100),
+            Column::make('include_meta_ads')
+                ->title(trans('plugins/marketplace::subscription-plan.include_meta_ads'))
+                ->width(120),
             CreatedAtColumn::make(),
         ];
     }

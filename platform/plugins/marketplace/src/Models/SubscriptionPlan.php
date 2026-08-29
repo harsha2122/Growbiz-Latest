@@ -19,6 +19,7 @@ class SubscriptionPlan extends BaseModel
         'is_default',
         'is_active',
         'sort_order',
+        'include_meta_ads',
     ];
 
     protected $casts = [
@@ -30,6 +31,7 @@ class SubscriptionPlan extends BaseModel
         'is_default' => 'boolean',
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'include_meta_ads' => 'boolean',
     ];
 
     public function vendorSubscriptions(): HasMany

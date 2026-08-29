@@ -74,6 +74,15 @@ class SubscriptionPlanForm extends FormAbstract
                     ->label(trans('plugins/marketplace::subscription-plan.is_active'))
                     ->defaultValue(true)
                     ->toArray()
+            )
+            ->add(
+                'include_meta_ads',
+                OnOffField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/marketplace::subscription-plan.include_meta_ads'))
+                    ->helperText(trans('plugins/marketplace::subscription-plan.include_meta_ads_help'))
+                    ->defaultValue(true)
+                    ->toArray()
             );
     }
 }

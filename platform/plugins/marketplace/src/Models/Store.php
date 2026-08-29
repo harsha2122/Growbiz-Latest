@@ -73,6 +73,7 @@ class Store extends BaseModel
         'referral_code',
         'vendor_type',
         'establishment_date',
+        'first_dashboard_visited_at',
     ];
 
     protected $casts = [
@@ -87,6 +88,7 @@ class Store extends BaseModel
         'verified_at' => 'datetime',
         'verification_note' => SafeContent::class,
         'sponsored_video_expires_at' => 'datetime',
+        'first_dashboard_visited_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -342,6 +344,13 @@ class Store extends BaseModel
         return $this->activeSubscription()->exists();
     }
 
+    public function hasMetaAdsAccess(): bool
+    {
+        $subscription = VendorSubscription::getActiveForStore($this->id);
+
+        return (bool) ($subscription?->plan?->include_meta_ads ?? false);
+    }
+
     public function canCreateProduct(): bool
     {
         $subscription = VendorSubscription::getActiveForStore($this->id);
@@ -361,6 +370,7 @@ class Store extends BaseModel
             return [
                 'has_subscription' => false,
                 'plan_name' => null,
+                'include_meta_ads' => false,
                 'products_used' => $this->products()->where('is_variation', 0)->count(),
                 'products_limit' => 0,
                 'products_remaining' => 0,
@@ -376,6 +386,7 @@ class Store extends BaseModel
         return [
             'has_subscription' => true,
             'plan_name' => $subscription->plan->name ?? __('Unknown'),
+            'include_meta_ads' => (bool) ($subscription->plan->include_meta_ads ?? false),
             'products_used' => $productsUsed,
             'products_limit' => $productsLimit,
             'products_remaining' => $productsLimit == 0 ? -1 : max(0, $productsLimit - $productsUsed),

@@ -89,4 +89,69 @@
             });
         });
     </script>
+
+    @if($showWelcomeConfetti ?? false)
+        <script>
+            'use strict';
+
+            (function () {
+                var colors = ['#f94144', '#f3722c', '#f9c74f', '#90be6d', '#43aa8b', '#577590', '#0866ff'];
+                var canvas = document.createElement('canvas');
+                canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99999;';
+                document.body.appendChild(canvas);
+                var ctx = canvas.getContext('2d');
+
+                function resize() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                }
+                resize();
+                window.addEventListener('resize', resize);
+
+                var particles = [];
+                for (var i = 0; i < 160; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: -20 - Math.random() * canvas.height * 0.5,
+                        w: 6 + Math.random() * 6,
+                        h: 8 + Math.random() * 8,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        vy: 2 + Math.random() * 3,
+                        vx: -2 + Math.random() * 4,
+                        rotation: Math.random() * 360,
+                        vRotation: -8 + Math.random() * 16,
+                    });
+                }
+
+                var start = Date.now();
+                var duration = 3500;
+
+                function frame() {
+                    var elapsed = Date.now() - start;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    particles.forEach(function (p) {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.rotation += p.vRotation;
+
+                        ctx.save();
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate((p.rotation * Math.PI) / 180);
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                        ctx.restore();
+                    });
+
+                    if (elapsed < duration) {
+                        window.requestAnimationFrame(frame);
+                    } else {
+                        canvas.remove();
+                    }
+                }
+
+                window.requestAnimationFrame(frame);
+            })();
+        </script>
+    @endif
 @endpush

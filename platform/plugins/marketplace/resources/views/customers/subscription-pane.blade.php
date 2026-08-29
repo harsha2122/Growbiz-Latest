@@ -16,7 +16,13 @@
         <h6 class="fw-semibold mb-3">{{ __('Current Subscription') }}</h6>
         @if ($activeSub)
             <div class="d-flex flex-wrap gap-3">
-                <div><span class="text-muted">{{ __('Plan') }}:</span> <strong>{{ $activeSub->plan?->name ?? '—' }}</strong></div>
+                <div><span class="text-muted">{{ __('Plan') }}:</span> <strong>{{ $activeSub->plan?->name ?? '—' }}</strong>
+                    @if($activeSub->plan?->include_meta_ads)
+                        <span class="badge" style="background-color:#0866ff;color:#fff;" title="{{ __('This plan includes Meta Ads access') }}">
+                            <i class="ti ti-brand-meta"></i> {{ __('Meta Ads') }}
+                        </span>
+                    @endif
+                </div>
                 <div><span class="text-muted">{{ __('Status') }}:</span>
                     <span class="badge bg-{{ $activeSub->isActive() ? 'success' : 'danger' }}">{{ $activeSub->status_label }}</span>
                 </div>

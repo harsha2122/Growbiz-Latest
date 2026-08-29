@@ -406,7 +406,9 @@ class MarketplaceServiceProvider extends ServiceProvider
                     ]);
                 })
                 ->when(
-                    MarketplaceHelper::isMetaAdsEnabled() && auth('customer')->check(),
+                    MarketplaceHelper::isMetaAdsEnabled()
+                        && auth('customer')->check()
+                        && (bool) auth('customer')->user()?->store?->hasMetaAdsAccess(),
                     function (DashboardMenuSupport $dashboardMenu): void {
                         $dashboardMenu
                             ->registerItem([

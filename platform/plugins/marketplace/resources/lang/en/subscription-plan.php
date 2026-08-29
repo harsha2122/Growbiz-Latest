@@ -14,6 +14,8 @@ return [
     'is_default' => 'Default Plan',
     'is_default_help' => 'This plan will be assigned to new sellers by default.',
     'is_active' => 'Active',
+    'include_meta_ads' => 'Include Meta Ads',
+    'include_meta_ads_help' => 'When enabled, sellers on this plan can access the Meta Ads dashboard (connect Facebook, create campaigns/ad sets/ads).',
     'status' => 'Status',
     'sort_order' => 'Sort Order',
     'select_plan' => 'Select Subscription Plan',

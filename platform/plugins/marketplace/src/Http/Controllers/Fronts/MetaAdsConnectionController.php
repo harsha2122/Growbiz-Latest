@@ -20,10 +20,15 @@ class MetaAdsConnectionController extends BaseController
                 return redirect()->route('marketplace.vendor.dashboard')
                     ->with('error', 'Meta Ads is not enabled.');
             }
-            $this->storeId = auth('customer')->user()?->store?->id ?? 0;
+            $store = auth('customer')->user()?->store;
+            $this->storeId = $store?->id ?? 0;
             if (! $this->storeId) {
                 return redirect()->route('marketplace.vendor.dashboard')
                     ->with('error', 'No store found for your account.');
+            }
+            if (! $store->hasMetaAdsAccess()) {
+                return redirect()->route('marketplace.vendor.dashboard')
+                    ->with('error', 'Your current subscription plan does not include Meta Ads. Please contact admin to upgrade your plan.');
             }
 
             return $next($request);

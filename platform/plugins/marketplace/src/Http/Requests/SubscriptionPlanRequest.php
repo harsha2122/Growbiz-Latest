@@ -18,6 +18,7 @@ class SubscriptionPlanRequest extends Request
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_default' => [new OnOffRule()],
             'is_active' => [new OnOffRule()],
+            'include_meta_ads' => [new OnOffRule()],
         ];
     }
 }

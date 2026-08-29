@@ -19,6 +19,11 @@
                                 <div class="text-muted small">{{ trans('plugins/marketplace::subscription-plan.current_plan') }}</div>
                                 <div class="mt-1">
                                     <span class="badge bg-primary text-primary-fg fs-6">{{ $subscriptionStatus['plan_name'] }}</span>
+                                    @if($subscriptionStatus['include_meta_ads'])
+                                        <span class="badge" style="background-color:#0866ff;color:#fff;" title="{{ __('Your plan includes Meta Ads access') }}">
+                                            <i class="ti ti-brand-meta"></i> {{ __('Meta Ads') }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">

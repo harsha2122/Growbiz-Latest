@@ -250,6 +250,15 @@ class StoreController extends BaseController
         $startsAt = $request->input('starts_at') ? Carbon::parse($request->input('starts_at')) : Carbon::now();
         $expiresAt = $plan->duration_days > 0 ? $startsAt->copy()->addDays($plan->duration_days) : null;
 
+        // A vendor can only have one active plan at a time — cancel any existing
+        // active subscription(s) so the new plan takes over unambiguously and is
+        // reflected immediately everywhere (vendor dashboard, Meta Ads access,
+        // product limits), instead of leaving multiple "active" rows behind.
+        VendorSubscription::query()
+            ->where('store_id', $store->id)
+            ->where('status', VendorSubscription::STATUS_ACTIVE)
+            ->update(['status' => VendorSubscription::STATUS_CANCELLED]);
+
         VendorSubscription::query()->create([
             'store_id'    => $store->id,
             'plan_id'     => $plan->id,

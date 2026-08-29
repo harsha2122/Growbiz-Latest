@@ -165,7 +165,15 @@ class DashboardController extends BaseController
                 ]);
         }
 
-        return MarketplaceHelper::view('vendor-dashboard.index', $compact);
+        // One-time welcome celebration on the very first full-page dashboard visit
+        // (not on the date-range-picker's ajax refresh above, so it never re-fires).
+        $showWelcomeConfetti = false;
+        if (! $store->first_dashboard_visited_at) {
+            $showWelcomeConfetti = true;
+            $store->update(['first_dashboard_visited_at' => now()]);
+        }
+
+        return MarketplaceHelper::view('vendor-dashboard.index', $compact + compact('showWelcomeConfetti'));
     }
 
     public function postUpload(Request $request)
