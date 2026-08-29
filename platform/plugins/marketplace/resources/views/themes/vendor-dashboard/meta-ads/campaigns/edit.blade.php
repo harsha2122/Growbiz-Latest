@@ -21,7 +21,7 @@
                 <div class="mb-3">
                     <label class="form-label">Objective <span class="text-danger">*</span></label>
                     <select name="objective" class="form-select" required>
-                        @foreach(['OUTCOME_TRAFFIC' => 'Traffic', 'OUTCOME_AWARENESS' => 'Awareness', 'OUTCOME_ENGAGEMENT' => 'Engagement', 'OUTCOME_SALES' => 'Sales', 'OUTCOME_LEADS' => 'Leads'] as $val => $label)
+                        @foreach(['OUTCOME_TRAFFIC' => 'Traffic', 'OUTCOME_AWARENESS' => 'Awareness', 'OUTCOME_ENGAGEMENT' => 'Engagement', 'OUTCOME_SALES' => 'Sales', 'OUTCOME_LEADS' => 'Leads', 'OUTCOME_APP_PROMOTION' => 'App Promotion'] as $val => $label)
                             <option value="{{ $val }}" {{ old('objective', $campaign->objective) === $val ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>

@@ -121,7 +121,8 @@ class MarketplaceServiceProvider extends ServiceProvider
         }
 
         $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
-            $schedule->command('meta-ads:sync-insights')->dailyAt('03:00');
+            // Hourly (was daily) so the vendor analytics dashboard stays close to real-time.
+            $schedule->command('meta-ads:sync-insights')->hourly();
             // FIX #3: Refresh tokens every 30 days (catches expiring tokens 15 days early)
             $schedule->command('meta-ads:refresh-tokens')->monthlyOn(1, '02:00');
         });

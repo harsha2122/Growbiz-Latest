@@ -13,6 +13,8 @@ class MetaAdSet extends Model
         'targeting_locations', 'targeting_age_min', 'targeting_age_max',
         'targeting_genders', 'targeting_interests', 'placements',
         'optimization_goal', 'meta_adset_id', 'impressions', 'clicks', 'spend',
+        'reach', 'frequency', 'cpm', 'ctr', 'cpc', 'conversions', 'conversion_value',
+        'insights_synced_at',
     ];
 
     protected $casts = [
@@ -22,6 +24,12 @@ class MetaAdSet extends Model
         'daily_budget' => 'decimal:2',
         'bid_cap' => 'decimal:2',
         'spend' => 'decimal:2',
+        'cpm' => 'decimal:2',
+        'ctr' => 'decimal:2',
+        'cpc' => 'decimal:2',
+        'frequency' => 'decimal:2',
+        'conversion_value' => 'decimal:2',
+        'insights_synced_at' => 'datetime',
     ];
 
     public function campaign()
@@ -37,5 +45,10 @@ class MetaAdSet extends Model
     public function ads()
     {
         return $this->hasMany(MetaAd::class, 'ad_set_id');
+    }
+
+    public function dailyInsights()
+    {
+        return $this->hasMany(MetaAdInsightDaily::class, 'object_id')->where('object_type', 'ad_set');
     }
 }

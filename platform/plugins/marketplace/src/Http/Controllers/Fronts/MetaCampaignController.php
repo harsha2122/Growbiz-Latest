@@ -2,6 +2,7 @@
 
 namespace Botble\Marketplace\Http\Controllers\Fronts;
 
+use Botble\Base\Facades\Assets;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Models\MetaAdAccount;
@@ -29,6 +30,9 @@ class MetaCampaignController extends BaseController
 
             return $next($request);
         });
+
+        Assets::addScriptsDirectly(['vendor/core/plugins/ecommerce/libraries/apexcharts-bundle/dist/apexcharts.min.js'])
+            ->addStylesDirectly(['vendor/core/plugins/ecommerce/libraries/apexcharts-bundle/dist/apexcharts.css']);
     }
 
     public function index()
@@ -105,7 +109,43 @@ class MetaCampaignController extends BaseController
 
         $this->pageTitle($campaign->name);
 
-        return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.show', compact('campaign'));
+        $dailySeries = $campaign->dailyInsights()->orderBy('date')->get();
+
+        $chartData = [
+            'dates'       => $dailySeries->pluck('date')->map(fn ($d) => $d->format('Y-m-d'))->values(),
+            'spend'       => $dailySeries->pluck('spend')->map(fn ($v) => (float) $v)->values(),
+            'impressions' => $dailySeries->pluck('impressions')->map(fn ($v) => (int) $v)->values(),
+            'clicks'      => $dailySeries->pluck('clicks')->map(fn ($v) => (int) $v)->values(),
+        ];
+
+        // Age/gender breakdown -> grouped bar chart series (one series per gender, categories = age ranges)
+        $ageGenderChart = ['categories' => [], 'series' => []];
+        $ageGenderRows = collect($campaign->age_gender_breakdown ?? []);
+        if ($ageGenderRows->isNotEmpty()) {
+            $ages = $ageGenderRows->pluck('age')->unique()->sort()->values();
+            $genders = $ageGenderRows->pluck('gender')->unique()->values();
+            $ageGenderChart['categories'] = $ages->all();
+            foreach ($genders as $gender) {
+                $ageGenderChart['series'][] = [
+                    'name' => ucfirst($gender),
+                    'data' => $ages->map(function ($age) use ($ageGenderRows, $gender) {
+                        $row = $ageGenderRows->first(fn ($r) => ($r['age'] ?? null) === $age && ($r['gender'] ?? null) === $gender);
+                        return (int) ($row['impressions'] ?? 0);
+                    })->all(),
+                ];
+            }
+        }
+
+        // Placement (publisher_platform) breakdown -> donut chart
+        $placementRows = collect($campaign->placement_breakdown ?? []);
+        $placementChart = [
+            'labels' => $placementRows->pluck('publisher_platform')->map(fn ($p) => ucfirst($p ?? 'unknown'))->values(),
+            'series' => $placementRows->pluck('impressions')->map(fn ($v) => (int) $v)->values(),
+        ];
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.campaigns.show', compact(
+            'campaign', 'chartData', 'ageGenderChart', 'placementChart'
+        ));
     }
 
     public function edit(int $id)

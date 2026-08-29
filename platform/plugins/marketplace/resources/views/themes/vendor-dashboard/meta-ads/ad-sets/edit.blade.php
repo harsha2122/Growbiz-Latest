@@ -75,11 +75,11 @@
                         ? (json_decode(old('targeting_locations'), true) ?? [])
                         : ($adSet->targeting_locations ?? []),
                 ])
-                <div class="mb-3">
-                    <label class="form-label">Interests (comma-separated)</label>
-                    <input type="text" name="targeting_interests" class="form-control"
-                           value="{{ old('targeting_interests', is_array($adSet->targeting_interests) ? implode(', ', $adSet->targeting_interests) : '') }}">
-                </div>
+                @include(MarketplaceHelper::viewPath('vendor-dashboard.meta-ads.partials.interest-picker'), [
+                    'existingInterests' => old('targeting_interests')
+                        ? (json_decode(old('targeting_interests'), true) ?? [])
+                        : collect($adSet->targeting_interests ?? [])->filter(fn ($i) => is_array($i) && ! empty($i['id']))->values()->all(),
+                ])
                 <div class="mb-3">
                     <label class="form-label">Placements</label>
                     @foreach(['facebook_feed' => 'Facebook Feed', 'instagram_feed' => 'Instagram Feed', 'instagram_stories' => 'Instagram Stories', 'instagram_reels' => 'Reels', 'messenger' => 'Messenger'] as $val => $label)
@@ -89,7 +89,19 @@
                             <label class="form-check-label" for="pl_{{ $val }}">{{ $label }}</label>
                         </div>
                     @endforeach
+                    <div class="form-text">Leave all unchecked to let Meta automatically place your ad wherever it performs best (recommended).</div>
                 </div>
+
+                <div class="card bg-light border-0 mb-3">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">Estimated audience reach</span>
+                            <button type="button" id="estimate-audience-btn" class="btn btn-sm btn-outline-primary">Estimate</button>
+                        </div>
+                        <div id="estimate-audience-result" class="mt-1 fw-semibold"></div>
+                    </div>
+                </div>
+
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                     <a href="{{ route('marketplace.vendor.meta-ads.campaigns.show', $adSet->campaign_id) }}" class="btn btn-outline-secondary">Cancel</a>
@@ -97,6 +109,8 @@
             </form>
         </div>
     </div>
+
+    @include(MarketplaceHelper::viewPath('vendor-dashboard.meta-ads.partials.delivery-estimate-script'))
 
     @if($adSet->campaign)
     <script>

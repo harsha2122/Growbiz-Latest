@@ -39,6 +39,8 @@ Route::group([
     Route::get('campaigns/{campaignId}/ad-sets/create', [MetaAdSetController::class, 'create'])->name('campaigns.ad-sets.create');
     Route::post('campaigns/{campaignId}/ad-sets', [MetaAdSetController::class, 'store'])->name('campaigns.ad-sets.store');
     Route::get('ad-sets/search-locations', [MetaAdSetController::class, 'searchLocations'])->name('ad-sets.search-locations');
+    Route::get('ad-sets/search-interests', [MetaAdSetController::class, 'searchInterests'])->name('ad-sets.search-interests');
+    Route::post('ad-sets/delivery-estimate', [MetaAdSetController::class, 'deliveryEstimate'])->name('ad-sets.delivery-estimate');
     Route::get('ad-sets/{id}', [MetaAdSetController::class, 'show'])->where('id', '[0-9]+')->name('ad-sets.show');
     Route::get('ad-sets/{id}/edit', [MetaAdSetController::class, 'edit'])->where('id', '[0-9]+')->name('ad-sets.edit');
     Route::put('ad-sets/{id}', [MetaAdSetController::class, 'update'])->where('id', '[0-9]+')->name('ad-sets.update');

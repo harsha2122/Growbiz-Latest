@@ -248,7 +248,23 @@ class MetaAdController extends BaseController
 
         $storeName = auth('customer')->user()->store?->name ?? 'Your Store';
 
-        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.preview', compact('ad', 'storeName'));
+        // Once the ad is live on Meta, prefer Meta's own real preview iframe
+        // (exactly what will render in Facebook/Instagram) over the mock card.
+        $previewHtml = null;
+        if ($ad->meta_ad_id) {
+            $adAccount = $this->getConnectedAccount();
+            if ($adAccount) {
+                $format = match ($ad->format) {
+                    'VIDEO' => 'INSTAGRAM_STANDARD',
+                    default => 'MOBILE_FEED_STANDARD',
+                };
+
+                $preview = app(MetaApiClient::class)->getAdPreview($adAccount->access_token, $ad->meta_ad_id, $format);
+                $previewHtml = $preview['body'] ?? null;
+            }
+        }
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ads.preview', compact('ad', 'storeName', 'previewHtml'));
     }
 
     /**

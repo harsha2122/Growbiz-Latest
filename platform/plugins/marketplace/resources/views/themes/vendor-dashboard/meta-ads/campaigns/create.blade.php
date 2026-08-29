@@ -26,6 +26,7 @@
                         <option value="OUTCOME_ENGAGEMENT" {{ old('objective') === 'OUTCOME_ENGAGEMENT' ? 'selected' : '' }}>Engagement</option>
                         <option value="OUTCOME_SALES" {{ old('objective') === 'OUTCOME_SALES' ? 'selected' : '' }}>Sales</option>
                         <option value="OUTCOME_LEADS" {{ old('objective') === 'OUTCOME_LEADS' ? 'selected' : '' }}>Leads</option>
+                        <option value="OUTCOME_APP_PROMOTION" {{ old('objective') === 'OUTCOME_APP_PROMOTION' ? 'selected' : '' }}>App Promotion</option>
                     </select>
                 </div>
                 <div class="row">

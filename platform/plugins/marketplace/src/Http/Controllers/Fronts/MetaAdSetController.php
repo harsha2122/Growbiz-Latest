@@ -2,6 +2,7 @@
 
 namespace Botble\Marketplace\Http\Controllers\Fronts;
 
+use Botble\Base\Facades\Assets;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Models\MetaAdAccount;
@@ -30,6 +31,9 @@ class MetaAdSetController extends BaseController
 
             return $next($request);
         });
+
+        Assets::addScriptsDirectly(['vendor/core/plugins/ecommerce/libraries/apexcharts-bundle/dist/apexcharts.min.js'])
+            ->addStylesDirectly(['vendor/core/plugins/ecommerce/libraries/apexcharts-bundle/dist/apexcharts.css']);
     }
 
     public function create(int $campaignId)
@@ -64,10 +68,10 @@ class MetaAdSetController extends BaseController
         $validated['store_id']    = $this->storeId;
         $validated['status']      = 'PAUSED';
 
-        // targeting_locations arrives as a JSON string of structured location objects
-        $validated['targeting_locations'] = $this->parseLocationsInput($validated['targeting_locations'] ?? null);
-        $validated['targeting_interests'] = $validated['targeting_interests']
-            ? array_map('trim', explode(',', $validated['targeting_interests'])) : [];
+        // targeting_locations / targeting_interests arrive as JSON strings of
+        // structured objects (from the location-picker / interest-picker widgets).
+        $validated['targeting_locations'] = $this->parseJsonArrayInput($validated['targeting_locations'] ?? null);
+        $validated['targeting_interests'] = $this->parseJsonArrayInput($validated['targeting_interests'] ?? null);
 
         $adSet = MetaAdSet::query()->create($validated);
 
@@ -92,7 +96,15 @@ class MetaAdSetController extends BaseController
 
         $this->pageTitle($adSet->name);
 
-        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.show', compact('adSet'));
+        $dailySeries = $adSet->dailyInsights()->orderBy('date')->get();
+
+        $chartData = [
+            'dates'  => $dailySeries->pluck('date')->map(fn ($d) => $d->format('Y-m-d'))->values(),
+            'spend'  => $dailySeries->pluck('spend')->map(fn ($v) => (float) $v)->values(),
+            'clicks' => $dailySeries->pluck('clicks')->map(fn ($v) => (int) $v)->values(),
+        ];
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.ad-sets.show', compact('adSet', 'chartData'));
     }
 
     public function edit(int $id)
@@ -124,9 +136,8 @@ class MetaAdSetController extends BaseController
             'placements'          => ['nullable', 'array'],
         ]);
 
-        $validated['targeting_locations'] = $this->parseLocationsInput($validated['targeting_locations'] ?? null);
-        $validated['targeting_interests'] = $validated['targeting_interests']
-            ? array_map('trim', explode(',', $validated['targeting_interests'])) : [];
+        $validated['targeting_locations'] = $this->parseJsonArrayInput($validated['targeting_locations'] ?? null);
+        $validated['targeting_interests'] = $this->parseJsonArrayInput($validated['targeting_interests'] ?? null);
 
         $adSet->update($validated);
 
@@ -140,6 +151,8 @@ class MetaAdSetController extends BaseController
                         'targeting_age_max'   => $adSet->targeting_age_max,
                         'targeting_genders'   => $adSet->targeting_genders,
                         'targeting_locations' => $adSet->targeting_locations,
+                        'targeting_interests' => $adSet->targeting_interests,
+                        'placements'          => $adSet->placements,
                     ]);
 
                     $payload = [
@@ -269,6 +282,8 @@ class MetaAdSetController extends BaseController
                 'targeting_age_max'   => $adSet->targeting_age_max,
                 'targeting_genders'   => $adSet->targeting_genders,
                 'targeting_locations' => $adSet->targeting_locations,
+                'targeting_interests' => $adSet->targeting_interests,
+                'placements'          => $adSet->placements,
             ]);
 
             $payload = [
@@ -363,11 +378,13 @@ class MetaAdSetController extends BaseController
     }
 
     /**
-     * Parse the targeting_locations input.
-     * Accepts either a JSON string of structured objects [{key,type,name}]
-     * or a legacy comma-separated country code string.
+     * Parse a JSON-string-of-objects input (used by both the location-picker and
+     * interest-picker widgets, e.g. [{key,type,name}] or [{id,name}]).
+     * Accepts a legacy plain comma-separated string as a fallback for old rows
+     * saved before either picker existed (kept as opaque strings; buildTargeting()
+     * already knows to skip interest entries with no 'id').
      */
-    private function parseLocationsInput(?string $input): array
+    private function parseJsonArrayInput(?string $input): array
     {
         if (empty($input)) {
             return [];
@@ -378,8 +395,81 @@ class MetaAdSetController extends BaseController
             return $decoded;
         }
 
-        // Legacy fallback: plain comma-separated country codes
         return array_values(array_filter(array_map('trim', explode(',', $input))));
+    }
+
+    /**
+     * AJAX: search Meta's real interest targeting index.
+     */
+    public function searchInterests(Request $request)
+    {
+        $query = trim($request->get('q', ''));
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        try {
+            $adAccount = $this->getConnectedAccount();
+            if (! $adAccount) {
+                return response()->json(['error' => 'No connected Meta ad account. Please reconnect Facebook.'], 403);
+            }
+
+            $results = app(MetaApiClient::class)->searchInterests($adAccount->access_token, $query);
+
+            return response()->json(array_values(array_map(fn ($r) => [
+                'id'   => $r['id'] ?? '',
+                'name' => $r['name'] ?? '',
+                'audience_size_lower_bound' => $r['audience_size_lower_bound'] ?? null,
+            ], $results)));
+        } catch (\Throwable $e) {
+            Log::error('MetaAdSetController::searchInterests error', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Search failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * AJAX: live reachable-audience-size estimate while building targeting,
+     * so vendors get feedback before pushing the ad set to Meta.
+     */
+    public function deliveryEstimate(Request $request)
+    {
+        $adAccount = $this->getConnectedAccount();
+        if (! $adAccount) {
+            return response()->json(['error' => 'No connected Meta ad account. Please reconnect Facebook.'], 403);
+        }
+
+        try {
+            $metaClient = app(MetaApiClient::class);
+            $targeting  = $metaClient->buildTargeting([
+                'targeting_age_min'   => (int) $request->input('targeting_age_min', 18),
+                'targeting_age_max'   => (int) $request->input('targeting_age_max', 65),
+                'targeting_genders'   => $request->input('targeting_genders', 'all'),
+                'targeting_locations' => $this->parseJsonArrayInput($request->input('targeting_locations')),
+                'targeting_interests' => $this->parseJsonArrayInput($request->input('targeting_interests')),
+                'placements'          => $request->input('placements', []),
+            ]);
+
+            $estimate = $metaClient->getDeliveryEstimate(
+                $adAccount->access_token,
+                $adAccount->ad_account_id,
+                $targeting,
+                $request->input('optimization_goal', 'REACH')
+            );
+
+            if (empty($estimate)) {
+                return response()->json(['error' => 'Estimate unavailable right now.'], 200);
+            }
+
+            return response()->json([
+                'estimate_mau_lower' => $estimate['estimate_mau_lower_bound'] ?? null,
+                'estimate_mau_upper' => $estimate['estimate_mau_upper_bound'] ?? null,
+                'estimate_dau_lower' => $estimate['estimate_dau_lower_bound'] ?? null,
+                'estimate_dau_upper' => $estimate['estimate_dau_upper_bound'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('MetaAdSetController::deliveryEstimate error', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Estimate failed: ' . $e->getMessage()], 200);
+        }
     }
 
     private function getConnectedAccount(): ?MetaAdAccount

@@ -6,6 +6,21 @@
         <a href="{{ route('marketplace.vendor.meta-ads.ads.show', $ad->id) }}" class="btn btn-outline-secondary">← Back</a>
     </div>
 
+    @if($previewHtml)
+        <div class="alert alert-success py-2 small">
+            <i class="ti ti-cloud-check me-1"></i> Showing Meta's real ad preview (as it will actually render on Facebook/Instagram).
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="d-flex justify-content-center">
+                    {!! $previewHtml !!}
+                </div>
+            </div>
+        </div>
+    @else
+    <div class="alert alert-info py-2 small">
+        <i class="ti ti-info-circle me-1"></i> This is a mock preview. Push this ad to Meta to see the real ad preview here.
+    </div>
     <div class="row justify-content-center">
         <div class="col-md-5">
             <div class="card shadow-sm" style="max-width:420px;margin:auto;border-radius:12px;overflow:hidden">
@@ -42,4 +57,5 @@
             </div>
         </div>
     </div>
+    @endif
 @endsection

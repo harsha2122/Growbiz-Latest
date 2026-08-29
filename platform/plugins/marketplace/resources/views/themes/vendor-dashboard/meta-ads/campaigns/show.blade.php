@@ -48,6 +48,54 @@
         </div></div>
     </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3"><div class="card card-body py-2">
+            <div class="text-muted small">Reach / Frequency</div>
+            <strong>{{ number_format((int) $campaign->reach) }}</strong> <span class="text-muted small">/ {{ $campaign->frequency }}x</span>
+        </div></div>
+        <div class="col-sm-6 col-lg-3"><div class="card card-body py-2">
+            <div class="text-muted small">CPM / CPC</div>
+            <strong>₹{{ $campaign->cpm }}</strong> <span class="text-muted small">/ ₹{{ $campaign->cpc }}</span>
+        </div></div>
+        <div class="col-sm-6 col-lg-3"><div class="card card-body py-2">
+            <div class="text-muted small">CTR</div>
+            <strong>{{ $campaign->ctr }}%</strong>
+        </div></div>
+        <div class="col-sm-6 col-lg-3"><div class="card card-body py-2">
+            <div class="text-muted small">Conversions</div>
+            <strong>{{ number_format((int) $campaign->conversions) }}</strong>
+            <span class="text-muted small">₹{{ number_format((float) $campaign->conversion_value, 2) }}</span>
+        </div></div>
+    </div>
+
+    @if(collect($chartData['dates'] ?? [])->isNotEmpty())
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Performance Trend</h5></div>
+            <div class="card-body"><div id="campaign-trend-chart"></div></div>
+        </div>
+    @endif
+
+    @if(collect($ageGenderChart['series'] ?? [])->isNotEmpty() || collect($placementChart['series'] ?? [])->isNotEmpty())
+        <div class="row g-3 mb-4">
+            @if(collect($ageGenderChart['series'] ?? [])->isNotEmpty())
+                <div class="col-lg-7">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Audience — Age &amp; Gender (last 30 days)</h5></div>
+                        <div class="card-body"><div id="campaign-age-gender-chart"></div></div>
+                    </div>
+                </div>
+            @endif
+            @if(collect($placementChart['series'] ?? [])->isNotEmpty())
+                <div class="col-lg-5">
+                    <div class="card h-100">
+                        <div class="card-header"><h5 class="mb-0">Placements (last 30 days)</h5></div>
+                        <div class="card-body"><div id="campaign-placement-chart"></div></div>
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header"><h5 class="mb-0">Ad Sets ({{ $campaign->adSets->count() }})</h5></div>
         <div class="card-body p-0">
@@ -84,4 +132,50 @@
             @endif
         </div>
     </div>
+
+    <script>
+        (function () {
+            if (!window.ApexCharts) return;
+
+            var chartData = @json($chartData ?? ['dates' => [], 'spend' => [], 'clicks' => []]);
+            if (chartData.dates.length) {
+                new ApexCharts(document.querySelector('#campaign-trend-chart'), {
+                    series: [
+                        { name: 'Spend (₹)', type: 'area', data: chartData.spend },
+                        { name: 'Clicks', type: 'line', data: chartData.clicks },
+                    ],
+                    chart: { height: 300, type: 'line', toolbar: { show: false } },
+                    stroke: { curve: 'smooth', width: [0, 2] },
+                    fill: { type: ['gradient', 'solid'], gradient: { opacityFrom: 0.4, opacityTo: 0.05 } },
+                    colors: ['#0d6efd', '#fcb800'],
+                    dataLabels: { enabled: false },
+                    xaxis: { type: 'datetime', categories: chartData.dates },
+                    yaxis: [{ title: { text: 'Spend' } }, { opposite: true, title: { text: 'Clicks' } }],
+                    tooltip: { x: { format: 'dd MMM yy' } },
+                }).render();
+            }
+
+            var ageGender = @json($ageGenderChart ?? ['categories' => [], 'series' => []]);
+            if (ageGender.series.length) {
+                new ApexCharts(document.querySelector('#campaign-age-gender-chart'), {
+                    series: ageGender.series,
+                    chart: { height: 280, type: 'bar', toolbar: { show: false } },
+                    plotOptions: { bar: { horizontal: false, columnWidth: '55%' } },
+                    dataLabels: { enabled: false },
+                    xaxis: { categories: ageGender.categories, title: { text: 'Impressions' } },
+                    colors: ['#0d6efd', '#fc6b00', '#6c757d'],
+                }).render();
+            }
+
+            var placement = @json($placementChart ?? ['labels' => [], 'series' => []]);
+            if (placement.series.length) {
+                new ApexCharts(document.querySelector('#campaign-placement-chart'), {
+                    series: placement.series,
+                    labels: placement.labels,
+                    chart: { height: 280, type: 'donut' },
+                    legend: { position: 'bottom' },
+                }).render();
+            }
+        })();
+    </script>
 @endsection

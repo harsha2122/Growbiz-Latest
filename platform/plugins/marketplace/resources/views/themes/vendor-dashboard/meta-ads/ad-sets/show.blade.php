@@ -87,6 +87,33 @@
         </div>
     @endif
 
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3"><div class="card card-body py-2">
+            <div class="text-muted small">Reach / Frequency</div>
+            <strong>{{ number_format((int) $adSet->reach) }}</strong> <span class="text-muted small">/ {{ $adSet->frequency }}x</span>
+        </div></div>
+        <div class="col-sm-6 col-lg-3"><div class="card card-body py-2">
+            <div class="text-muted small">CPM / CPC</div>
+            <strong>₹{{ $adSet->cpm }}</strong> <span class="text-muted small">/ ₹{{ $adSet->cpc }}</span>
+        </div></div>
+        <div class="col-sm-6 col-lg-3"><div class="card card-body py-2">
+            <div class="text-muted small">Spend / CTR</div>
+            <strong>₹{{ number_format((float) $adSet->spend, 2) }}</strong> <span class="text-muted small">/ {{ $adSet->ctr }}%</span>
+        </div></div>
+        <div class="col-sm-6 col-lg-3"><div class="card card-body py-2">
+            <div class="text-muted small">Conversions</div>
+            <strong>{{ number_format((int) $adSet->conversions) }}</strong>
+            <span class="text-muted small">₹{{ number_format((float) $adSet->conversion_value, 2) }}</span>
+        </div></div>
+    </div>
+
+    @if(collect($chartData['dates'] ?? [])->isNotEmpty())
+        <div class="card mb-4">
+            <div class="card-header"><h5 class="mb-0">Performance Trend</h5></div>
+            <div class="card-body"><div id="adset-trend-chart"></div></div>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-header"><h5 class="mb-0">Ads ({{ $adSet->ads->count() }})</h5></div>
         <div class="card-body p-0">
@@ -147,4 +174,26 @@
             @endif
         </div>
     </div>
+
+    <script>
+        (function () {
+            var chartData = @json($chartData ?? ['dates' => [], 'spend' => [], 'clicks' => []]);
+            if (chartData.dates.length && window.ApexCharts) {
+                new ApexCharts(document.querySelector('#adset-trend-chart'), {
+                    series: [
+                        { name: 'Spend (₹)', type: 'area', data: chartData.spend },
+                        { name: 'Clicks', type: 'line', data: chartData.clicks },
+                    ],
+                    chart: { height: 280, type: 'line', toolbar: { show: false } },
+                    stroke: { curve: 'smooth', width: [0, 2] },
+                    fill: { type: ['gradient', 'solid'], gradient: { opacityFrom: 0.4, opacityTo: 0.05 } },
+                    colors: ['#0d6efd', '#fcb800'],
+                    dataLabels: { enabled: false },
+                    xaxis: { type: 'datetime', categories: chartData.dates },
+                    yaxis: [{ title: { text: 'Spend' } }, { opposite: true, title: { text: 'Clicks' } }],
+                    tooltip: { x: { format: 'dd MMM yy' } },
+                }).render();
+            }
+        })();
+    </script>
 @endsection
