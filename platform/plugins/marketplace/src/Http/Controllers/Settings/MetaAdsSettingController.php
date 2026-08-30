@@ -4,6 +4,7 @@ namespace Botble\Marketplace\Http\Controllers\Settings;
 
 use Botble\Marketplace\Forms\Settings\MetaAdsSettingForm;
 use Botble\Marketplace\Http\Requests\MetaAdsSettingRequest;
+use Illuminate\Http\Request;
 
 class MetaAdsSettingController extends SettingController
 {
@@ -23,5 +24,16 @@ class MetaAdsSettingController extends SettingController
         return $this->httpResponse()
             ->setNextUrl(route('marketplace.meta-ads-settings'))
             ->withUpdatedSuccessMessage();
+    }
+
+    public function testOembed(Request $request)
+    {
+        $request->validate([
+            'url' => ['required', 'url', 'max:500'],
+        ]);
+
+        $result = test_instagram_oembed($request->input('url'));
+
+        return response()->json($result);
     }
 }

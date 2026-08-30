@@ -264,6 +264,12 @@ AdminHelper::registerRoutes(function (): void {
                 'uses' => 'Settings\MetaAdsSettingController@update',
                 'permission' => 'marketplace.settings',
             ]);
+
+            Route::post('meta-ads-settings/test-oembed', [
+                'as' => 'meta-ads-settings.test-oembed',
+                'uses' => 'Settings\MetaAdsSettingController@testOembed',
+                'permission' => 'marketplace.settings',
+            ]);
         });
 
         Route::group(['prefix' => 'ecommerce/products', 'as' => 'products.'], function (): void {

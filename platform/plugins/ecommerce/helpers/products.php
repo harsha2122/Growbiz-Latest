@@ -303,28 +303,30 @@ if (! function_exists('get_related_products')) {
     }
 }
 
-if (! function_exists('get_instagram_oembed_html')) {
+if (! function_exists('get_instagram_oembed_credentials')) {
     /**
-     * Fetch the official Instagram embed markup for a post/reel URL via Meta's oEmbed API -
-     * this is the most reliable method (a real, guaranteed-correct embed) when it works,
-     * but requires a Meta Developer App with credentials configured AND that app's
-     * "oEmbed Read" feature to have been reviewed and approved by Facebook (Graph API
-     * error code #10 if it's configured but not yet approved). Falls back to
-     * get_instagram_video_url()/build_instagram_embed_html() below when unavailable.
-     *
-     * Credentials are read from, in order, using whichever is configured first:
-     * 1. services.facebook.app_id/client_token (FACEBOOK_APP_ID/FACEBOOK_CLIENT_TOKEN env vars)
-     * 2. The Marketplace plugin's Meta Ads settings (Settings > Meta Ads Integration) -
-     *    Marketing App credentials first, then Auth App, matching that page's own priority
-     * 3. The Social Login plugin's Facebook Login app credentials
-     *
-     * Returns null if no credentials are available, the app isn't approved, or the
-     * request fails (caller should fall back further in that case).
+     * Resolve the [appId, clientToken] pair used to build the oEmbed access token
+     * (`{app-id}|{client-token}`), checked in priority order - see
+     * get_instagram_oembed_html() docblock for the full list. Shared by both the
+     * real embed fetcher and the settings-page "Test oEmbed Connection" button so
+     * they always agree on which credentials are actually in effect.
      */
-    function get_instagram_oembed_html(string $url): ?string
+    function get_instagram_oembed_credentials(): array
     {
-        $appId = config('services.facebook.app_id');
-        $clientToken = config('services.facebook.client_token');
+        $appId = null;
+        $clientToken = null;
+
+        if (is_plugin_active('marketplace')) {
+            $appId = \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('oembed_app_id') ?: null;
+            $clientToken = \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('oembed_client_token')
+                ?: \Botble\Marketplace\Facades\MarketplaceHelper::getSetting('oembed_app_secret')
+                ?: null;
+        }
+
+        if (! $appId || ! $clientToken) {
+            $appId = $appId ?: config('services.facebook.app_id');
+            $clientToken = $clientToken ?: config('services.facebook.client_token');
+        }
 
         if ((! $appId || ! $clientToken) && is_plugin_active('marketplace')) {
             $appId = $appId
@@ -339,6 +341,81 @@ if (! function_exists('get_instagram_oembed_html')) {
             $appId = $appId ?: setting('social_login_facebook_app_id');
             $clientToken = $clientToken ?: setting('social_login_facebook_app_secret');
         }
+
+        return [$appId, $clientToken];
+    }
+}
+
+if (! function_exists('test_instagram_oembed')) {
+    /**
+     * Live (uncached) oEmbed test used by the admin settings page's "Test oEmbed
+     * Connection" button - unlike get_instagram_oembed_html(), this returns the
+     * exact Graph API error message so an admin can tell "not configured" apart
+     * from "configured but oEmbed Read isn't approved yet" (error code #10) apart
+     * from "invalid credentials" etc.
+     */
+    function test_instagram_oembed(string $url): array
+    {
+        [$appId, $clientToken] = get_instagram_oembed_credentials();
+
+        if (! $appId || ! $clientToken) {
+            return [
+                'success' => false,
+                'message' => 'No credentials configured. Fill in and save the oEmbed App ID + Client Token (or App Secret) above first.',
+            ];
+        }
+
+        try {
+            $response = Http::timeout(10)->get('https://graph.facebook.com/v19.0/instagram_oembed', [
+                'url' => $url,
+                'access_token' => $appId . '|' . $clientToken,
+                'omitscript' => 'true',
+            ]);
+
+            if ($response->ok() && $response->json('html')) {
+                return ['success' => true, 'message' => 'OK'];
+            }
+
+            $error = $response->json('error') ?: [];
+            $code = $error['code'] ?? null;
+            $message = $error['message'] ?? $response->body();
+
+            if ($code == 10) {
+                $message = 'Your app\'s "oEmbed Read" feature has not been approved by Facebook yet (error code 10). '
+                    . 'Submit it for App Review under App Dashboard → App Review → Permissions and Features. Original message: ' . $message;
+            }
+
+            return ['success' => false, 'message' => $message];
+        } catch (Exception $exception) {
+            return ['success' => false, 'message' => $exception->getMessage()];
+        }
+    }
+}
+
+if (! function_exists('get_instagram_oembed_html')) {
+    /**
+     * Fetch the official Instagram embed markup for a post/reel URL via Meta's oEmbed API -
+     * this is the most reliable method (a real, guaranteed-correct embed) when it works,
+     * but requires a Meta Developer App with credentials configured AND that app's
+     * "oEmbed Read" feature to have been reviewed and approved by Facebook (Graph API
+     * error code #10 if it's configured but not yet approved). Falls back to
+     * get_instagram_video_url()/build_instagram_embed_html() below when unavailable.
+     *
+     * Credentials are read from, in order, using whichever is configured first:
+     * 1. The Marketplace plugin's dedicated oEmbed settings (Settings > Meta Ads Integration >
+     *    Instagram/Facebook Reels & Video Embedding) - the recommended, explicit place to
+     *    configure this feature separately from Ads/OAuth credentials
+     * 2. services.facebook.app_id/client_token (FACEBOOK_APP_ID/FACEBOOK_CLIENT_TOKEN env vars)
+     * 3. The Marketplace plugin's Meta Ads settings (Settings > Meta Ads Integration) -
+     *    Marketing App credentials first, then Auth App, matching that page's own priority
+     * 4. The Social Login plugin's Facebook Login app credentials
+     *
+     * Returns null if no credentials are available, the app isn't approved, or the
+     * request fails (caller should fall back further in that case).
+     */
+    function get_instagram_oembed_html(string $url): ?string
+    {
+        [$appId, $clientToken] = get_instagram_oembed_credentials();
 
         if (! $appId || ! $clientToken) {
             return null;
