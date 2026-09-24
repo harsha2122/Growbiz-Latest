@@ -24,12 +24,8 @@ return new class () extends Migration {
                 }
 
                 // Add indexes for performance
-                if (! Schema::hasIndexPath('mp_store_sponsored_videos', ['video_type'])) {
-                    $table->index('video_type');
-                }
-                if (! Schema::hasIndexPath('mp_store_sponsored_videos', ['scheduled_deletion_at'])) {
-                    $table->index('scheduled_deletion_at');
-                }
+                $table->index('video_type');
+                $table->index('scheduled_deletion_at');
             });
         }
     }
