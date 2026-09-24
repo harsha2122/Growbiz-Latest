@@ -108,7 +108,7 @@ class AdsForm extends FormAbstract
                 'label' => 'Video Source',
                 'choices' => [
                     'local' => 'Upload Video',
-                    'external' => 'External URL (YouTube, Vimeo, etc)',
+                    'external' => 'External URL',
                 ],
                 'default_value' => $this->getModel()->video_type ?? 'local',
             ])
@@ -118,9 +118,10 @@ class AdsForm extends FormAbstract
                 'attr' => [
                     'type' => 'file',
                     'accept' => 'video/mp4,video/webm,video/ogg,.mov,.avi,.mkv',
+                    'id' => 'ads-video-file',
                 ],
                 'help_block' => [
-                    'text' => 'Formats: MP4, WebM, OGG, MOV, AVI, MKV (Max: 500MB)',
+                    'text' => 'Formats: MP4, WebM, OGG, MOV, AVI, MKV (Max: 500MB) - Click Upload button after selecting',
                 ],
             ])
             ->addCloseCollapsible('video_type', 'local')
@@ -128,7 +129,7 @@ class AdsForm extends FormAbstract
             ->add('video_url', TextField::class, [
                 'label' => trans('plugins/ads::ads.video_url'),
                 'attr' => [
-                    'placeholder' => 'https://www.youtube.com/watch?v=... or https://vimeo.com/...',
+                    'placeholder' => 'https://www.youtube.com/watch?v=...',
                     'data-counter' => 500,
                 ],
                 'help_block' => [
