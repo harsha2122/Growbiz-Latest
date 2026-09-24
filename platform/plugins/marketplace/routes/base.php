@@ -286,7 +286,7 @@ AdminHelper::registerRoutes(function (): void {
 // Sponsored videos upload route (outside admin helper for proper registration)
 Route::group(['namespace' => 'Botble\Marketplace\Http\Controllers'], function (): void {
     AdminHelper::registerRoutes(function (): void {
-        Route::post('admin/marketplaces/stores/sponsored-videos/upload', [
+        Route::post('marketplaces/stores/sponsored-videos/upload', [
             'as' => 'admin.marketplace.store.sponsored-videos.upload',
             'uses' => 'Admin\SponsoredVideoUploadController@upload',
             'permission' => 'marketplace.store.edit',
