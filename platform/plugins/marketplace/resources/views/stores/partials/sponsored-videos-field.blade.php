@@ -236,7 +236,7 @@
         formData.append('video', file);
         formData.append('store_id', fileInput.dataset.storeId);
 
-        fetch('{{ route("admin.marketplace.sponsored-videos.upload") }}', {
+        fetch('{{ route("admin.marketplace.store.sponsored-videos.upload") }}', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
