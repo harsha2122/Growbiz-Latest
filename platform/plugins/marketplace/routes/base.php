@@ -62,6 +62,12 @@ AdminHelper::registerRoutes(function (): void {
                         'uses' => 'StoreRevenueController@store',
                     ])->wherePrimaryKey();
                 });
+
+                Route::post('sponsored-videos/upload', [
+                    'as' => 'sponsored-videos.upload',
+                    'uses' => 'Admin\SponsoredVideoUploadController@upload',
+                    'permission' => 'marketplace.store.edit',
+                ]);
             });
 
             Route::group(['prefix' => 'withdrawals', 'as' => 'withdrawal.'], function (): void {
