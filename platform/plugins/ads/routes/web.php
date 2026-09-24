@@ -22,6 +22,12 @@ Route::group(['namespace' => 'Botble\Ads\Http\Controllers'], function (): void {
                 'permission' => 'ads.settings',
             ]);
         });
+
+        Route::post('ads/upload-video', [
+            'as' => 'ads.upload-video',
+            'uses' => 'AdsVideoUploadController@upload',
+            'permission' => 'ads.create',
+        ]);
     });
 
     if (defined('THEME_MODULE_SCREEN_NAME')) {

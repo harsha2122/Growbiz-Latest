@@ -104,6 +104,27 @@ class AdsForm extends FormAbstract
             ])
             ->addCloseCollapsible('ad_media_type', 'image')
             ->addOpenCollapsible('ad_media_type', 'video', $this->getModel()->ad_media_type)
+            ->add('video_type', SelectField::class, [
+                'label' => 'Video Source',
+                'choices' => [
+                    'local' => 'Upload Video',
+                    'external' => 'External URL (YouTube, Vimeo, etc)',
+                ],
+                'default_value' => $this->getModel()->video_type ?? 'local',
+            ])
+            ->addOpenCollapsible('video_type', 'local', $this->getModel()->video_type ?? 'local')
+            ->add('video_file', TextField::class, [
+                'label' => 'Video File',
+                'attr' => [
+                    'type' => 'file',
+                    'accept' => 'video/mp4,video/webm,video/ogg,.mov,.avi,.mkv',
+                ],
+                'help_block' => [
+                    'text' => 'Formats: MP4, WebM, OGG, MOV, AVI, MKV (Max: 500MB)',
+                ],
+            ])
+            ->addCloseCollapsible('video_type', 'local')
+            ->addOpenCollapsible('video_type', 'external', $this->getModel()->video_type)
             ->add('video_url', TextField::class, [
                 'label' => trans('plugins/ads::ads.video_url'),
                 'attr' => [
@@ -114,6 +135,7 @@ class AdsForm extends FormAbstract
                     'text' => trans('plugins/ads::ads.video_url_helper'),
                 ],
             ])
+            ->addCloseCollapsible('video_type', 'external')
             ->add('video_thumbnail', MediaImageField::class, [
                 'label' => trans('plugins/ads::ads.video_thumbnail'),
                 'help_block' => [

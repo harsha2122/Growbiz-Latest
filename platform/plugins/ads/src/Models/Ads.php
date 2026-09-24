@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
 
 class Ads extends BaseModel
 {
@@ -33,6 +34,9 @@ class Ads extends BaseModel
         'google_adsense_slot_id',
         'ad_media_type',
         'video_url',
+        'video_file',
+        'video_type',
+        'video_size',
         'video_thumbnail',
     ];
 
@@ -121,11 +125,17 @@ class Ads extends BaseModel
 
     public function isVideoAd(): bool
     {
-        return $this->ad_media_type === 'video' && ! empty($this->video_url);
+        return $this->ad_media_type === 'video' &&
+               ($this->isLocalVideo() || ! empty($this->video_url));
     }
 
     public function getEmbedVideoUrl(): ?string
     {
+        // Return local video URL directly
+        if ($this->isLocalVideo()) {
+            return $this->getVideoUrl();
+        }
+
         if (! $this->video_url) {
             return null;
         }
@@ -149,5 +159,58 @@ class Ads extends BaseModel
     protected static function newFactory()
     {
         return AdsFactory::new();
+    }
+
+    public function isLocalVideo(): bool
+    {
+        return $this->video_type === 'local' && $this->video_file;
+    }
+
+    public function isExternalVideo(): bool
+    {
+        return $this->video_type === 'external' && $this->video_url;
+    }
+
+    public function getVideoUrl(): string
+    {
+        if ($this->isLocalVideo()) {
+            return Storage::disk('public')->url($this->video_file);
+        }
+        return $this->video_url ?? '';
+    }
+
+    public function deleteVideoFile(): bool
+    {
+        if ($this->isLocalVideo() && $this->video_file) {
+            return Storage::disk('public')->delete($this->video_file);
+        }
+        return true;
+    }
+
+    public function getFormattedSize(): string
+    {
+        if (! $this->video_size) {
+            return '0 B';
+        }
+
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $size = $this->video_size;
+        $unitIndex = 0;
+
+        while ($size >= 1024 && $unitIndex < count($units) - 1) {
+            $size /= 1024;
+            $unitIndex++;
+        }
+
+        return round($size, 2) . ' ' . $units[$unitIndex];
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($model) {
+            $model->deleteVideoFile();
+        });
     }
 }
