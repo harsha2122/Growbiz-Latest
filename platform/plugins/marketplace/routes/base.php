@@ -254,6 +254,12 @@ AdminHelper::registerRoutes(function (): void {
                 ]);
             });
 
+            Route::post('stores/sponsored-videos/upload', [
+                'as' => 'store.sponsored-videos.upload',
+                'uses' => 'Admin\SponsoredVideoUploadController@upload',
+                'permission' => 'marketplace.store.edit',
+            ]);
+
             Route::get('meta-ads-settings', [
                 'as' => 'meta-ads-settings',
                 'uses' => 'Settings\MetaAdsSettingController@edit',
@@ -281,10 +287,4 @@ AdminHelper::registerRoutes(function (): void {
             ])->wherePrimaryKey();
         });
     });
-});
-
-// Standalone admin route for sponsored video uploads
-Route::prefix('admin/marketplaces/stores')->middleware(['web', 'auth', 'core'])->group(function () {
-    Route::post('sponsored-videos/upload', 'Botble\Marketplace\Http\Controllers\Admin\SponsoredVideoUploadController@upload')
-        ->name('admin.marketplace.store.sponsored-videos.upload');
 });
