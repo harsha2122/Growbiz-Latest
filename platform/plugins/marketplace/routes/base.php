@@ -50,6 +50,12 @@ AdminHelper::registerRoutes(function (): void {
                     'permission' => 'marketplace.store.edit',
                 ]);
 
+                Route::post('sponsored-videos/upload', [
+                    'as' => 'sponsored-videos.upload',
+                    'uses' => 'Admin\SponsoredVideoUploadController@upload',
+                    'permission' => 'marketplace.store.edit',
+                ]);
+
                 Route::group(['prefix' => 'revenues', 'as' => 'revenue.'], function (): void {
                     Route::match(['GET', 'POST'], 'list/{id}', [
                         'as' => 'index',
@@ -280,16 +286,5 @@ AdminHelper::registerRoutes(function (): void {
                 'permission' => 'products.edit',
             ])->wherePrimaryKey();
         });
-    });
-});
-
-// Sponsored videos upload route
-AdminHelper::registerRoutes(function (): void {
-    Route::group(['namespace' => 'Botble\Marketplace\Http\Controllers'], function (): void {
-        Route::post('marketplaces/stores/sponsored-videos/upload', [
-            'as' => 'admin.marketplace.store.sponsored-videos.upload',
-            'uses' => 'Admin\SponsoredVideoUploadController@upload',
-            'permission' => 'marketplace.store.edit',
-        ]);
     });
 });
