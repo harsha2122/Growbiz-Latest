@@ -7,20 +7,21 @@
         <div class="row g-3">
             @foreach ($store->activeSponsoredVideos() as $sponsoredVideo)
                 @php
-                    $videoUrl = $sponsoredVideo->video_url;
+                    $videoUrl = $sponsoredVideo->getVideoUrl();
                     $provider = 'generic';
                     $embedUrl = $videoUrl;
                     $embedHtml = null;
 
-                    if (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
+                    // Check for local video first
+                    if ($sponsoredVideo->isLocalVideo()) {
+                        $provider = 'direct';
+                        $embedUrl = $videoUrl;
+                    } elseif (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
                         $provider = 'iframe';
                         $embedUrl = 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1';
                     } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $matches)) {
                         $provider = 'iframe';
                         $embedUrl = 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1';
-                    } elseif (preg_match('/\.(mp4|webm|ogg)(\?|$)/i', $videoUrl)) {
-                        $provider = 'direct';
-                        $embedUrl = $videoUrl;
                     } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)
                         && ($fetchedHtml = get_instagram_oembed_html($videoUrl))
                     ) {
