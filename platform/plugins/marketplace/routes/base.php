@@ -52,7 +52,7 @@ AdminHelper::registerRoutes(function (): void {
 
                 Route::post('sponsored-videos/upload', [
                     'as' => 'sponsored-videos.upload',
-                    'uses' => 'Admin\SponsoredVideoUploadController@upload',
+                    'uses' => 'Botble\Marketplace\Http\Controllers\Admin\SponsoredVideoUploadController@upload',
                     'permission' => 'marketplace.store.edit',
                 ]);
 
