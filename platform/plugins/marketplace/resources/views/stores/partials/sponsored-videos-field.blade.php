@@ -217,55 +217,10 @@
         row.querySelector(`#external-video-${videoId}`).classList.toggle('d-none', type !== 'external');
     }
 
-    // Upload video via AJAX
-    function uploadSponsoredVideo(btn) {
-        const fileInput = btn.previousElementSibling;
-        const file = fileInput.files[0];
-
-        if (!file) {
-            alert('{{ __("Please select a video file") }}');
-            return;
-        }
-
-        // Show loading state
-        btn.disabled = true;
-        const originalText = btn.textContent;
-        btn.textContent = '{{ __("Uploading...") }}';
-
-        const formData = new FormData();
-        formData.append('video', file);
-        formData.append('store_id', fileInput.dataset.storeId);
-
-        fetch('/admin/marketplaces/stores/sponsored-videos/upload', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            },
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            btn.disabled = false;
-            btn.textContent = originalText;
-
-            if (data.success || data.data) {
-                alert('{{ __("Video uploaded successfully!") }}');
-                // Store the path in a hidden field for form submission
-                const row = btn.closest('.sponsored-video-row');
-                const input = row.querySelector('input[name*="[video_file]"]');
-                if (input && data.data && data.data.path) {
-                    input.value = data.data.path;
-                }
-            } else {
-                alert('{{ __("Upload failed:") }} ' + (data.message || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            btn.disabled = false;
-            btn.textContent = originalText;
-            alert('{{ __("Upload error:") }} ' + error.message);
-        });
-    }
+    // Upload video via AJAX - DISABLED
+    /*function uploadSponsoredVideo(btn) {
+        alert('Video upload is currently disabled. Please use External URL option.');
+    }*/
 
     // Template management
     (function () {
