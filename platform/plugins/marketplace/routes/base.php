@@ -285,9 +285,11 @@ AdminHelper::registerRoutes(function (): void {
 
 // Sponsored videos upload route
 AdminHelper::registerRoutes(function (): void {
-    Route::post('marketplaces/stores/sponsored-videos/upload', [
-        'as' => 'admin.marketplace.store.sponsored-videos.upload',
-        'uses' => 'Botble\Marketplace\Http\Controllers\Admin\SponsoredVideoUploadController@upload',
-        'permission' => 'marketplace.store.edit',
-    ]);
-}, 'Botble\Marketplace\Http\Controllers');
+    Route::group(['namespace' => 'Botble\Marketplace\Http\Controllers'], function (): void {
+        Route::post('marketplaces/stores/sponsored-videos/upload', [
+            'as' => 'admin.marketplace.store.sponsored-videos.upload',
+            'uses' => 'Admin\SponsoredVideoUploadController@upload',
+            'permission' => 'marketplace.store.edit',
+        ]);
+    });
+});
