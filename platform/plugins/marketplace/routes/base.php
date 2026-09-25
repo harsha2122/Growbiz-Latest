@@ -283,13 +283,9 @@ AdminHelper::registerRoutes(function (): void {
     });
 });
 
-// Sponsored videos upload route (outside admin helper for proper registration)
-Route::group(['namespace' => 'Botble\Marketplace\Http\Controllers'], function (): void {
-    AdminHelper::registerRoutes(function (): void {
-        Route::post('marketplaces/stores/sponsored-videos/upload', [
-            'as' => 'admin.marketplace.store.sponsored-videos.upload',
-            'uses' => 'Admin\SponsoredVideoUploadController@upload',
-            'permission' => 'marketplace.store.edit',
-        ]);
-    });
-});
+// Sponsored videos upload route - registered outside admin group for proper access
+Route::post('admin/marketplaces/stores/sponsored-videos/upload', [
+    'as' => 'admin.marketplace.store.sponsored-videos.upload',
+    'uses' => 'Botble\Marketplace\Http\Controllers\Admin\SponsoredVideoUploadController@upload',
+    'middleware' => ['web', 'auth'],
+]);
