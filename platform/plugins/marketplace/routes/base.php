@@ -63,6 +63,11 @@ AdminHelper::registerRoutes(function (): void {
                     ])->wherePrimaryKey();
                 });
 
+                Route::post('sponsored-videos/upload', [
+                    'as' => 'sponsored-videos.upload',
+                    'uses' => 'Admin\SponsoredVideoUploadController@upload',
+                    'permission' => 'marketplace.store.edit',
+                ]);
             });
 
             Route::group(['prefix' => 'withdrawals', 'as' => 'withdrawal.'], function (): void {
@@ -253,12 +258,6 @@ AdminHelper::registerRoutes(function (): void {
                     'permission' => 'marketplace.b2b-catalogs.index',
                 ]);
             });
-
-            Route::post('stores/sponsored-videos/upload', [
-                'as' => 'store.sponsored-videos.upload',
-                'uses' => 'Admin\SponsoredVideoUploadController@upload',
-                'permission' => 'marketplace.store.edit',
-            ]);
 
             Route::get('meta-ads-settings', [
                 'as' => 'meta-ads-settings',
