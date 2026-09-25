@@ -8,7 +8,7 @@
 
     {{-- Video Ad --}}
     @if ($item->isVideoAd() && $item->video_thumbnail)
-        <div {!! Html::attributes($attributes) !!} class="ad-video-container" data-video-url="{{ $item->getEmbedVideoUrl() }}">
+        <div {!! Html::attributes($attributes) !!} class="ad-video-container" data-video-url="{{ $item->getEmbedVideoUrl() }}" data-video-type="{{ $item->isLocalVideo() ? 'local' : 'external' }}">
             <div class="ad-video-wrapper" style="position: relative; cursor: pointer;">
                 <img
                     src="{{ $item->video_thumbnail_url }}"
@@ -26,15 +26,23 @@
                 <button class="ad-video-close" style="position: absolute; top: -30px; right: 0; background: #333; color: white; border: none; padding: 5px 10px; cursor: pointer; z-index: 10;">
                     &times; Close
                 </button>
-                <iframe
-                    width="100%"
-                    height="auto"
-                    style="aspect-ratio: 16/9;"
-                    src=""
-                    frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                ></iframe>
+                <div class="ad-video-content" style="aspect-ratio: 16/9; background: #000;">
+                    <!-- iframe for external videos -->
+                    <iframe
+                        class="ad-video-iframe"
+                        width="100%"
+                        height="100%"
+                        style="display: none;"
+                        src=""
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                    ></iframe>
+                    <!-- video tag for local videos -->
+                    <video class="ad-video-tag" style="display: none; width: 100%; height: 100%;" controls autoplay>
+                        <source src="" type="video/mp4">
+                    </video>
+                </div>
             </div>
         </div>
         @continue
@@ -76,18 +84,32 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.ad-video-container').forEach(function(container) {
         var wrapper = container.querySelector('.ad-video-wrapper');
         var player = container.querySelector('.ad-video-player');
-        var iframe = player.querySelector('iframe');
         var closeBtn = player.querySelector('.ad-video-close');
         var videoUrl = container.dataset.videoUrl;
+        var videoType = container.dataset.videoType || 'external';
+
+        var iframe = player.querySelector('.ad-video-iframe');
+        var videoTag = player.querySelector('.ad-video-tag');
 
         wrapper.addEventListener('click', function() {
-            iframe.src = videoUrl;
+            if (videoType === 'local') {
+                // Show local video
+                videoTag.src = videoUrl;
+                videoTag.style.display = 'block';
+                iframe.style.display = 'none';
+            } else {
+                // Show external video (iframe)
+                iframe.src = videoUrl;
+                iframe.style.display = 'block';
+                videoTag.style.display = 'none';
+            }
             wrapper.style.display = 'none';
             player.style.display = 'block';
         });
 
         closeBtn.addEventListener('click', function() {
             iframe.src = '';
+            videoTag.src = '';
             player.style.display = 'none';
             wrapper.style.display = 'block';
         });
