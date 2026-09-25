@@ -16,39 +16,39 @@
                     if ($sponsoredVideo->isLocalVideo()) {
                         $provider = 'direct';
                         $embedUrl = $videoUrl;
-                    } elseif (preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
+                    } elseif (!empty($videoUrl) && preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches)) {
                         $provider = 'iframe';
                         $embedUrl = 'https://www.youtube.com/embed/' . $matches[1] . '?autoplay=1';
-                    } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $matches)) {
+                    } elseif (!empty($videoUrl) && preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $matches)) {
                         $provider = 'iframe';
                         $embedUrl = 'https://player.vimeo.com/video/' . $matches[1] . '?autoplay=1';
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)
+                    } elseif (!empty($videoUrl) && preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)
                         && ($fetchedHtml = get_instagram_oembed_html($videoUrl))
                     ) {
                         // Real inline embed via Meta's oEmbed API - most reliable, needs
                         // an approved Meta Developer App (see get_instagram_oembed_html()).
                         $provider = 'instagram-oembed';
                         $embedHtml = $fetchedHtml;
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)
+                    } elseif (!empty($videoUrl) && preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)
                         && ($scrapedVideoUrl = get_instagram_video_url($videoUrl))
                     ) {
                         // Fallback: real, guaranteed-correct playback of the actual video.
                         $provider = 'direct';
                         $embedUrl = $scrapedVideoUrl;
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)) {
+                    } elseif (!empty($videoUrl) && preg_match('#^https?://(?:www\.)?instagram\.com/(p|reel|reels|tv)/#', $videoUrl)) {
                         // Last-resort fallback: Instagram's own embed widget, best-effort
                         // without an oEmbed API token.
                         $provider = 'instagram-oembed';
                         $embedHtml = build_instagram_embed_html($videoUrl);
-                    } elseif (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
-                        || preg_match('#^https?://fb\.watch/#', $videoUrl)
+                    } elseif (!empty($videoUrl) && (preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/.*/videos/#', $videoUrl)
+                        || preg_match('#^https?://fb\.watch/#', $videoUrl))
                     ) {
                         // facebook.com blocks direct framing, but their video plugin endpoint is iframe-able.
                         $provider = 'iframe';
                         $embedUrl = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($videoUrl) . '&show_text=false&autoplay=true';
-                    } elseif (preg_match('#^https?://(?:www\.)?instagram\.com/#', $videoUrl)
+                    } elseif (!empty($videoUrl) && (preg_match('#^https?://(?:www\.)?instagram\.com/#', $videoUrl)
                         || preg_match('#^https?://(?:www\.|m\.|web\.)?facebook\.com/#', $videoUrl)
-                        || preg_match('#^https?://fb\.watch/#', $videoUrl)
+                        || preg_match('#^https?://fb\.watch/#', $videoUrl))
                     ) {
                         // Profile/page links (not a single post/reel/video) - no single
                         // piece of content to embed. Link out instead.
