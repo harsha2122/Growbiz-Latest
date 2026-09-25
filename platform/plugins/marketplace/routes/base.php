@@ -62,11 +62,6 @@ AdminHelper::registerRoutes(function (): void {
                         'uses' => 'StoreRevenueController@store',
                     ])->wherePrimaryKey();
                 });
-
-                Route::post('sponsored-videos/upload', [
-                    'as' => 'sponsored-videos.upload',
-                    'uses' => 'Admin\SponsoredVideoUploadController@upload',
-                ]);
             });
 
             Route::group(['prefix' => 'withdrawals', 'as' => 'withdrawal.'], function (): void {
@@ -286,3 +281,8 @@ AdminHelper::registerRoutes(function (): void {
         });
     });
 });
+
+// Admin API route for sponsored video uploads - outside AdminHelper to avoid middleware issues
+Route::post('admin/marketplaces/stores/sponsored-videos/upload',
+    'Botble\Marketplace\Http\Controllers\Admin\SponsoredVideoUploadController@upload'
+)->middleware(['web', 'auth', 'verified'])->name('marketplace.store.sponsored-videos.upload');
