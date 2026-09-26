@@ -215,7 +215,7 @@
     // Store reference to currently selected video input
     let currentVideoInput = null;
 
-    // Open media picker to select video from library
+    // Open media picker modal to select video from library
     function openMediaPickerForVideo(videoId) {
         // Find the video row and the input field
         const inputSelector = videoId ? `input[name*="[${videoId}][video_file]"]` : '.sponsored-video-file-input:last-of-type';
@@ -227,24 +227,83 @@
             return;
         }
 
-        // Open media manager popup for file selection
-        const mediaRoute = '{{ route('media.popup') }}?view_in=admin&folder_id=0';
-        window.open(mediaRoute, 'media_manager', 'width=1200,height=700,resizable=yes');
+        // Create a modal with media library embedded
+        const modal = document.createElement('div');
+        modal.id = 'media-picker-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        `;
+
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = `
+            background: white;
+            width: 90%;
+            max-width: 1000px;
+            height: 80vh;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        `;
+
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        `;
+        header.innerHTML = `
+            <h4 style="margin: 0;">{{ __('Select Video from Media Library') }}</h4>
+            <button type="button" onclick="closeMediaPickerModal()" style="
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #666;
+            ">&times;</button>
+        `;
+
+        const content = document.createElement('div');
+        content.style.cssText = `
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        `;
+        content.innerHTML = `
+            <iframe src="{{ route('media.popup') }}?view_in=admin&folder_id=0"
+                    style="width: 100%; height: 100%; border: none;"></iframe>
+        `;
+
+        modalContent.appendChild(header);
+        modalContent.appendChild(content);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
     }
 
-    // Handle media selection from media manager popup - called by media manager when file is selected
-    window.RvMediaSelectCallback = function(selectedUrl) {
-        if (currentVideoInput) {
-            currentVideoInput.value = selectedUrl;
-            alert('{{ __("Video selected: ") }}' + selectedUrl.split('/').pop());
-            currentVideoInput = null;
+    // Close the media picker modal
+    function closeMediaPickerModal() {
+        const modal = document.getElementById('media-picker-modal');
+        if (modal) {
+            modal.remove();
         }
-    };
+    }
 
-    // Also support direct assignment from media manager
-    window.RvMediaSelected = function(url) {
+    // Handle media selection - called when user selects from media library
+    window.onFileSelected = function(url) {
         if (currentVideoInput) {
             currentVideoInput.value = url;
+            closeMediaPickerModal();
             alert('{{ __("Video selected: ") }}' + url.split('/').pop());
             currentVideoInput = null;
         }
