@@ -35,15 +35,10 @@
                         {{-- Local Upload Section --}}
                         <div id="local-video-{{ $video->id }}" class="local-video-section {{ $video->isLocalVideo() ? '' : 'd-none' }}">
                             <label class="form-label">{{ __('Video File') }}</label>
-                            <div class="input-group mb-2">
-                                <input type="file" class="form-control"
-                                       name="sponsored_videos[{{ $video->id }}][video_file]"
-                                       accept="video/mp4,video/webm,video/ogg,.mov,.avi,.mkv"
-                                       data-store-id="{{ $store->id }}"
-                                       data-video-id="{{ $video->id }}">
-                                <button class="btn btn-outline-secondary" type="button"
-                                        onclick="uploadSponsoredVideo(this)">
-                                    {{ __('Upload') }}
+                            <div class="mb-2">
+                                <button class="btn btn-primary" type="button"
+                                        onclick="openMediaPickerForVideo(this, '{{ $video->id }}')">
+                                    {{ __('Choose from Media Library') }}
                                 </button>
                             </div>
                             <small class="text-muted d-block">
@@ -57,6 +52,9 @@
                                     <span class="badge bg-secondary">{{ $video->getFormattedSize() }}</span>
                                 </div>
                             @endif
+
+                            <input type="hidden" name="sponsored_videos[{{ $video->id }}][video_file]"
+                                   class="sponsored-video-file-input" value="{{ $video->isLocalVideo() ? $video->video_file : '' }}">
                         </div>
 
                         {{-- External URL Section --}}
@@ -148,20 +146,17 @@
 
                     <div id="local-video-__INDEX__" class="local-video-section">
                         <label class="form-label">{{ __('Video File') }}</label>
-                        <div class="input-group mb-2">
-                            <input type="file" class="form-control"
-                                   name="sponsored_videos[__INDEX__][video_file]"
-                                   accept="video/mp4,video/webm,video/ogg,.mov,.avi,.mkv"
-                                   data-store-id="{{ $store->id }}"
-                                   data-video-id="__INDEX__">
-                            <button class="btn btn-outline-secondary" type="button"
-                                    onclick="uploadSponsoredVideo(this)">
-                                {{ __('Upload') }}
+                        <div class="mb-2">
+                            <button class="btn btn-primary" type="button"
+                                    onclick="openMediaPickerForVideo('__INDEX__')">
+                                {{ __('Choose from Media Library') }}
                             </button>
                         </div>
                         <small class="text-muted d-block">
                             {{ __('Formats: MP4, WebM, OGG, MOV, AVI, MKV (Max: 500MB)') }}
                         </small>
+                        <input type="hidden" name="sponsored_videos[__INDEX__][video_file]"
+                               class="sponsored-video-file-input" value="">
                     </div>
 
                     <div id="external-video-__INDEX__" class="external-video-section d-none">
@@ -217,59 +212,42 @@
         row.querySelector(`#external-video-${videoId}`).classList.toggle('d-none', type !== 'external');
     }
 
-    // Upload video via AJAX - matching media upload pattern
-    function uploadSponsoredVideo(btn) {
-        const fileInput = btn.previousElementSibling;
-        const file = fileInput.files[0];
+    // Store reference to currently selected video input
+    let currentVideoInput = null;
 
-        if (!file) {
-            alert('{{ __("Please select a video file") }}');
+    // Open media picker to select video from library
+    function openMediaPickerForVideo(btn, videoId) {
+        // Store reference to the input field for this video
+        const row = btn.closest('.sponsored-video-row') || btn.closest('form');
+        currentVideoInput = row ? row.querySelector('.sponsored-video-file-input') : null;
+
+        if (!currentVideoInput) {
+            alert('{{ __("Error: Could not find video input field") }}');
             return;
         }
 
-        // Show loading state
-        btn.disabled = true;
-        const originalText = btn.textContent;
-        btn.textContent = '{{ __("Uploading...") }}';
-
-        const formData = new FormData();
-        formData.append('file', file);  // Use 'file' to match media upload pattern
-        formData.append('store_id', fileInput.dataset.storeId);
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-
-        fetch('/admin/marketplaces/stores/sponsored-videos/upload', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('HTTP error status: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            btn.disabled = false;
-            btn.textContent = originalText;
-
-            if (data.success || data.url) {
-                alert('{{ __("Video uploaded successfully!") }}');
-                // Store the path in a hidden field for form submission
-                const row = btn.closest('.sponsored-video-row');
-                const input = row.querySelector('input[name*="[video_file]"]');
-                if (input && (data.path || data.url)) {
-                    input.value = data.path || data.url;
-                }
-            } else {
-                alert('{{ __("Upload failed:") }} ' + (data.message || JSON.stringify(data)));
-            }
-        })
-        .catch(error => {
-            btn.disabled = false;
-            btn.textContent = originalText;
-            console.error('Upload error:', error);
-            alert('{{ __("Upload error:") }} ' + error.message);
-        });
+        // Open media manager popup for file selection
+        const mediaRoute = '{{ route('media.popup') }}?view_in=admin&folder_id=0';
+        window.open(mediaRoute, 'media_manager', 'width=1200,height=700,resizable=yes');
     }
+
+    // Handle media selection from media manager popup - called by media manager when file is selected
+    window.RvMediaSelectCallback = function(selectedUrl) {
+        if (currentVideoInput) {
+            currentVideoInput.value = selectedUrl;
+            alert('{{ __("Video selected: ") }}' + selectedUrl.split('/').pop());
+            currentVideoInput = null;
+        }
+    };
+
+    // Also support direct assignment from media manager
+    window.RvMediaSelected = function(url) {
+        if (currentVideoInput) {
+            currentVideoInput.value = url;
+            alert('{{ __("Video selected: ") }}' + url.split('/').pop());
+            currentVideoInput = null;
+        }
+    };
 
     // Template management
     (function () {
