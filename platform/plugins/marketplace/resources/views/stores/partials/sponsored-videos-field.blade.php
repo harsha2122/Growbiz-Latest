@@ -217,7 +217,7 @@
         row.querySelector(`#external-video-${videoId}`).classList.toggle('d-none', type !== 'external');
     }
 
-    // Upload video via AJAX
+    // Upload video via AJAX - matching media upload pattern
     function uploadSponsoredVideo(btn) {
         const fileInput = btn.previousElementSibling;
         const file = fileInput.files[0];
@@ -233,36 +233,40 @@
         btn.textContent = '{{ __("Uploading...") }}';
 
         const formData = new FormData();
-        formData.append('video', file);
+        formData.append('file', file);  // Use 'file' to match media upload pattern
         formData.append('store_id', fileInput.dataset.storeId);
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
 
-        fetch('{{ route('marketplace.store.sponsored-videos.upload') }}', {
+        fetch('/admin/marketplaces/stores/sponsored-videos/upload', {
             method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            },
             body: formData,
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('HTTP error status: ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
             btn.disabled = false;
             btn.textContent = originalText;
 
-            if (data.success || data.data) {
+            if (data.success || data.url) {
                 alert('{{ __("Video uploaded successfully!") }}');
                 // Store the path in a hidden field for form submission
                 const row = btn.closest('.sponsored-video-row');
                 const input = row.querySelector('input[name*="[video_file]"]');
-                if (input && data.data && data.data.path) {
-                    input.value = data.data.path;
+                if (input && (data.path || data.url)) {
+                    input.value = data.path || data.url;
                 }
             } else {
-                alert('{{ __("Upload failed:") }} ' + (data.message || 'Unknown error'));
+                alert('{{ __("Upload failed:") }} ' + (data.message || JSON.stringify(data)));
             }
         })
         .catch(error => {
             btn.disabled = false;
             btn.textContent = originalText;
+            console.error('Upload error:', error);
             alert('{{ __("Upload error:") }} ' + error.message);
         });
     }
