@@ -37,7 +37,7 @@
                             <label class="form-label">{{ __('Video File') }}</label>
                             <div class="mb-2">
                                 <button class="btn btn-primary" type="button"
-                                        onclick="openMediaPickerForVideo(this, '{{ $video->id }}')">
+                                        onclick="openMediaPickerForVideo('{{ $video->id }}')">
                                     {{ __('Choose from Media Library') }}
                                 </button>
                             </div>
@@ -216,12 +216,13 @@
     let currentVideoInput = null;
 
     // Open media picker to select video from library
-    function openMediaPickerForVideo(btn, videoId) {
-        // Store reference to the input field for this video
-        const row = btn.closest('.sponsored-video-row') || btn.closest('form');
-        currentVideoInput = row ? row.querySelector('.sponsored-video-file-input') : null;
+    function openMediaPickerForVideo(videoId) {
+        // Find the video row and the input field
+        const inputSelector = videoId ? `input[name*="[${videoId}][video_file]"]` : '.sponsored-video-file-input:last-of-type';
+        currentVideoInput = document.querySelector(inputSelector);
 
         if (!currentVideoInput) {
+            console.error('Could not find video input for:', videoId);
             alert('{{ __("Error: Could not find video input field") }}');
             return;
         }
