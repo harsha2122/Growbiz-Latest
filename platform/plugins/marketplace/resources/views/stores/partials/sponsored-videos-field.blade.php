@@ -227,68 +227,34 @@
             return;
         }
 
-        // Create a modal with media library embedded
-        const modal = document.createElement('div');
-        modal.id = 'media-picker-modal';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
+        // Create Bootstrap modal with media library embedded
+        const modalHTML = `
+            <div id="media-picker-modal" class="modal fade show" style="display: block; background: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-xl" style="max-width: 1200px; margin: 2rem auto;">
+                    <div class="modal-content" style="height: 70vh;">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ __('Select Video from Media Library') }}</h5>
+                            <button type="button" class="btn-close" onclick="closeMediaPickerModal()" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" style="padding: 0; overflow: hidden;">
+                            <iframe src="{{ route('media.popup') }}?view_in=admin&folder_id=0"
+                                    style="width: 100%; height: 100%; border: none;"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
 
-        const modalContent = document.createElement('div');
-        modalContent.style.cssText = `
-            background: white;
-            width: 90%;
-            max-width: 1000px;
-            height: 80vh;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        `;
+        // Remove existing modal if any
+        const existingModal = document.getElementById('media-picker-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
 
-        const header = document.createElement('div');
-        header.style.cssText = `
-            padding: 20px;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        `;
-        header.innerHTML = `
-            <h4 style="margin: 0;">{{ __('Select Video from Media Library') }}</h4>
-            <button type="button" onclick="closeMediaPickerModal()" style="
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                color: #666;
-            ">&times;</button>
-        `;
-
-        const content = document.createElement('div');
-        content.style.cssText = `
-            flex: 1;
-            overflow: auto;
-            padding: 20px;
-        `;
-        content.innerHTML = `
-            <iframe src="{{ route('media.popup') }}?view_in=admin&folder_id=0"
-                    style="width: 100%; height: 100%; border: none;"></iframe>
-        `;
-
-        modalContent.appendChild(header);
-        modalContent.appendChild(content);
-        modal.appendChild(modalContent);
-        document.body.appendChild(modal);
+        // Add modal to body
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = modalHTML;
+        document.body.appendChild(wrapper.firstElementChild);
     }
 
     // Close the media picker modal
