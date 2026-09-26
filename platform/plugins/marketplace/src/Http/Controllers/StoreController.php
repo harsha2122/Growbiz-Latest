@@ -24,6 +24,7 @@ use Botble\Media\Facades\RvMedia;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class StoreController extends BaseController
 {
@@ -153,9 +154,14 @@ class StoreController extends BaseController
                 continue;
             }
 
+            $videoType = $row['video_type'] ?? 'external';
+            $videoFile = trim((string) ($row['video_file'] ?? ''));
             $videoUrl = trim((string) ($row['video_url'] ?? ''));
 
-            if (! $videoUrl || $kept >= Store::MAX_SPONSORED_VIDEOS) {
+            $isLocal = $videoType === 'local' && $videoFile !== '';
+            $isExternal = $videoType === 'external' && $videoUrl !== '';
+
+            if ((! $isLocal && ! $isExternal) || $kept >= Store::MAX_SPONSORED_VIDEOS) {
                 continue;
             }
 
@@ -172,6 +178,29 @@ class StoreController extends BaseController
                 }
             }
 
+            $data = [
+                'expires_at' => $expiresAt,
+                'sort_order' => $kept,
+            ];
+
+            if ($isLocal) {
+                $data['video_type'] = 'local';
+                $data['video_file'] = $videoFile;
+                $data['video_url'] = null;
+                $data['video_size'] = Storage::disk('public')->exists($videoFile)
+                    ? Storage::disk('public')->size($videoFile)
+                    : null;
+            } else {
+                $data['video_type'] = 'external';
+                $data['video_url'] = $videoUrl;
+                $data['video_file'] = null;
+                $data['video_size'] = null;
+            }
+
+            if ($thumbnailPath) {
+                $data['thumbnail'] = $thumbnailPath;
+            }
+
             if ($id) {
                 $video = StoreSponsoredVideo::query()
                     ->where('id', $id)
@@ -179,24 +208,20 @@ class StoreController extends BaseController
                     ->first();
 
                 if ($video) {
-                    $video->video_url = $videoUrl;
-                    $video->expires_at = $expiresAt;
-                    $video->sort_order = $kept;
+                    $oldWasLocal = $video->isLocalVideo();
+                    $oldFile = $video->video_file;
 
-                    if ($thumbnailPath) {
-                        $video->thumbnail = $thumbnailPath;
-                    }
-
+                    $video->fill($data);
                     $video->save();
+
+                    if ($oldWasLocal && $oldFile && $oldFile !== $video->video_file) {
+                        Storage::disk('public')->delete($oldFile);
+                    }
                 }
             } else {
-                StoreSponsoredVideo::query()->create([
-                    'store_id' => $store->getKey(),
-                    'video_url' => $videoUrl,
-                    'thumbnail' => $thumbnailPath,
-                    'expires_at' => $expiresAt,
-                    'sort_order' => $kept,
-                ]);
+                $data['store_id'] = $store->getKey();
+
+                StoreSponsoredVideo::query()->create($data);
             }
 
             $kept++;
