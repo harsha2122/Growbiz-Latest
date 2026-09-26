@@ -14,6 +14,7 @@ use Botble\Base\Forms\FieldOptions\SortOrderFieldOption;
 use Botble\Base\Forms\FieldOptions\StatusFieldOption;
 use Botble\Base\Forms\FieldOptions\TextFieldOption;
 use Botble\Base\Forms\Fields\DatePickerField;
+use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\MediaImageField;
 use Botble\Base\Forms\Fields\NumberField;
 use Botble\Base\Forms\Fields\OnOffField;
@@ -113,16 +114,9 @@ class AdsForm extends FormAbstract
                 'default_value' => $this->getModel()->video_type ?? 'local',
             ])
             ->addOpenCollapsible('video_type', 'local', $this->getModel()->video_type ?? 'local')
-            ->add('video_file', TextField::class, [
+            ->add('video_file', HtmlField::class, [
                 'label' => 'Video File',
-                'attr' => [
-                    'type' => 'file',
-                    'accept' => 'video/mp4,video/webm,video/ogg,.mov,.avi,.mkv',
-                    'id' => 'ads-video-file',
-                ],
-                'help_block' => [
-                    'text' => 'Formats: MP4, WebM, OGG, MOV, AVI, MKV (Max: 500MB) - Click Upload button after selecting',
-                ],
+                'html' => view('plugins/ads::ads.video-upload-field', ['ad' => $this->getModel()])->render(),
             ])
             ->addCloseCollapsible('video_type', 'local')
             ->addOpenCollapsible('video_type', 'external', $this->getModel()->video_type)

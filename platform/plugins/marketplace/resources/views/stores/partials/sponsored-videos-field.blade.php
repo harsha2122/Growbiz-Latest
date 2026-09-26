@@ -35,26 +35,25 @@
                         {{-- Local Upload Section --}}
                         <div id="local-video-{{ $video->id }}" class="local-video-section {{ $video->isLocalVideo() ? '' : 'd-none' }}">
                             <label class="form-label">{{ __('Video File') }}</label>
-                            <div class="mb-2">
-                                <button class="btn btn-primary" type="button"
-                                        onclick="openMediaPickerForVideo('{{ $video->id }}')">
+                            <div class="attachment-wrapper mb-2">
+                                <input type="hidden" name="sponsored_videos[{{ $video->id }}][video_file]"
+                                       class="attachment-url" value="{{ $video->isLocalVideo() ? $video->video_file : '' }}">
+                                <a href="javascript:void(0);" class="btn btn-primary btn_gallery_video" data-action="attachment">
                                     {{ __('Choose from Media Library') }}
-                                </button>
+                                </a>
+                                <div class="attachment-info mt-2">
+                                    @if ($video->isLocalVideo())
+                                        <div class="alert alert-info mb-0">
+                                            <strong>{{ __('Current Video:') }}</strong>
+                                            {{ basename($video->video_file) }}
+                                            <span class="badge bg-secondary">{{ $video->getFormattedSize() }}</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                             <small class="text-muted d-block">
                                 {{ __('Formats: MP4, WebM, OGG, MOV, AVI, MKV (Max: 500MB)') }}
                             </small>
-
-                            @if ($video->isLocalVideo())
-                                <div class="alert alert-info mt-2 mb-0">
-                                    <strong>{{ __('Current Video:') }}</strong>
-                                    {{ basename($video->video_file) }}
-                                    <span class="badge bg-secondary">{{ $video->getFormattedSize() }}</span>
-                                </div>
-                            @endif
-
-                            <input type="hidden" name="sponsored_videos[{{ $video->id }}][video_file]"
-                                   class="sponsored-video-file-input" value="{{ $video->isLocalVideo() ? $video->video_file : '' }}">
                         </div>
 
                         {{-- External URL Section --}}
@@ -146,17 +145,17 @@
 
                     <div id="local-video-__INDEX__" class="local-video-section">
                         <label class="form-label">{{ __('Video File') }}</label>
-                        <div class="mb-2">
-                            <button class="btn btn-primary" type="button"
-                                    onclick="openMediaPickerForVideo('__INDEX__')">
+                        <div class="attachment-wrapper mb-2">
+                            <input type="hidden" name="sponsored_videos[__INDEX__][video_file]"
+                                   class="attachment-url" value="">
+                            <a href="javascript:void(0);" class="btn btn-primary btn_gallery_video" data-action="attachment">
                                 {{ __('Choose from Media Library') }}
-                            </button>
+                            </a>
+                            <div class="attachment-info mt-2"></div>
                         </div>
                         <small class="text-muted d-block">
                             {{ __('Formats: MP4, WebM, OGG, MOV, AVI, MKV (Max: 500MB)') }}
                         </small>
-                        <input type="hidden" name="sponsored_videos[__INDEX__][video_file]"
-                               class="sponsored-video-file-input" value="">
                     </div>
 
                     <div id="external-video-__INDEX__" class="external-video-section d-none">
@@ -212,68 +211,52 @@
         row.querySelector(`#external-video-${videoId}`).classList.toggle('d-none', type !== 'external');
     }
 
-    // Store reference to currently selected video input
-    let currentVideoInput = null;
-
-    // Open media picker modal to select video from library
-    function openMediaPickerForVideo(videoId) {
-        // Find the video row and the input field
-        const inputSelector = videoId ? `input[name*="[${videoId}][video_file]"]` : '.sponsored-video-file-input:last-of-type';
-        currentVideoInput = document.querySelector(inputSelector);
-
-        if (!currentVideoInput) {
-            console.error('Could not find video input for:', videoId);
-            alert('{{ __("Error: Could not find video input field") }}');
+    // Bind the real Botble media picker (rvMedia jQuery plugin) to "Choose from Media Library"
+    // buttons. This reuses the same #rv_media_modal that's already on every admin page,
+    // instead of a custom iframe/modal (which has no CSS and no working callback).
+    function bindSponsoredVideoPickers(context) {
+        if (typeof jQuery === 'undefined' || !jQuery.fn.rvMedia) {
+            // Media JS not loaded yet - retry shortly.
+            setTimeout(function () {
+                bindSponsoredVideoPickers(context);
+            }, 300);
             return;
         }
 
-        // Create Bootstrap modal with media library embedded
-        const modalHTML = `
-            <div id="media-picker-modal" class="modal fade show" style="display: block; background: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-xl" style="max-width: 1200px; margin: 2rem auto;">
-                    <div class="modal-content" style="height: 70vh;">
-                        <div class="modal-header">
-                            <h5 class="modal-title">{{ __('Select Video from Media Library') }}</h5>
-                            <button type="button" class="btn-close" onclick="closeMediaPickerModal()" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body" style="padding: 0; overflow: hidden;">
-                            <iframe src="{{ route('media.popup') }}?view_in=admin&folder_id=0"
-                                    style="width: 100%; height: 100%; border: none;"></iframe>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        jQuery(context).find('.btn_gallery_video').each(function () {
+            var $btn = jQuery(this);
+            if ($btn.data('rv-media-bound')) {
+                return;
+            }
+            $btn.data('rv-media-bound', true);
 
-        // Remove existing modal if any
-        const existingModal = document.getElementById('media-picker-modal');
-        if (existingModal) {
-            existingModal.remove();
-        }
+            $btn.rvMedia({
+                multiple: false,
+                filter: 'video',
+                view_in: 'all_media',
+                onSelectFiles: function (files, $el) {
+                    var file = files && files[0];
+                    if (!file) {
+                        return;
+                    }
 
-        // Add modal to body
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = modalHTML;
-        document.body.appendChild(wrapper.firstElementChild);
+                    var $wrapper = $el.closest('.attachment-wrapper');
+                    $wrapper.find('.attachment-url').val(file.url).trigger('change');
+                    $wrapper.find('.attachment-info').html(
+                        '<div class="alert alert-info mb-0">' +
+                        '<strong>{{ __('Current Video:') }}</strong> ' +
+                        (file.name || file.url.split('/').pop()) +
+                        (file.size ? ' <span class="badge bg-secondary">' + file.size + '</span>' : '') +
+                        '</div>'
+                    );
+                },
+            });
+        });
     }
 
-    // Close the media picker modal
-    function closeMediaPickerModal() {
-        const modal = document.getElementById('media-picker-modal');
-        if (modal) {
-            modal.remove();
-        }
-    }
-
-    // Handle media selection - called when user selects from media library
-    window.onFileSelected = function(url) {
-        if (currentVideoInput) {
-            currentVideoInput.value = url;
-            closeMediaPickerModal();
-            alert('{{ __("Video selected: ") }}' + url.split('/').pop());
-            currentVideoInput = null;
-        }
-    };
+    jQuery(function () {
+        bindSponsoredVideoPickers(document);
+    });
 
     // Template management
     (function () {
@@ -308,6 +291,7 @@
             wrapperDiv.innerHTML = html;
             var newRow = wrapperDiv.firstElementChild;
             rowsContainer.appendChild(newRow);
+            bindSponsoredVideoPickers(newRow);
 
             newRow.querySelector('.remove-new-sponsored-video-row').addEventListener('click', function () {
                 newRow.remove();
