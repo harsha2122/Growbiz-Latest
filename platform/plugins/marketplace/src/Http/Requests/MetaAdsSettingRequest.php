@@ -16,11 +16,9 @@ class MetaAdsSettingRequest extends Request
             'meta_ads_fb_auth_redirect_uri'       => ['nullable', 'string', 'max:500'],
             'meta_ads_marketing_app_id'           => ['nullable', 'string', 'max:255'],
             'meta_ads_marketing_app_secret'       => ['nullable', 'string', 'max:255'],
-            'meta_ads_marketing_developer_token'  => ['nullable', 'string', 'max:500'],
             'oembed_app_id'                       => ['nullable', 'string', 'max:255'],
             'oembed_app_secret'                   => ['nullable', 'string', 'max:255'],
             'oembed_client_token'                 => ['nullable', 'string', 'max:255'],
-            'meta_ads_sandbox_mode'               => [new OnOffRule()],
             'meta_ads_api_version'                => ['nullable', 'string', 'max:10'],
         ];
     }

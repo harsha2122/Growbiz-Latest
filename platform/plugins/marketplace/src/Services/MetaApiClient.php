@@ -2,6 +2,7 @@
 
 namespace Botble\Marketplace\Services;
 
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -17,12 +18,75 @@ class MetaApiClient
     }
 
     /**
+     * Base request with timeouts, and the token sent as a Bearer header rather than a
+     * URL query param so it never lands in web server / proxy access logs.
+     */
+    protected function http(?string $accessToken = null): PendingRequest
+    {
+        $request = Http::timeout(20)->connectTimeout(10);
+
+        return $accessToken ? $request->withToken($accessToken) : $request;
+    }
+
+    /**
+     * Human-readable message for a Graph API error response, or null when the
+     * response is not an error.
+     */
+    public static function errorMessage(array $result): ?string
+    {
+        if (! array_key_exists('error', $result)) {
+            return null;
+        }
+
+        $error = $result['error'];
+
+        if (! is_array($error)) {
+            return (string) $error ?: 'Unknown Meta API error';
+        }
+
+        return ($error['error_user_msg'] ?? $error['message'] ?? 'Unknown Meta API error')
+            . (isset($error['error_subcode']) ? ' (subcode: ' . $error['error_subcode'] . ')' : '');
+    }
+
+    /**
+     * Graph error code 190 = access token expired, revoked, or otherwise invalid.
+     */
+    public static function isTokenError(array $result): bool
+    {
+        return is_array($result['error'] ?? null) && (int) ($result['error']['code'] ?? 0) === 190;
+    }
+
+    /**
+     * A delete counts as done if Meta confirms it, or reports the object no longer
+     * exists (already deleted on Meta's side) - either way nothing is left running.
+     */
+    public static function isDeleted(array $result): bool
+    {
+        if (! empty($result['success'])) {
+            return true;
+        }
+
+        $error = $result['error'] ?? null;
+
+        return is_array($error) && (int) ($error['code'] ?? 0) === 100 && (int) ($error['error_subcode'] ?? 0) === 33;
+    }
+
+    /**
+     * Meta takes money in the currency's minor unit (paise/cents). round() rather
+     * than (int) cast: 19.99 * 100 is 1998.9999... and would truncate to 1998.
+     */
+    public static function toMinorUnits(float|int|string $amount): int
+    {
+        return (int) round(((float) $amount) * 100);
+    }
+
+    /**
      * Exchange auth code for short-lived token.
      */
     public function exchangeCodeForToken(string $code, string $appId, string $appSecret, string $redirectUri): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/oauth/access_token", [
+            $response = $this->http()->get("{$this->baseUrl}/oauth/access_token", [
                 'client_id'     => $appId,
                 'client_secret' => $appSecret,
                 'redirect_uri'  => $redirectUri,
@@ -42,7 +106,7 @@ class MetaApiClient
     public function extendToken(string $shortToken, string $appId, string $appSecret): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/oauth/access_token", [
+            $response = $this->http()->get("{$this->baseUrl}/oauth/access_token", [
                 'grant_type'        => 'fb_exchange_token',
                 'client_id'         => $appId,
                 'client_secret'     => $appSecret,
@@ -62,8 +126,7 @@ class MetaApiClient
     public function getMe(string $accessToken): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/me", [
-                'access_token' => $accessToken,
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/me", [
                 'fields'       => 'id,name,email',
             ]);
 
@@ -82,8 +145,7 @@ class MetaApiClient
     public function getAdAccountDetails(string $accessToken, string $adAccountId): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/act_{$adAccountId}", [
-                'access_token' => $accessToken,
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/act_{$adAccountId}", [
                 'fields'       => 'id,name,account_status,disable_reason,currency,funding_source_details,'
                     . 'amount_spent,spend_cap,balance,timezone_name',
             ]);
@@ -91,7 +153,7 @@ class MetaApiClient
             return $response->json() ?? [];
         } catch (\Throwable $e) {
             Log::error('MetaApiClient::getAdAccountDetails failed', ['error' => $e->getMessage()]);
-            return [];
+            return ['error' => $e->getMessage()];
         }
     }
 
@@ -101,8 +163,7 @@ class MetaApiClient
     public function getAdAccounts(string $accessToken): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/me/adaccounts", [
-                'access_token' => $accessToken,
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/me/adaccounts", [
                 'fields'       => 'id,name,account_status,currency',
                 'limit'        => 50,
             ]);
@@ -120,8 +181,7 @@ class MetaApiClient
     public function getPages(string $accessToken): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/me/accounts", [
-                'access_token' => $accessToken,
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/me/accounts", [
                 'fields'       => 'id,name',
                 'limit'        => 50,
             ]);
@@ -138,8 +198,7 @@ class MetaApiClient
     public function createCampaign(string $accessToken, string $adAccountId, array $data): array
     {
         try {
-            $response = Http::asJson()
-                ->post("{$this->baseUrl}/act_{$adAccountId}/campaigns?access_token={$accessToken}", $data);
+            $response = $this->http($accessToken)->asJson()->post("{$this->baseUrl}/act_{$adAccountId}/campaigns", $data);
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
@@ -151,8 +210,7 @@ class MetaApiClient
     public function updateCampaign(string $accessToken, string $metaCampaignId, array $data): array
     {
         try {
-            $response = Http::asJson()
-                ->post("{$this->baseUrl}/{$metaCampaignId}?access_token={$accessToken}", $data);
+            $response = $this->http($accessToken)->asJson()->post("{$this->baseUrl}/{$metaCampaignId}", $data);
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
@@ -164,12 +222,12 @@ class MetaApiClient
     public function deleteCampaign(string $accessToken, string $metaCampaignId): array
     {
         try {
-            $response = Http::delete("{$this->baseUrl}/{$metaCampaignId}?access_token={$accessToken}");
+            $response = $this->http($accessToken)->delete("{$this->baseUrl}/{$metaCampaignId}");
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
             Log::error('MetaApiClient::deleteCampaign failed', ['error' => $e->getMessage()]);
-            return [];
+            return ['error' => $e->getMessage()];
         }
     }
 
@@ -178,8 +236,7 @@ class MetaApiClient
     public function createAdSet(string $accessToken, string $adAccountId, array $data): array
     {
         try {
-            $response = Http::asJson()
-                ->post("{$this->baseUrl}/act_{$adAccountId}/adsets?access_token={$accessToken}", $data);
+            $response = $this->http($accessToken)->asJson()->post("{$this->baseUrl}/act_{$adAccountId}/adsets", $data);
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
@@ -191,8 +248,7 @@ class MetaApiClient
     public function updateAdSet(string $accessToken, string $metaAdSetId, array $data): array
     {
         try {
-            $response = Http::asJson()
-                ->post("{$this->baseUrl}/{$metaAdSetId}?access_token={$accessToken}", $data);
+            $response = $this->http($accessToken)->asJson()->post("{$this->baseUrl}/{$metaAdSetId}", $data);
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
@@ -204,12 +260,12 @@ class MetaApiClient
     public function deleteAdSet(string $accessToken, string $metaAdSetId): array
     {
         try {
-            $response = Http::delete("{$this->baseUrl}/{$metaAdSetId}?access_token={$accessToken}");
+            $response = $this->http($accessToken)->delete("{$this->baseUrl}/{$metaAdSetId}");
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
             Log::error('MetaApiClient::deleteAdSet failed', ['error' => $e->getMessage()]);
-            return [];
+            return ['error' => $e->getMessage()];
         }
     }
 
@@ -218,8 +274,7 @@ class MetaApiClient
     public function createAdCreative(string $accessToken, string $adAccountId, array $data): array
     {
         try {
-            $response = Http::asJson()
-                ->post("{$this->baseUrl}/act_{$adAccountId}/adcreatives?access_token={$accessToken}", $data);
+            $response = $this->http($accessToken)->asJson()->post("{$this->baseUrl}/act_{$adAccountId}/adcreatives", $data);
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
@@ -231,8 +286,7 @@ class MetaApiClient
     public function createAd(string $accessToken, string $adAccountId, array $data): array
     {
         try {
-            $response = Http::asJson()
-                ->post("{$this->baseUrl}/act_{$adAccountId}/ads?access_token={$accessToken}", $data);
+            $response = $this->http($accessToken)->asJson()->post("{$this->baseUrl}/act_{$adAccountId}/ads", $data);
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
@@ -244,8 +298,7 @@ class MetaApiClient
     public function updateAd(string $accessToken, string $metaAdId, array $data): array
     {
         try {
-            $response = Http::asJson()
-                ->post("{$this->baseUrl}/{$metaAdId}?access_token={$accessToken}", $data);
+            $response = $this->http($accessToken)->asJson()->post("{$this->baseUrl}/{$metaAdId}", $data);
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
@@ -257,14 +310,12 @@ class MetaApiClient
     public function deleteAd(string $accessToken, string $metaAdId): array
     {
         try {
-            $response = Http::delete("{$this->baseUrl}/{$metaAdId}", [
-                'access_token' => $accessToken,
-            ]);
+            $response = $this->http($accessToken)->delete("{$this->baseUrl}/{$metaAdId}");
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
             Log::error('MetaApiClient::deleteAd failed', ['error' => $e->getMessage()]);
-            return [];
+            return ['error' => $e->getMessage()];
         }
     }
 
@@ -303,7 +354,6 @@ class MetaApiClient
     {
         try {
             $query = array_merge([
-                'access_token' => $accessToken,
                 'fields'       => self::BASIC_INSIGHT_FIELDS,
                 'date_preset'  => 'maximum',
                 'limit'        => 500,
@@ -318,12 +368,12 @@ class MetaApiClient
                 $query['breakdowns'] = implode(',', $query['breakdowns']);
             }
 
-            $response = Http::get("{$this->baseUrl}/{$objectId}/insights", $query);
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/{$objectId}/insights", $query);
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
             Log::error('MetaApiClient::getInsights failed', ['error' => $e->getMessage()]);
-            return [];
+            return ['error' => $e->getMessage()];
         }
     }
 
@@ -359,8 +409,7 @@ class MetaApiClient
     public function getDeliveryEstimate(string $accessToken, string $adAccountId, array $targeting, string $optimizationGoal = 'REACH'): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/act_{$adAccountId}/delivery_estimate", [
-                'access_token'      => $accessToken,
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/act_{$adAccountId}/delivery_estimate", [
                 'targeting_spec'    => json_encode($targeting),
                 'optimization_goal' => $optimizationGoal,
             ]);
@@ -379,8 +428,7 @@ class MetaApiClient
     public function searchInterests(string $accessToken, string $query): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/search", [
-                'access_token' => $accessToken,
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/search", [
                 'type'         => 'adinterest',
                 'q'            => $query,
                 'limit'        => 20,
@@ -401,8 +449,7 @@ class MetaApiClient
     public function getAdPreview(string $accessToken, string $metaAdId, string $adFormat = 'MOBILE_FEED_STANDARD'): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/{$metaAdId}/previews", [
-                'access_token' => $accessToken,
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/{$metaAdId}/previews", [
                 'ad_format'    => $adFormat,
             ]);
 
@@ -422,8 +469,7 @@ class MetaApiClient
     public function getRecommendations(string $accessToken, string $objectId): array
     {
         try {
-            $response = Http::get("{$this->baseUrl}/{$objectId}", [
-                'access_token' => $accessToken,
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/{$objectId}", [
                 'fields'       => 'recommendations',
             ]);
 
@@ -442,13 +488,12 @@ class MetaApiClient
     {
         try {
             $params = array_merge([
-                'access_token'   => $accessToken,
                 'type'           => 'adgeolocation',
                 'q'              => $query,
                 'location_types' => json_encode($types ?: ['country', 'region', 'city', 'zip']),
             ], $extra);
 
-            $response = Http::get("{$this->baseUrl}/search", $params);
+            $response = $this->http($accessToken)->get("{$this->baseUrl}/search", $params);
             $json     = $response->json();
 
             return is_array($json) ? ($json['data'] ?? []) : [];

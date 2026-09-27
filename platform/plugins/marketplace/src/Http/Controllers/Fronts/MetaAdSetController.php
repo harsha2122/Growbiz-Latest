@@ -5,6 +5,7 @@ namespace Botble\Marketplace\Http\Controllers\Fronts;
 use Botble\Base\Facades\Assets;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Marketplace\Facades\MarketplaceHelper;
+use Botble\Marketplace\Http\Controllers\Fronts\Concerns\HandlesMetaApiResults;
 use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Models\MetaAdSet;
 use Botble\Marketplace\Models\MetaCampaign;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 class MetaAdSetController extends BaseController
 {
+    use HandlesMetaApiResults;
+
     protected int $storeId = 0;
 
     public function __construct()
@@ -80,16 +83,25 @@ class MetaAdSetController extends BaseController
 
         $adSet = MetaAdSet::query()->create($validated);
 
-        if ($campaign->meta_campaign_id) {
-            $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                $this->syncAdSetToMeta($adSet, $campaign->meta_campaign_id, $adAccount);
-            }
+        $response = $this->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id));
+
+        if (! $campaign->meta_campaign_id) {
+            return $response->setMessage('Ad set saved as a draft. Push the campaign to Meta first, then push this ad set.');
         }
 
-        return $this->httpResponse()
-            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id))
-            ->withCreatedSuccessMessage();
+        $adAccount = $this->getConnectedAccount();
+        if (! $adAccount) {
+            return $response->setMessage('Ad set saved as a draft. Reconnect your Facebook account, then use "Push to Meta".');
+        }
+
+        $result = $this->syncAdSetToMeta($adSet, $campaign->meta_campaign_id, $adAccount);
+
+        if (! $result['success']) {
+            return $response->setError()->setMessage('Ad set saved, but it could not be created on Meta: ' . $result['error'] . ' Fix the issue and use "Push to Meta" to retry.');
+        }
+
+        return $response->withCreatedSuccessMessage();
     }
 
     public function show(int $id)
@@ -146,41 +158,40 @@ class MetaAdSetController extends BaseController
 
         $adSet->update($validated);
 
-        if ($adSet->meta_adset_id) {
-            $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                try {
-                    $metaClient = app(MetaApiClient::class);
-                    $targeting  = $metaClient->buildTargeting([
-                        'targeting_age_min'   => $adSet->targeting_age_min,
-                        'targeting_age_max'   => $adSet->targeting_age_max,
-                        'targeting_genders'   => $adSet->targeting_genders,
-                        'targeting_locations' => $adSet->targeting_locations,
-                        'targeting_interests' => $adSet->targeting_interests,
-                        'placements'          => $adSet->placements,
-                    ]);
+        $response = $this->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $adSet->campaign_id));
 
-                    $payload = [
-                        'name'         => $adSet->name,
-                        'daily_budget' => (int) ($adSet->daily_budget * 100),
-                        'targeting'    => $targeting,
-                        'status'       => $adSet->status,
-                    ];
-                    if (! empty($adSet->bid_cap)) {
-                        $payload['bid_strategy'] = 'LOWEST_COST_WITH_BID_CAP';
-                        $payload['bid_amount']   = (int) ($adSet->bid_cap * 100);
-                    }
+        if ($adSet->meta_adset_id && ($adAccount = $this->getConnectedAccount())) {
+            $metaClient = app(MetaApiClient::class);
+            $targeting  = $metaClient->buildTargeting([
+                'targeting_age_min'   => $adSet->targeting_age_min,
+                'targeting_age_max'   => $adSet->targeting_age_max,
+                'targeting_genders'   => $adSet->targeting_genders,
+                'targeting_locations' => $adSet->targeting_locations,
+                'targeting_interests' => $adSet->targeting_interests,
+                'placements'          => $adSet->placements,
+            ]);
 
-                    $metaClient->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, $payload);
-                } catch (\Throwable $e) {
-                    Log::error('Meta ad set update API failed', ['error' => $e->getMessage()]);
-                }
+            // Status is deliberately not sent: it's only changed via toggleStatus().
+            $payload = [
+                'name'         => $adSet->name,
+                'daily_budget' => MetaApiClient::toMinorUnits($adSet->daily_budget),
+                'targeting'    => $targeting,
+                'bid_strategy' => 'LOWEST_COST_WITHOUT_CAP',
+            ];
+            if (! empty($adSet->bid_cap)) {
+                $payload['bid_strategy'] = 'LOWEST_COST_WITH_BID_CAP';
+                $payload['bid_amount']   = MetaApiClient::toMinorUnits($adSet->bid_cap);
+            }
+
+            $result = $metaClient->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, $payload);
+
+            if ($error = $this->metaError($result, $adAccount, 'ad set update')) {
+                return $response->setError()->setMessage('Saved here, but Meta was not updated: ' . $error);
             }
         }
 
-        return $this->httpResponse()
-            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $adSet->campaign_id))
-            ->withUpdatedSuccessMessage();
+        return $response->withUpdatedSuccessMessage();
     }
 
     public function destroy(int $id)
@@ -190,12 +201,18 @@ class MetaAdSetController extends BaseController
 
         if ($adSet->meta_adset_id) {
             $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                try {
-                    app(MetaApiClient::class)->deleteAdSet($adAccount->access_token, $adSet->meta_adset_id);
-                } catch (\Throwable $e) {
-                    Log::error('Meta ad set delete API failed', ['error' => $e->getMessage()]);
-                }
+            if (! $adAccount) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage('This ad set exists on Meta. Reconnect your Facebook account so it can be deleted there first.');
+            }
+
+            $result = app(MetaApiClient::class)->deleteAdSet($adAccount->access_token, $adSet->meta_adset_id);
+
+            if (! MetaApiClient::isDeleted($result)) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage('Could not delete the ad set on Meta, so it was kept here: ' . ($this->metaError($result, $adAccount, 'ad set delete') ?? 'Unknown error'));
             }
         }
 
@@ -210,20 +227,25 @@ class MetaAdSetController extends BaseController
     {
         $adSet     = MetaAdSet::query()->where('store_id', $this->storeId)->findOrFail($id);
         $newStatus = $adSet->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-        $adSet->update(['status' => $newStatus]);
 
         if ($adSet->meta_adset_id) {
             $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                try {
-                    app(MetaApiClient::class)->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, [
-                        'status' => $newStatus,
-                    ]);
-                } catch (\Throwable $e) {
-                    Log::error('Meta ad set toggleStatus API failed', ['error' => $e->getMessage()]);
-                }
+            if (! $adAccount) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage('Reconnect your Facebook account to change this ad set\'s status.');
+            }
+
+            $result = app(MetaApiClient::class)->updateAdSet($adAccount->access_token, $adSet->meta_adset_id, [
+                'status' => $newStatus,
+            ]);
+
+            if ($error = $this->metaError($result, $adAccount, 'ad set status change')) {
+                return $this->httpResponse()->setError()->setMessage('Status not changed: ' . $error);
             }
         }
+
+        $adSet->update(['status' => $newStatus]);
 
         return $this->httpResponse()->setMessage('Ad set status updated.');
     }
@@ -235,6 +257,12 @@ class MetaAdSetController extends BaseController
     {
         $adSet    = MetaAdSet::query()->where('store_id', $this->storeId)->with('campaign')->findOrFail($id);
         $campaign = $adSet->campaign;
+
+        if ($adSet->meta_adset_id) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage('This ad set is already on Meta (ID: ' . $adSet->meta_adset_id . ').');
+        }
 
         if (! $campaign || ! $campaign->meta_campaign_id) {
             return $this->httpResponse()
@@ -294,7 +322,7 @@ class MetaAdSetController extends BaseController
             $payload = [
                 'name'              => $adSet->name,
                 'campaign_id'       => $metaCampaignId,
-                'daily_budget'      => (int) ($adSet->daily_budget * 100),
+                'daily_budget'      => MetaApiClient::toMinorUnits($adSet->daily_budget),
                 'billing_event'     => 'IMPRESSIONS',
                 'optimization_goal' => $adSet->optimization_goal,
                 'bid_strategy'      => 'LOWEST_COST_WITHOUT_CAP',
@@ -304,7 +332,7 @@ class MetaAdSetController extends BaseController
             // Override bid strategy when vendor explicitly provided a bid cap.
             if (! empty($adSet->bid_cap)) {
                 $payload['bid_strategy'] = 'LOWEST_COST_WITH_BID_CAP';
-                $payload['bid_amount']   = (int) ($adSet->bid_cap * 100);
+                $payload['bid_amount']   = MetaApiClient::toMinorUnits($adSet->bid_cap);
             }
 
             Log::info('Meta createAdSet payload', ['payload' => $payload, 'adset_id' => $adSet->id]);
@@ -318,12 +346,8 @@ class MetaAdSetController extends BaseController
                 return ['success' => true, 'meta_adset_id' => $result['id'], 'error' => null];
             }
 
-            // Build a detailed error message including subcode and user message
-            $err        = $result['error'] ?? [];
-            $errorMsg   = ($err['message'] ?? 'Unknown error')
-                . (isset($err['error_subcode']) ? ' (subcode: ' . $err['error_subcode'] . ')' : '')
-                . (isset($err['error_user_msg']) ? ' — ' . $err['error_user_msg'] : '');
-            Log::warning('Meta ad set create API error', ['error' => $err, 'adset_id' => $adSet->id]);
+            $errorMsg = $this->metaError($result, $adAccount, 'ad set create') ?? 'Meta returned no ad set ID.';
+
             return ['success' => false, 'meta_adset_id' => null, 'error' => $errorMsg];
         } catch (\Throwable $e) {
             Log::error('Meta ad set push failed', ['error' => $e->getMessage(), 'adset_id' => $adSet->id]);

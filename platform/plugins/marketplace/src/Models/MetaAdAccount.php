@@ -16,7 +16,10 @@ class MetaAdAccount extends Model
         'timezone_name', 'has_payment_method',
     ];
 
+    protected $hidden = ['access_token'];
+
     protected $casts = [
+        'access_token' => 'encrypted',
         'is_connected' => 'boolean',
         'token_expires_at' => 'datetime',
         'connected_at' => 'datetime',

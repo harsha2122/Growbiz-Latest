@@ -5,6 +5,7 @@ namespace Botble\Marketplace\Http\Controllers\Fronts;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Ecommerce\Models\Product;
 use Botble\Marketplace\Facades\MarketplaceHelper;
+use Botble\Marketplace\Http\Controllers\Fronts\Concerns\HandlesMetaApiResults;
 use Botble\Marketplace\Models\MetaAd;
 use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Models\MetaAdSet;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Log;
 
 class MetaAdController extends BaseController
 {
+    use HandlesMetaApiResults;
+
     protected int $storeId = 0;
 
     public function __construct()
@@ -97,27 +100,29 @@ class MetaAdController extends BaseController
 
         $ad = MetaAd::query()->create($validated);
 
-        // Push to Meta API
-        if ($adSet->meta_adset_id) {
-            $adAccount = $this->getConnectedAccount();
-            if ($adAccount && empty($adAccount->fb_page_id)) {
-                Log::warning('Meta ad creation: no Facebook Page linked for store', ['store_id' => $this->storeId]);
-            } elseif ($adAccount) {
-                $pushResult = $this->syncAdToMeta($ad, $adSet, $adAccount);
-                if (! $pushResult['success']) {
-                    Log::warning('Meta ad push failed on store', ['store_id' => $this->storeId, 'error' => $pushResult['error']]);
-                }
-            }
-        } else {
-            Log::warning('Meta ad creation skipped: ad set not synced to Meta', [
-                'ad_set_id' => $adSet->id,
-                'store_id'  => $this->storeId,
-            ]);
+        $response = $this->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $adSet->id));
+
+        if (! $adSet->meta_adset_id) {
+            return $response->setMessage('Ad saved as a draft. Push the ad set to Meta first, then push this ad.');
         }
 
-        return $this->httpResponse()
-            ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $adSet->id))
-            ->withCreatedSuccessMessage();
+        $adAccount = $this->getConnectedAccount();
+        if (! $adAccount) {
+            return $response->setMessage('Ad saved as a draft. Reconnect your Facebook account, then use "Push to Meta".');
+        }
+
+        if (empty($adAccount->fb_page_id)) {
+            return $response->setMessage('Ad saved as a draft. Reconnect Facebook and select a Page - Meta ads must run from a Facebook Page.');
+        }
+
+        $pushResult = $this->syncAdToMeta($ad, $adSet, $adAccount);
+
+        if (! $pushResult['success']) {
+            return $response->setError()->setMessage('Ad saved, but it could not be created on Meta: ' . $pushResult['error'] . ' Fix the issue and use "Push to Meta" to retry.');
+        }
+
+        return $response->withCreatedSuccessMessage();
     }
 
     public function show(int $id)
@@ -180,23 +185,25 @@ class MetaAdController extends BaseController
         unset($validated['creative_file']);
         $ad->update($validated);
 
-        if ($ad->meta_ad_id) {
-            $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                try {
-                    app(MetaApiClient::class)->updateAd($adAccount->access_token, $ad->meta_ad_id, [
-                        'status' => $ad->status,
-                        'name'   => $ad->name,
-                    ]);
-                } catch (\Throwable $e) {
-                    Log::error('Meta ad update API failed', ['error' => $e->getMessage()]);
-                }
+        $response = $this->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $ad->ad_set_id));
+
+        if ($ad->meta_ad_id && ($adAccount = $this->getConnectedAccount())) {
+            // Only the name is pushed: status is managed via toggleStatus() (and a local
+            // "IN_REVIEW" is not a status Meta accepts), and creative text/images are
+            // immutable on Meta - changing them needs a new ad.
+            $result = app(MetaApiClient::class)->updateAd($adAccount->access_token, $ad->meta_ad_id, [
+                'name' => $ad->name,
+            ]);
+
+            if ($error = $this->metaError($result, $adAccount, 'ad update')) {
+                return $response->setError()->setMessage('Saved here, but Meta was not updated: ' . $error);
             }
+
+            return $response->setMessage('Ad updated. Note: on Meta only the ad name changes - text, image and link changes need a new ad.');
         }
 
-        return $this->httpResponse()
-            ->setNextUrl(route('marketplace.vendor.meta-ads.ad-sets.show', $ad->ad_set_id))
-            ->withUpdatedSuccessMessage();
+        return $response->withUpdatedSuccessMessage();
     }
 
     public function destroy(int $id)
@@ -206,12 +213,18 @@ class MetaAdController extends BaseController
 
         if ($ad->meta_ad_id) {
             $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                try {
-                    app(MetaApiClient::class)->deleteAd($adAccount->access_token, $ad->meta_ad_id);
-                } catch (\Throwable $e) {
-                    Log::error('Meta ad delete API failed', ['error' => $e->getMessage()]);
-                }
+            if (! $adAccount) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage('This ad exists on Meta. Reconnect your Facebook account so it can be deleted there first.');
+            }
+
+            $result = app(MetaApiClient::class)->deleteAd($adAccount->access_token, $ad->meta_ad_id);
+
+            if (! MetaApiClient::isDeleted($result)) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage('Could not delete the ad on Meta, so it was kept here: ' . ($this->metaError($result, $adAccount, 'ad delete') ?? 'Unknown error'));
             }
         }
 
@@ -226,20 +239,25 @@ class MetaAdController extends BaseController
     {
         $ad        = MetaAd::query()->where('store_id', $this->storeId)->findOrFail($id);
         $newStatus = $ad->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-        $ad->update(['status' => $newStatus]);
 
         if ($ad->meta_ad_id) {
             $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                try {
-                    app(MetaApiClient::class)->updateAd($adAccount->access_token, $ad->meta_ad_id, [
-                        'status' => $newStatus,
-                    ]);
-                } catch (\Throwable $e) {
-                    Log::error('Meta ad toggleStatus API failed', ['error' => $e->getMessage()]);
-                }
+            if (! $adAccount) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage('Reconnect your Facebook account to change this ad\'s status.');
+            }
+
+            $result = app(MetaApiClient::class)->updateAd($adAccount->access_token, $ad->meta_ad_id, [
+                'status' => $newStatus,
+            ]);
+
+            if ($error = $this->metaError($result, $adAccount, 'ad status change')) {
+                return $this->httpResponse()->setError()->setMessage('Status not changed: ' . $error);
             }
         }
+
+        $ad->update(['status' => $newStatus]);
 
         return $this->httpResponse()->setMessage('Ad status updated.');
     }
@@ -279,6 +297,12 @@ class MetaAdController extends BaseController
     {
         $ad    = MetaAd::query()->where('store_id', $this->storeId)->with('adSet')->findOrFail($id);
         $adSet = $ad->adSet;
+
+        if ($ad->meta_ad_id) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage('This ad is already on Meta (ID: ' . $ad->meta_ad_id . ').');
+        }
 
         if (! $adSet || ! $adSet->meta_adset_id) {
             return $this->httpResponse()
@@ -362,12 +386,7 @@ class MetaAdController extends BaseController
                 ]
             );
 
-            if (! empty($creativeResult['error'])) {
-                $err      = $creativeResult['error'];
-                $errorMsg = ($err['message'] ?? 'Creative creation failed')
-                    . (isset($err['error_subcode']) ? ' (subcode: ' . $err['error_subcode'] . ')' : '')
-                    . (isset($err['error_user_msg']) ? ' — ' . $err['error_user_msg'] : '');
-                Log::warning('Meta ad creative create API error', ['error' => $err, 'ad_id' => $ad->id]);
+            if ($errorMsg = $this->metaError($creativeResult, $adAccount, 'ad creative create')) {
                 return ['success' => false, 'meta_ad_id' => null, 'error' => $errorMsg];
             }
 
@@ -382,11 +401,7 @@ class MetaAdController extends BaseController
                 'status'   => 'PAUSED',
             ]);
 
-            if (! empty($adResult['error'])) {
-                $errorMsg = $adResult['error']['message']
-                    ?? $adResult['error']['error_user_title']
-                    ?? 'Ad creation failed';
-                Log::warning('Meta ad create API error', ['error' => $adResult['error'], 'ad_id' => $ad->id]);
+            if ($errorMsg = $this->metaError($adResult, $adAccount, 'ad create')) {
                 return ['success' => false, 'meta_ad_id' => null, 'error' => $errorMsg];
             }
 

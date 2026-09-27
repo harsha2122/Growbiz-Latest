@@ -221,7 +221,7 @@ class MetaAdsConnectionController extends BaseController
     private function saveAccountSelection(string $accessToken, ?int $expiresIn, array $me, array $adAccount, ?array $page = null)
     {
         // Strip "act_" prefix — store raw numeric ID
-        $rawAccountId = ltrim($adAccount['id'] ?? '', 'act_');
+        $rawAccountId = preg_replace('/^act_/', '', (string) ($adAccount['id'] ?? ''));
 
         MetaAdAccount::query()->updateOrCreate(
             ['store_id' => $this->storeId],

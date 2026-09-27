@@ -52,11 +52,6 @@ class MetaAdsSettingForm extends SettingForm
                 TextFieldOption::make()->label('Marketing App Secret')
                     ->value(MarketplaceHelper::getSetting('meta_ads_marketing_app_secret', ''))
             )
-            ->add('meta_ads_marketing_developer_token', TextField::class,
-                TextFieldOption::make()->label('Developer Token (System User Token)')
-                    ->helperText('Optional: System User access token from Meta Business Manager for server-side calls.')
-                    ->value(MarketplaceHelper::getSetting('meta_ads_marketing_developer_token', ''))
-            )
             ->add('oembed_section', 'html', ['html' => '<hr><h5>Instagram / Facebook Reels &amp; Video Embedding (oEmbed)</h5>'
                 . '<p class="text-muted small">Dedicated credentials for embedding public Instagram/Facebook Reels and posts '
                 . 'inline on product pages and sponsored store videos, via Meta\'s oEmbed API. If left empty, the Marketing App '
@@ -89,10 +84,6 @@ class MetaAdsSettingForm extends SettingForm
             )
             ->add('oembed_test_section', 'html', ['html' => view('plugins/marketplace::settings.partials.oembed-test')->render()])
             ->add('advanced_section', 'html', ['html' => '<hr><h5>Advanced</h5>'])
-            ->add('meta_ads_sandbox_mode', OnOffCheckboxField::class,
-                OnOffFieldOption::make()->label('Sandbox Mode')
-                    ->value(MarketplaceHelper::getSetting('meta_ads_sandbox_mode', true))
-            )
             ->add('meta_ads_api_version', TextField::class,
                 TextFieldOption::make()->label('API Version')
                     ->value(MarketplaceHelper::getSetting('meta_ads_api_version', 'v21.0'))

@@ -5,6 +5,7 @@ namespace Botble\Marketplace\Http\Controllers\Fronts;
 use Botble\Base\Facades\Assets;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Marketplace\Facades\MarketplaceHelper;
+use Botble\Marketplace\Http\Controllers\Fronts\Concerns\HandlesMetaApiResults;
 use Botble\Marketplace\Models\MetaAdAccount;
 use Botble\Marketplace\Models\MetaCampaign;
 use Botble\Marketplace\Services\MetaApiClient;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Log;
 
 class MetaCampaignController extends BaseController
 {
+    use HandlesMetaApiResults;
+
     protected int $storeId = 0;
 
     public function __construct()
@@ -56,12 +59,17 @@ class MetaCampaignController extends BaseController
         $adAccount        = $this->getConnectedAccount();
 
         if ($adAccount) {
-            $details = app(MetaApiClient::class)
-                ->getAdAccountDetails($adAccount->access_token, $adAccount->ad_account_id);
+            if ($adAccount->account_status !== null) {
+                $accountStatus    = (int) $adAccount->account_status;
+                $hasPaymentMethod = (bool) $adAccount->has_payment_method;
+            } else {
+                $details = app(MetaApiClient::class)
+                    ->getAdAccountDetails($adAccount->access_token, $adAccount->ad_account_id);
 
-            if (! empty($details['account_status'])) {
-                $accountStatus    = (int) $details['account_status'];
-                $hasPaymentMethod = ! empty($details['funding_source_details']);
+                if (! empty($details['account_status'])) {
+                    $accountStatus    = (int) $details['account_status'];
+                    $hasPaymentMethod = ! empty($details['funding_source_details']);
+                }
             }
         }
 
@@ -94,15 +102,21 @@ class MetaCampaignController extends BaseController
 
         $campaign = MetaCampaign::query()->create($validated);
 
-        // Push to Meta API
+        $response = $this->httpResponse()
+            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id));
+
         $adAccount = $this->getConnectedAccount();
-        if ($adAccount) {
-            $this->syncCampaignToMeta($campaign, $adAccount);
+        if (! $adAccount) {
+            return $response->setMessage('Campaign saved as a draft. Connect your Facebook account, then use "Push to Meta" to publish it.');
         }
 
-        return $this->httpResponse()
-            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id))
-            ->withCreatedSuccessMessage();
+        $result = $this->syncCampaignToMeta($campaign, $adAccount);
+
+        if (! $result['success']) {
+            return $response->setError()->setMessage('Campaign saved, but it could not be created on Meta: ' . $result['error'] . ' Fix the issue and use "Push to Meta" to retry.');
+        }
+
+        return $response->withCreatedSuccessMessage();
     }
 
     public function show(int $id)
@@ -175,25 +189,28 @@ class MetaCampaignController extends BaseController
             'end_date'        => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
+        // Objective can't be changed on Meta once a campaign exists there.
+        if ($campaign->meta_campaign_id && $validated['objective'] !== $campaign->objective) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage('The objective of a campaign already published to Meta cannot be changed. Create a new campaign instead.');
+        }
+
         $campaign->update($validated);
 
-        if ($campaign->meta_campaign_id) {
-            $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                try {
-                    app(MetaApiClient::class)->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
-                        'name'   => $campaign->name,
-                        'status' => $campaign->status,
-                    ]);
-                } catch (\Throwable $e) {
-                    Log::error('Meta campaign update API failed', ['error' => $e->getMessage()]);
-                }
+        $response = $this->httpResponse()->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.index'));
+
+        if ($campaign->meta_campaign_id && ($adAccount = $this->getConnectedAccount())) {
+            $result = app(MetaApiClient::class)->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
+                'name' => $campaign->name,
+            ]);
+
+            if ($error = $this->metaError($result, $adAccount, 'campaign update')) {
+                return $response->setError()->setMessage('Saved here, but Meta was not updated: ' . $error);
             }
         }
 
-        return $this->httpResponse()
-            ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.index'))
-            ->withUpdatedSuccessMessage();
+        return $response->withUpdatedSuccessMessage();
     }
 
     public function destroy(int $id)
@@ -201,13 +218,21 @@ class MetaCampaignController extends BaseController
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
 
         if ($campaign->meta_campaign_id) {
+            // Never drop our record while the campaign may still be spending on Meta -
+            // the vendor would lose the only place to stop it.
             $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                try {
-                    app(MetaApiClient::class)->deleteCampaign($adAccount->access_token, $campaign->meta_campaign_id);
-                } catch (\Throwable $e) {
-                    Log::error('Meta campaign delete API failed', ['error' => $e->getMessage()]);
-                }
+            if (! $adAccount) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage('This campaign exists on Meta. Reconnect your Facebook account so it can be deleted there first.');
+            }
+
+            $result = app(MetaApiClient::class)->deleteCampaign($adAccount->access_token, $campaign->meta_campaign_id);
+
+            if (! MetaApiClient::isDeleted($result)) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage('Could not delete the campaign on Meta, so it was kept here: ' . ($this->metaError($result, $adAccount, 'campaign delete') ?? 'Unknown error'));
             }
         }
 
@@ -222,20 +247,27 @@ class MetaCampaignController extends BaseController
     {
         $campaign  = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
         $newStatus = $campaign->status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-        $campaign->update(['status' => $newStatus]);
 
+        // Change Meta first and only record the new status once Meta accepted it,
+        // so the dashboard never shows PAUSED while the campaign is still spending.
         if ($campaign->meta_campaign_id) {
             $adAccount = $this->getConnectedAccount();
-            if ($adAccount) {
-                try {
-                    app(MetaApiClient::class)->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
-                        'status' => $newStatus,
-                    ]);
-                } catch (\Throwable $e) {
-                    Log::error('Meta campaign toggleStatus API failed', ['error' => $e->getMessage()]);
-                }
+            if (! $adAccount) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage('Reconnect your Facebook account to change this campaign\'s status.');
+            }
+
+            $result = app(MetaApiClient::class)->updateCampaign($adAccount->access_token, $campaign->meta_campaign_id, [
+                'status' => $newStatus,
+            ]);
+
+            if ($error = $this->metaError($result, $adAccount, 'campaign status change')) {
+                return $this->httpResponse()->setError()->setMessage('Status not changed: ' . $error);
             }
         }
+
+        $campaign->update(['status' => $newStatus]);
 
         return $this->httpResponse()->setMessage('Campaign status updated.');
     }
@@ -243,6 +275,12 @@ class MetaCampaignController extends BaseController
     public function pushToMeta(int $id)
     {
         $campaign = MetaCampaign::query()->where('store_id', $this->storeId)->findOrFail($id);
+
+        if ($campaign->meta_campaign_id) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage('This campaign is already on Meta (ID: ' . $campaign->meta_campaign_id . ').');
+        }
 
         $adAccount = $this->getConnectedAccount();
         if (! $adAccount) {
@@ -291,12 +329,7 @@ class MetaCampaignController extends BaseController
                 return ['success' => true, 'meta_campaign_id' => $result['id'], 'error' => null];
             }
 
-            $err      = $result['error'] ?? [];
-            $errorMsg = ($err['message'] ?? 'Unknown error')
-                . (isset($err['error_subcode']) ? ' (subcode: ' . $err['error_subcode'] . ')' : '')
-                . (isset($err['error_user_msg']) ? ' — ' . $err['error_user_msg'] : '')
-                . (isset($err['error_user_title']) ? ' [' . $err['error_user_title'] . ']' : '');
-            Log::warning('Meta campaign create API error', ['error' => $err, 'campaign_id' => $campaign->id]);
+            $errorMsg = $this->metaError($result, $adAccount, 'campaign create') ?? 'Meta returned no campaign ID.';
 
             return ['success' => false, 'meta_campaign_id' => null, 'error' => $errorMsg];
         } catch (\Throwable $e) {

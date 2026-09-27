@@ -37,7 +37,10 @@ class SyncMetaInsightsCommand extends Command
         $this->info("Syncing insights for {$accounts->count()} account(s)...");
 
         foreach ($accounts as $account) {
-            $this->syncAccountFinancials($client, $account);
+            if (! $this->syncAccountFinancials($client, $account)) {
+                continue;
+            }
+
             $this->syncAccount($client, $account);
         }
 
@@ -46,20 +49,36 @@ class SyncMetaInsightsCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function syncAccountFinancials(MetaApiClient $client, MetaAdAccount $account): void
+    /**
+     * Returns false when the account's token is dead, so the caller skips the (then
+     * guaranteed-to-fail) insight calls for it.
+     */
+    protected function syncAccountFinancials(MetaApiClient $client, MetaAdAccount $account): bool
     {
         try {
             $details = $client->getAdAccountDetails($account->access_token, $account->ad_account_id);
 
-            if (empty($details) || ! empty($details['error'])) {
-                return;
+            if (MetaApiClient::isTokenError($details)) {
+                // Flip to disconnected so the vendor sees a reconnect prompt instead of
+                // a "Connected" badge on an account where every call silently fails.
+                $account->update(['is_connected' => false]);
+                $this->warn("  ✗ Store #{$account->store_id}: Facebook token expired or revoked - marked disconnected.");
+
+                return false;
             }
+
+            if (empty($details) || ! empty($details['error'])) {
+                return true;
+            }
+
+            // Meta reports spend_cap "0" when the account has no cap, not a ₹0 cap.
+            $spendCap = (float) ($details['spend_cap'] ?? 0);
 
             $account->update([
                 'currency'            => $details['currency'] ?? $account->currency,
                 'account_status'      => isset($details['account_status']) ? (int) $details['account_status'] : $account->account_status,
                 'amount_spent'        => isset($details['amount_spent']) ? ((float) $details['amount_spent']) / 100 : $account->amount_spent,
-                'spend_cap'           => isset($details['spend_cap']) ? ((float) $details['spend_cap']) / 100 : null,
+                'spend_cap'           => $spendCap > 0 ? $spendCap / 100 : null,
                 'balance'             => isset($details['balance']) ? ((float) $details['balance']) / 100 : null,
                 'timezone_name'       => $details['timezone_name'] ?? $account->timezone_name,
                 'has_payment_method'  => ! empty($details['funding_source_details']),
@@ -67,6 +86,8 @@ class SyncMetaInsightsCommand extends Command
         } catch (\Throwable $e) {
             Log::warning('Meta account financials sync failed', ['account_id' => $account->id, 'error' => $e->getMessage()]);
         }
+
+        return true;
     }
 
     protected function syncAccount(MetaApiClient $client, MetaAdAccount $account): void

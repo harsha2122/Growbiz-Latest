@@ -75,19 +75,9 @@ class MarketplaceHelper
         return (string) $this->getSetting('meta_ads_marketing_app_secret', '');
     }
 
-    public function getMetaAdsDeveloperToken(): string
-    {
-        return (string) $this->getSetting('meta_ads_marketing_developer_token', '');
-    }
-
     public function getMetaAdsApiVersion(): string
     {
         return (string) $this->getSetting('meta_ads_api_version', 'v21.0');
-    }
-
-    public function isMetaAdsSandboxMode(): bool
-    {
-        return (bool) $this->getSetting('meta_ads_sandbox_mode', true);
     }
 
     public function discountTypes(): array
