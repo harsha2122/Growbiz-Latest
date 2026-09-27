@@ -96,9 +96,16 @@ class StoreSponsoredVideo extends BaseModel
     public function updateScheduledDeletion(): void
     {
         if ($this->expires_at) {
-            $this->update([
-                'scheduled_deletion_at' => $this->calculateScheduledDeletion(),
-            ]);
+            $newValue = $this->calculateScheduledDeletion();
+
+            if ($this->scheduled_deletion_at == $newValue) {
+                return;
+            }
+
+            $this->scheduled_deletion_at = $newValue;
+            // saveQuietly() skips model events - update()/save() here would fire the
+            // 'updated' event again, which calls this method again, infinitely.
+            $this->saveQuietly();
         }
     }
 
