@@ -13,8 +13,8 @@ class EnquiryRequest extends Request
             'product_id' => ['nullable', 'integer', 'exists:ec_products,id'],
             'source' => ['required', 'in:vendor_page,product_page'],
             'name' => ['required', 'string', 'max:255'],
-            'contact_number' => ['required', 'string', 'max:30'],
-            'email' => ['required', 'email', 'max:255'],
+            'contact_number' => ['required', 'digits:10'],
+            'email' => ['required', 'email:rfc,strict', 'max:255'],
             'address' => ['required', 'string', 'max:1000'],
         ];
     }

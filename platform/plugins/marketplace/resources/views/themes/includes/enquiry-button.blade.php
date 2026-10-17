@@ -31,7 +31,18 @@
                         </div>
                         <div class="mb-10">
                             <label class="form-label">{{ __('Contact Number') }}</label>
-                            <input type="tel" class="form-control" name="contact_number" required>
+                            <input
+                                type="tel"
+                                class="form-control"
+                                name="contact_number"
+                                inputmode="numeric"
+                                pattern="[0-9]{10}"
+                                maxlength="10"
+                                minlength="10"
+                                title="{{ __('Enter a valid 10-digit phone number') }}"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
+                                required
+                            >
                         </div>
                         <div class="mb-10">
                             <label class="form-label">{{ __('Email') }}</label>
