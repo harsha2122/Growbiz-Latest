@@ -113,8 +113,6 @@
 
     @include(Theme::getThemeNamespace('views.ecommerce.includes.product-finance'))
 
-    @includeIf('plugins/marketplace::themes.includes.enquiry-button', ['type' => 'product', 'product' => $product, 'store' => $product->store ?? null])
-
     @if (isset($flashSale))
         <div class="tp-product-details-countdown justify-content-between flex-wrap mt-25 mb-25">
             <h4 class="tp-product-details-countdown-title">
@@ -187,6 +185,7 @@
                 </div>
                 @endif
             </div>
+            <div class="d-flex align-items-center gap-10 flex-wrap mb-15">
             @if ($isService)
                 @once
                     <style>
@@ -247,6 +246,9 @@
                     {!! EcommerceHelper::jsAttributes('buy-now-in-form', $product) !!}
                 >{{ __('Buy Now') }}</button>
             @endif
+
+                @includeIf('plugins/marketplace::themes.includes.enquiry-button', ['type' => 'product', 'product' => $product, 'store' => $product->store ?? null, 'inline' => true])
+            </div>
         </div>
     @endif
 

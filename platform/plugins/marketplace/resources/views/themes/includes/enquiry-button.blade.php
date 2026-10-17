@@ -2,10 +2,31 @@
     $storeId = $store->id ?? null;
     $productId = $product->id ?? null;
     $modalId = 'enquiry-modal-' . ($type ?? 'vendor') . '-' . ($productId ?? $storeId);
+    $inline = $inline ?? false;
 @endphp
 
 @if ($storeId)
-    <button type="button" class="btn btn-outline-primary w-100 mt-10 mb-10" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}">
+    @once
+        <style>
+            .tp-enquiry-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+        </style>
+    @endonce
+
+    <button
+        type="button"
+        @class([
+            'tp-product-details-buy-now-btn tp-enquiry-btn',
+            'w-100 mt-10 mb-10' => ! $inline,
+            'flex-grow-1' => $inline,
+        ])
+        data-bs-toggle="modal"
+        data-bs-target="#{{ $modalId }}"
+    >
         <x-core::icon name="ti ti-message-question" />
         {{ __('Enquire Now') }}
     </button>
