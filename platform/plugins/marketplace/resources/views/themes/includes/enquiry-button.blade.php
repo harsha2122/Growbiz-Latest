@@ -51,6 +51,18 @@
         </div>
     </div>
 
+    <script>
+        // Modals nested inside a transformed/overflow-hidden ancestor (sliders, product
+        // gallery, etc.) break Bootstrap's position:fixed and render trapped behind the
+        // backdrop. Move each enquiry modal to a direct child of <body> on load.
+        (function () {
+            var modal = document.getElementById('{{ $modalId }}');
+            if (modal && modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+        })();
+    </script>
+
     @once
         @push('footer')
             <script>
