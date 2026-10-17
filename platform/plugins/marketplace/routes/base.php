@@ -258,6 +258,24 @@ AdminHelper::registerRoutes(function (): void {
                 'uses' => 'Settings\MetaAdsSettingController@testOembed',
                 'permission' => 'marketplace.settings',
             ]);
+
+            Route::group(['prefix' => 'enquiries', 'as' => 'enquiries.'], function (): void {
+                Route::get('', [
+                    'as' => 'index',
+                    'uses' => 'EnquiryController@index',
+                    'permission' => 'marketplace.store.index',
+                ]);
+                Route::get('{storeId}', [
+                    'as' => 'vendor',
+                    'uses' => 'EnquiryController@vendor',
+                    'permission' => 'marketplace.store.index',
+                ])->where('storeId', '[0-9]+');
+                Route::post('toggle-visibility', [
+                    'as' => 'toggle-visibility',
+                    'uses' => 'EnquiryController@toggleVisibility',
+                    'permission' => 'marketplace.store.index',
+                ]);
+            });
         });
 
         Route::group(['prefix' => 'ecommerce/products', 'as' => 'products.'], function (): void {

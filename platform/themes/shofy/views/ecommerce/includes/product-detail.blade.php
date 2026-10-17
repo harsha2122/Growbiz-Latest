@@ -111,6 +111,10 @@
 
     @include(Theme::getThemeNamespace('views.ecommerce.includes.product-availability'))
 
+    @include(Theme::getThemeNamespace('views.ecommerce.includes.product-finance'))
+
+    @includeIf('plugins/marketplace::themes.includes.enquiry-button', ['type' => 'product', 'product' => $product, 'store' => $product->store ?? null])
+
     @if (isset($flashSale))
         <div class="tp-product-details-countdown justify-content-between flex-wrap mt-25 mb-25">
             <h4 class="tp-product-details-countdown-title">

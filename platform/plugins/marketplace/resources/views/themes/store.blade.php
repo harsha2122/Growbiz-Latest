@@ -11,6 +11,8 @@
 
         @include(MarketplaceHelper::viewPath('includes.sponsored-video'))
 
+        @includeIf(MarketplaceHelper::viewPath('includes.enquiry-button'), ['type' => 'vendor', 'store' => $store, 'product' => null])
+
         <div class="row">
             <div class="col-xl-3 col-lg-4">
                 @include(MarketplaceHelper::viewPath('includes.store-filters'))

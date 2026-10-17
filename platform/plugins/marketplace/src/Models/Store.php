@@ -282,6 +282,21 @@ class Store extends BaseModel
         return $this->hasMany(StoreSponsoredVideo::class, 'store_id')->orderBy('sort_order');
     }
 
+    public function enquiries(): HasMany
+    {
+        return $this->hasMany(Enquiry::class, 'store_id');
+    }
+
+    public function enquiryVisibility(): HasOne
+    {
+        return $this->hasOne(StoreEnquiryVisibility::class, 'store_id');
+    }
+
+    public function enquiryDetailsVisible(): bool
+    {
+        return (bool) $this->enquiryVisibility?->details_visible;
+    }
+
     public function activeSponsoredVideos(): Collection
     {
         return $this->sponsoredVideos()->get()->filter->isActive()->values();

@@ -331,6 +331,8 @@ Route::group([
         ])->name('stream-pdf');
     });
 
+    Route::get('enquiries', [\Botble\Marketplace\Http\Controllers\Fronts\VendorEnquiryController::class, 'index'])->name('enquiries.index');
+
     // Meta Ads
     Route::group(['prefix' => 'meta-ads', 'as' => 'meta-ads.'], function (): void {
         Route::get('dashboard', [MetaAdsDashboardController::class, 'index'])->name('dashboard');

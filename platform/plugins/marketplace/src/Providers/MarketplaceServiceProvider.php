@@ -235,6 +235,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'permissions' => ['marketplace.b2b-catalogs.index'],
                 ])
                 ->registerItem([
+                    'id' => 'cms-plugins-marketplace-enquiries',
+                    'priority' => 11,
+                    'parent_id' => 'cms-plugins-marketplace',
+                    'name' => __('Enquiries'),
+                    'icon' => 'ti ti-message-question',
+                    'url' => fn () => route('marketplace.enquiries.index'),
+                    'permissions' => ['marketplace.store.index'],
+                ])
+                ->registerItem([
                     'id' => 'cms-plugins-marketplace-meta-ads-settings',
                     'priority' => 12,
                     'parent_id' => 'cms-plugins-marketplace',
@@ -406,6 +415,21 @@ class MarketplaceServiceProvider extends ServiceProvider
                         'icon' => 'ti ti-file-type-pdf',
                     ]);
                 })
+                ->when(
+                    auth('customer')->check() && auth('customer')->user()?->store,
+                    function (DashboardMenuSupport $dashboardMenu): void {
+                        $store = auth('customer')->user()->store;
+                        $count = \Botble\Marketplace\Models\Enquiry::query()->where('store_id', $store->id)->count();
+
+                        $dashboardMenu->registerItem([
+                            'id' => 'marketplace.vendor.enquiries',
+                            'priority' => 6,
+                            'name' => __('Enquiries') . ($count ? ' (' . $count . ')' : ''),
+                            'icon' => 'ti ti-message-question',
+                            'url' => fn () => route('marketplace.vendor.enquiries.index'),
+                        ]);
+                    }
+                )
                 ->when(
                     MarketplaceHelper::isMetaAdsEnabled()
                         && auth('customer')->check()

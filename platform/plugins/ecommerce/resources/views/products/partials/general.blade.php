@@ -133,6 +133,58 @@
 
 {!! apply_filters('ecommerce_product_variation_form_middle', null, $product) !!}
 
+@php
+    $financeAvailable = old('finance_available', $product ? $product->finance_available : 0) == 1;
+@endphp
+<x-core::form.on-off.checkbox
+    label="Finance Available"
+    name="finance_available"
+    class="finance-available-status"
+    :checked="$financeAvailable"
+/>
+
+<x-core::form.fieldset class="finance-info" @style(['display: none' => ! $financeAvailable])>
+    <x-core::form.text-input
+        label="Finance Provider"
+        name="finance_provider"
+        :value="old('finance_provider', $product->finance_provider ?? '')"
+    />
+    <x-core::form.text-input
+        label="Interest Rate (%)"
+        name="finance_interest_rate"
+        type="number"
+        :attributes="['step' => '0.01', 'min' => 0]"
+        :value="old('finance_interest_rate', $product->finance_interest_rate ?? '')"
+    />
+    <x-core::form.text-input
+        label="Tenure Options (e.g. 6,12,18,24 months)"
+        name="finance_tenure_options"
+        :value="old('finance_tenure_options', $product->finance_tenure_options ?? '')"
+    />
+    <x-core::form.text-input
+        label="Down Payment (%)"
+        name="finance_down_payment_percent"
+        type="number"
+        :attributes="['step' => '0.01', 'min' => 0, 'max' => 100]"
+        :value="old('finance_down_payment_percent', $product->finance_down_payment_percent ?? '')"
+    />
+    <x-core::form.textarea
+        label="Eligibility Notes"
+        name="finance_eligibility_notes"
+        :value="old('finance_eligibility_notes', $product->finance_eligibility_notes ?? '')"
+    />
+</x-core::form.fieldset>
+
+@push('footer')
+    <script>
+        (function ($) {
+            $(document).on('click', 'input.finance-available-status', function (e) {
+                $('.finance-info').toggle($(e.currentTarget).prop('checked') === true)
+            })
+        })(jQuery)
+    </script>
+@endpush
+
 <x-core::form.on-off.checkbox
     :label="trans('plugins/ecommerce::products.form.storehouse.storehouse')"
     name="with_storehouse_management"

@@ -82,6 +82,12 @@ class Product extends BaseModel
         'specification_table_id',
         'vendor_commission',
         'vendor_commission_type',
+        'finance_available',
+        'finance_provider',
+        'finance_interest_rate',
+        'finance_tenure_options',
+        'finance_down_payment_percent',
+        'finance_eligibility_notes',
     ];
 
     protected $appends = [
@@ -110,6 +116,9 @@ class Product extends BaseModel
         'notify_attachment_updated' => 'bool',
         'video_media' => 'json',
         'custom_variations' => 'json',
+        'finance_available' => 'bool',
+        'finance_interest_rate' => 'float',
+        'finance_down_payment_percent' => 'float',
         'length' => 'float',
         'wide' => 'float',
         'height' => 'float',
