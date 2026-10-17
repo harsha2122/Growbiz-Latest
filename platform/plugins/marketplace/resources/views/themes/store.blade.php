@@ -1,3 +1,4 @@
+<!-- MARKER: plugin-default-store-view -->
 @php
     $categories = ProductCategoryHelper::getProductCategoriesWithUrl();
     $categoriesRequest = (array) request()->input('categories', []);

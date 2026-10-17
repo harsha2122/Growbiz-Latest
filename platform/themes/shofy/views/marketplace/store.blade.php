@@ -1,3 +1,4 @@
+<!-- MARKER: shofy-theme-store-view -->
 @php
     Theme::set('breadcrumbStyle', 'none');
     Theme::layout('full-width');
