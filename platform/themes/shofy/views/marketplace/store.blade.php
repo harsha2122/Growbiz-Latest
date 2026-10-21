@@ -1,4 +1,3 @@
-<!-- MARKER: shofy-theme-store-view -->
 @php
     Theme::set('breadcrumbStyle', 'none');
     Theme::layout('full-width');
@@ -19,8 +18,6 @@
 
     <div class="container">
         @include(MarketplaceHelper::viewPath('includes.sponsored-video'))
-
-        @includeIf(MarketplaceHelper::viewPath('includes.enquiry-button'), ['type' => 'vendor', 'store' => $store, 'product' => null])
 
         <ul class="bb-shop-nav-tabs nav nav-tabs" id="storeTab" role="tablist">
             <li class="nav-item" role="presentation">

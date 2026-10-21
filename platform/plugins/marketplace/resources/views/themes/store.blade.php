@@ -1,4 +1,3 @@
-<!-- MARKER: plugin-default-store-view -->
 @php
     $categories = ProductCategoryHelper::getProductCategoriesWithUrl();
     $categoriesRequest = (array) request()->input('categories', []);
@@ -11,8 +10,6 @@
         @include(MarketplaceHelper::viewPath('includes.store-detail-banner'))
 
         @include(MarketplaceHelper::viewPath('includes.sponsored-video'))
-
-        @includeIf(MarketplaceHelper::viewPath('includes.enquiry-button'), ['type' => 'vendor', 'store' => $store, 'product' => null])
 
         <div class="row">
             <div class="col-xl-3 col-lg-4">

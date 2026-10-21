@@ -46,6 +46,28 @@
             flex: 1 1 auto;
             min-width: 0;
             padding-bottom: 6px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .bb-shop-banner-identity {
+            min-width: 0;
+        }
+
+        .bb-shop-banner-actions .tp-enquiry-btn {
+            width: auto !important;
+            margin: 0 !important;
+            padding: 8px 20px;
+            border-radius: 6px;
+        }
+
+        @media (max-width: 767px) {
+            .bb-shop-banner-info {
+                align-items: flex-start;
+            }
         }
 
         .bb-shop-banner-name {
@@ -164,30 +186,36 @@
             {{ RvMedia::image($store->logo, $store->name, useDefaultImage: true, attributes: ['class' => 'bb-shop-banner-logo']) }}
 
             <div class="bb-shop-banner-info">
-                <h2 class="bb-shop-banner-name">
-                    {{ $store->name }}
-                    {!! $store->badge !!}
-                </h2>
+                <div class="bb-shop-banner-identity">
+                    <h2 class="bb-shop-banner-name">
+                        {{ $store->name }}
+                        {!! $store->badge !!}
+                    </h2>
 
-                <div class="bb-shop-banner-meta">
-                    @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $store->reviews->count() > 0))
-                        <div class="bb-shop-banner-rating">
-                            @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $store->reviews()->avg('star'), 'size' => 80])
-                            <small>{{ __('(:count reviews)', ['count' => number_format($store->reviews->count())]) }}</small>
+                    <div class="bb-shop-banner-meta">
+                        @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $store->reviews->count() > 0))
+                            <div class="bb-shop-banner-rating">
+                                @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $store->reviews()->avg('star'), 'size' => 80])
+                                <small>{{ __('(:count reviews)', ['count' => number_format($store->reviews->count())]) }}</small>
+                            </div>
+                        @endif
+
+                        <div class="bb-shop-banner-visits">
+                            <x-core::icon name="ti ti-eye" />
+                            {{ __(':count store visits', ['count' => number_format($store->visitsCount())]) }}
                         </div>
-                    @endif
 
-                    <div class="bb-shop-banner-visits">
-                        <x-core::icon name="ti ti-eye" />
-                        {{ __(':count store visits', ['count' => number_format($store->visitsCount())]) }}
+                        @if ($store->establishment_date)
+                            <div class="bb-shop-banner-established">
+                                <x-core::icon name="ti ti-calendar" />
+                                {{ __('Since ') }}{{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
+                            </div>
+                        @endif
                     </div>
+                </div>
 
-                    @if ($store->establishment_date)
-                        <div class="bb-shop-banner-established">
-                            <x-core::icon name="ti ti-calendar" />
-                            {{ __('Since ') }}{{ \Carbon\Carbon::parse($store->establishment_date)->format('M Y') }}
-                        </div>
-                    @endif
+                <div class="bb-shop-banner-actions">
+                    @includeIf(MarketplaceHelper::viewPath('includes.enquiry-button'), ['type' => 'vendor', 'store' => $store, 'product' => null, 'inline' => true])
                 </div>
             </div>
         </div>
