@@ -289,6 +289,11 @@ return [
         'published' => 'Approved',
         'blocked' => 'Blocked',
     ],
+    'vendor_payment_statuses' => [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'declined' => 'Declined',
+    ],
     'view_vendor' => 'View seller :name',
     'vendor_information' => 'Seller Information',
     'vendor_verified' => 'Seller Verified',

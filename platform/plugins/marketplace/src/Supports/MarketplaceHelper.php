@@ -105,6 +105,11 @@ class MarketplaceHelper
         return (bool) $this->getSetting('hide_store_social_links', false);
     }
 
+    public function paymentQrCode(): ?string
+    {
+        return $this->getSetting('payment_qr_code') ?: null;
+    }
+
     public function hideStoreAddress(): bool
     {
         return (bool) $this->getSetting('hide_store_address', false);

@@ -333,6 +333,11 @@ Route::group([
 
     Route::get('enquiries', [\Botble\Marketplace\Http\Controllers\Fronts\VendorEnquiryController::class, 'index'])->name('enquiries.index');
 
+    Route::group(['prefix' => 'payments', 'as' => 'payments.'], function (): void {
+        Route::get('', [\Botble\Marketplace\Http\Controllers\Fronts\VendorPaymentController::class, 'index'])->name('index');
+        Route::post('', [\Botble\Marketplace\Http\Controllers\Fronts\VendorPaymentController::class, 'store'])->name('store');
+    });
+
     // Meta Ads
     Route::group(['prefix' => 'meta-ads', 'as' => 'meta-ads.'], function (): void {
         Route::get('dashboard', [MetaAdsDashboardController::class, 'index'])->name('dashboard');

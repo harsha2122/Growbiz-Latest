@@ -265,6 +265,19 @@ AdminHelper::registerRoutes(function (): void {
                 'permission' => 'marketplace.settings',
             ]);
 
+            Route::group(['prefix' => 'vendor-payments', 'as' => 'vendor-payments.'], function (): void {
+                Route::get('', [
+                    'as' => 'index',
+                    'uses' => 'VendorPaymentController@index',
+                    'permission' => 'marketplace.store.index',
+                ]);
+                Route::post('{id}/review', [
+                    'as' => 'review',
+                    'uses' => 'VendorPaymentController@review',
+                    'permission' => 'marketplace.store.index',
+                ])->where('id', '[0-9]+');
+            });
+
             Route::group(['prefix' => 'enquiries', 'as' => 'enquiries.'], function (): void {
                 Route::get('', [
                     'as' => 'index',

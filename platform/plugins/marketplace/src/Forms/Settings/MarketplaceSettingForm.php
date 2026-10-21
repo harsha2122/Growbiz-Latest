@@ -8,6 +8,8 @@ use Botble\Base\Forms\FieldOptions\MultiChecklistFieldOption;
 use Botble\Base\Forms\FieldOptions\NumberFieldOption;
 use Botble\Base\Forms\FieldOptions\OnOffFieldOption;
 use Botble\Base\Forms\FieldOptions\TextFieldOption;
+use Botble\Base\Forms\FieldOptions\MediaImageFieldOption;
+use Botble\Base\Forms\Fields\MediaImageField;
 use Botble\Base\Forms\Fields\MultiCheckListField;
 use Botble\Base\Forms\Fields\NumberField;
 use Botble\Base\Forms\Fields\OnOffCheckboxField;
@@ -302,6 +304,14 @@ class MarketplaceSettingForm extends SettingForm
                     ->label(__('Earning per referral (₹)'))
                     ->helperText(__('Amount earned by a seller for each successful referral. Set to 0 to disable earnings display.'))
                     ->defaultValue(MarketplaceHelper::getSetting('referral_earning_per_referral', 0))
+            )
+            ->add(
+                'payment_qr_code',
+                MediaImageField::class,
+                MediaImageFieldOption::make()
+                    ->label(__('Payment QR Code'))
+                    ->helperText(__('Shown to vendors on their dashboard so they can scan it to pay you, then submit the transaction details for your approval.'))
+                    ->value(MarketplaceHelper::paymentQrCode())
             );
     }
 }
