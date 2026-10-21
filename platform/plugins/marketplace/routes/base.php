@@ -266,7 +266,7 @@ AdminHelper::registerRoutes(function (): void {
             ]);
 
             Route::group(['prefix' => 'vendor-payments', 'as' => 'vendor-payments.'], function (): void {
-                Route::get('', [
+                Route::match(['GET', 'POST'], '', [
                     'as' => 'index',
                     'uses' => 'VendorPaymentController@index',
                     'permission' => 'marketplace.store.index',
