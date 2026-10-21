@@ -46,12 +46,12 @@
                         @endif
                         <input type="hidden" name="source" value="{{ $productId ? 'product_page' : 'vendor_page' }}">
 
-                        <div class="mb-10">
-                            <label class="form-label">{{ __('Name') }}</label>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ __('Name') }}</label>
                             <input type="text" class="form-control" name="name" required>
                         </div>
-                        <div class="mb-10">
-                            <label class="form-label">{{ __('Contact Number') }}</label>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ __('Contact Number') }}</label>
                             <input
                                 type="tel"
                                 class="form-control"
@@ -65,12 +65,12 @@
                                 required
                             >
                         </div>
-                        <div class="mb-10">
-                            <label class="form-label">{{ __('Email') }}</label>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ __('Email') }}</label>
                             <input type="email" class="form-control" name="email" required>
                         </div>
-                        <div class="mb-10">
-                            <label class="form-label">{{ __('Address') }}</label>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ __('Address') }}</label>
                             <textarea class="form-control" name="address" rows="2" required></textarea>
                         </div>
                         <div class="enquiry-form-error text-danger small d-none"></div>

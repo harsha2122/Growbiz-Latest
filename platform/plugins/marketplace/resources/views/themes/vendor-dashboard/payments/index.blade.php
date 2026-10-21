@@ -31,20 +31,24 @@
                 </div>
                 <div class="card-body">
                     <form class="js-vendor-payment-form" data-url="{{ route('marketplace.vendor.payments.store') }}">
-                        <div class="mb-10">
-                            <label class="form-label">{{ __('Transaction ID') }}</label>
-                            <input type="text" class="form-control" name="transaction_id" required>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ __('Transaction ID') }}</label>
+                                <input type="text" class="form-control" name="transaction_id" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ __('Amount') }}</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control" name="amount" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ __('Payment Date') }}</label>
+                                <input type="date" class="form-control" name="payment_date" max="{{ now()->format('Y-m-d') }}" required>
+                            </div>
+                            <div class="col-12 vendor-payment-form-error text-danger small d-none"></div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary px-4">{{ __('Submit for Approval') }}</button>
+                            </div>
                         </div>
-                        <div class="mb-10">
-                            <label class="form-label">{{ __('Amount') }}</label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" name="amount" required>
-                        </div>
-                        <div class="mb-10">
-                            <label class="form-label">{{ __('Payment Date') }}</label>
-                            <input type="date" class="form-control" name="payment_date" max="{{ now()->format('Y-m-d') }}" required>
-                        </div>
-                        <div class="vendor-payment-form-error text-danger small d-none mb-10"></div>
-                        <button type="submit" class="btn btn-primary">{{ __('Submit for Approval') }}</button>
                     </form>
                 </div>
             </div>
