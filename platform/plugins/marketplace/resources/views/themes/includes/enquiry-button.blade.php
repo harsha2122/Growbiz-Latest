@@ -106,12 +106,12 @@
 
     @once
         <script>
-            // NOTE: this must stay an inline <script> here, not @push('footer') -
+            // NOTE: this must stay an inline script here, not a Blade footer push -
             // the public storefront layout (shofy/layouts/base.blade.php) renders
-            // Theme::footer() for scripts, which does NOT output Laravel's
-            // @stack('footer'). Anything pushed to 'footer' here silently never
-            // renders on the storefront, so the form would fall back to a native
-            // browser submit (no action/method handling) and lose the data.
+            // Theme::footer() for scripts, which does NOT output Laravel's footer
+            // stack. Anything pushed to that stack here silently never renders on
+            // the storefront, so the form would fall back to a native browser
+            // submit (no action/method handling) and lose the data.
             document.addEventListener('submit', function (e) {
                 if (!e.target.classList.contains('js-enquiry-form')) return;
                 e.preventDefault();
