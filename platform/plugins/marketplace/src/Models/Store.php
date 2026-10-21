@@ -366,6 +366,48 @@ class Store extends BaseModel
         return (bool) ($subscription?->plan?->include_meta_ads ?? false);
     }
 
+    public function commissionSetting(): HasOne
+    {
+        return $this->hasOne(StoreCommissionSetting::class, 'store_id');
+    }
+
+    public function hasCommissionAccess(): bool
+    {
+        return (bool) $this->commissionSetting?->is_enabled;
+    }
+
+    public function commissionedProductsCount(): int
+    {
+        return $this->products()->where('is_commissioned', true)->count();
+    }
+
+    public function commissionProductLimit(): ?int
+    {
+        return $this->commissionSetting?->max_products;
+    }
+
+    public function canAddCommissionedProduct(bool $excludeCurrent = false, int $currentValue = 0): bool
+    {
+        $limit = $this->commissionProductLimit();
+
+        if ($limit === null) {
+            return true;
+        }
+
+        $count = $this->commissionedProductsCount();
+
+        if ($excludeCurrent && $currentValue) {
+            $count--;
+        }
+
+        return $count < $limit;
+    }
+
+    public function commissionPercent(): float
+    {
+        return (float) ($this->commissionSetting?->commission_percent ?? 0);
+    }
+
     public function canCreateProduct(): bool
     {
         $subscription = VendorSubscription::getActiveForStore($this->id);

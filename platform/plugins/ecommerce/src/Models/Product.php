@@ -88,6 +88,7 @@ class Product extends BaseModel
         'finance_tenure_options',
         'finance_down_payment_percent',
         'finance_eligibility_notes',
+        'is_commissioned',
     ];
 
     protected $appends = [
@@ -119,6 +120,7 @@ class Product extends BaseModel
         'finance_available' => 'bool',
         'finance_interest_rate' => 'float',
         'finance_down_payment_percent' => 'float',
+        'is_commissioned' => 'bool',
         'length' => 'float',
         'wide' => 'float',
         'height' => 'float',

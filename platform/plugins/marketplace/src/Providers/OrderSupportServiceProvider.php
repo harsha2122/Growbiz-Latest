@@ -1432,6 +1432,12 @@ class OrderSupportServiceProvider extends ServiceProvider
                 continue;
             }
 
+            // Commissioned products program: admin-set commission %, separate from key account
+            if ($product->is_commissioned && $product->store?->hasCommissionAccess()) {
+                $totalFee += $orderProduct->price * $product->store->commissionPercent() / 100;
+                continue;
+            }
+
             // Use product-level vendor_commission if set (key account feature)
             if ($product->vendor_commission !== null) {
                 if ($product->vendor_commission_type === 'flat') {

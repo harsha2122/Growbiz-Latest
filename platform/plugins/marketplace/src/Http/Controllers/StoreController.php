@@ -323,6 +323,32 @@ class StoreController extends BaseController
             ->setMessage($message);
     }
 
+    public function updateCommissionSetting(int|string $id, Request $request)
+    {
+        $store = Store::query()->findOrFail($id);
+
+        $setting = $store->commissionSetting ?: $store->commissionSetting()->make(['store_id' => $store->id]);
+
+        if ($request->has('is_enabled')) {
+            $setting->is_enabled = (bool) $request->input('is_enabled');
+        }
+
+        if ($request->has('max_products')) {
+            $maxProducts = $request->input('max_products');
+            $setting->max_products = $maxProducts === '' || $maxProducts === null ? null : max(0, (int) $maxProducts);
+        }
+
+        if ($request->has('commission_percent')) {
+            $setting->commission_percent = max(0, min(100, (float) $request->input('commission_percent')));
+        }
+
+        $setting->save();
+
+        return $this
+            ->httpResponse()
+            ->setMessage(__('Commission setting for store ":name" has been updated.', ['name' => $store->name]));
+    }
+
     public function verify(int|string $id, Request $request)
     {
         $store = Store::query()->findOrFail($id);

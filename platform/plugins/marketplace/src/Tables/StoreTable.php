@@ -66,6 +66,22 @@ class StoreTable extends TableAbstract
                 $url = route('marketplace.store.toggle-key-account', $item->id);
 
                 return '<div class="form-check form-switch"><input type="checkbox" class="form-check-input toggle-key-account" data-url="' . $url . '" ' . $checked . '></div>';
+            })
+            ->editColumn('is_commissioned_enabled', function ($item) {
+                $checked = $item->commissionSetting?->is_enabled ? 'checked' : '';
+                $url = route('marketplace.store.update-commission-setting', $item->id);
+
+                return '<div class="form-check form-switch"><input type="checkbox" class="form-check-input toggle-commission-enabled" data-url="' . $url . '" ' . $checked . '></div>';
+            })
+            ->editColumn('commission_max_products', function ($item) {
+                $url = route('marketplace.store.update-commission-setting', $item->id);
+
+                return '<input type="number" min="0" class="form-control form-control-sm commission-max-products" data-url="' . $url . '" value="' . e($item->commissionSetting?->max_products) . '" placeholder="∞" style="width:90px">';
+            })
+            ->editColumn('commission_percent', function ($item) {
+                $url = route('marketplace.store.update-commission-setting', $item->id);
+
+                return '<input type="number" min="0" max="100" step="0.01" class="form-control form-control-sm commission-percent" data-url="' . $url . '" value="' . e($item->commissionSetting?->commission_percent) . '" style="width:90px">';
             });
 
         return $this->toJson($data);
@@ -86,7 +102,7 @@ class StoreTable extends TableAbstract
                 'is_verified',
                 'is_key_account',
             ])
-            ->with(['customer', 'customer.vendorInfo'])
+            ->with(['customer', 'customer.vendorInfo', 'commissionSetting'])
             ->withCount(['products']);
 
         return $this->applyScopes($query);
@@ -117,6 +133,21 @@ class StoreTable extends TableAbstract
                 ->printable(false),
             Column::make('is_key_account')
                 ->title(trans('Key Account'))
+                ->width(100)
+                ->orderable(false)
+                ->searchable(false),
+            Column::make('is_commissioned_enabled')
+                ->title(trans('Commission Access'))
+                ->width(100)
+                ->orderable(false)
+                ->searchable(false),
+            Column::make('commission_max_products')
+                ->title(trans('Commission Product Limit'))
+                ->width(100)
+                ->orderable(false)
+                ->searchable(false),
+            Column::make('commission_percent')
+                ->title(trans('Commission %'))
                 ->width(100)
                 ->orderable(false)
                 ->searchable(false),
@@ -152,6 +183,42 @@ class StoreTable extends TableAbstract
                     error: function () {
                         toggle.prop('checked', !toggle.prop('checked'));
                         Botble.showError('Failed to toggle key account status.');
+                    }
+                });
+            });
+
+            $('.toggle-commission-enabled').off('change').on('change', function () {
+                var toggle = $(this);
+                $.ajax({
+                    url: toggle.data('url'),
+                    type: 'POST',
+                    data: {is_enabled: toggle.prop('checked') ? 1 : 0},
+                    headers: {'X-CSRF-TOKEN': $('meta[name=\"csrf-token\"]').attr('content')},
+                    success: function (response) {
+                        Botble.showSuccess(response.message);
+                    },
+                    error: function () {
+                        toggle.prop('checked', !toggle.prop('checked'));
+                        Botble.showError('Failed to update commission access.');
+                    }
+                });
+            });
+
+            $('.commission-max-products, .commission-percent').off('change').on('change', function () {
+                var input = $(this);
+                var field = input.hasClass('commission-max-products') ? 'max_products' : 'commission_percent';
+                var data = {};
+                data[field] = input.val();
+                $.ajax({
+                    url: input.data('url'),
+                    type: 'POST',
+                    data: data,
+                    headers: {'X-CSRF-TOKEN': $('meta[name=\"csrf-token\"]').attr('content')},
+                    success: function (response) {
+                        Botble.showSuccess(response.message);
+                    },
+                    error: function () {
+                        Botble.showError('Failed to update commission setting.');
                     }
                 });
             });

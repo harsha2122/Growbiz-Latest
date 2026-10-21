@@ -44,6 +44,12 @@ AdminHelper::registerRoutes(function (): void {
                     'permission' => 'marketplace.store.edit',
                 ])->wherePrimaryKey();
 
+                Route::post('update-commission-setting/{id}', [
+                    'as' => 'update-commission-setting',
+                    'uses' => 'StoreController@updateCommissionSetting',
+                    'permission' => 'marketplace.store.edit',
+                ])->wherePrimaryKey();
+
                 Route::post('assign-plan/{store}', [
                     'as' => 'assign-plan',
                     'uses' => 'StoreController@assignPlan',

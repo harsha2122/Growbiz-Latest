@@ -7,8 +7,10 @@ use Botble\Base\Forms\FieldOptions\EditorFieldOption;
 use Botble\Base\Forms\FieldOptions\MediaImageFieldOption;
 use Botble\Base\Forms\FieldOptions\NameFieldOption;
 use Botble\Base\Forms\FieldOptions\NumberFieldOption;
+use Botble\Base\Forms\FieldOptions\OnOffFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\Fields\MediaImageField;
+use Botble\Base\Forms\Fields\OnOffCheckboxField;
 use Botble\Base\Forms\Fields\MultiCheckListField;
 use Botble\Base\Forms\Fields\NumberField;
 use Botble\Base\Forms\Fields\SelectField;
@@ -264,6 +266,26 @@ class ProductForm extends BaseProductForm
                         ->defaultValue(null)
                         ->addAttribute('step', '0.01')
                         ->addAttribute('min', '0')
+                );
+            })
+            ->when((bool) auth('customer')->user()?->store?->hasCommissionAccess(), function () {
+                $store = auth('customer')->user()->store;
+                $limit = $store->commissionProductLimit();
+                $used = $store->commissionedProductsCount();
+                $percent = $store->commissionPercent();
+
+                $helper = __('Admin commission for this program: :percent%', ['percent' => rtrim(rtrim(number_format($percent, 2), '0'), '.')]);
+                $helper .= ' — ' . ($limit !== null
+                    ? __(':used/:limit slots used', ['used' => $used, 'limit' => $limit])
+                    : __(':used product(s) listed (no limit)', ['used' => $used]));
+
+                $this->add(
+                    'is_commissioned',
+                    OnOffCheckboxField::class,
+                    OnOffFieldOption::make()
+                        ->label(__('List as Commissioned Product'))
+                        ->helperText($helper)
+                        ->value($this->getModel()?->is_commissioned ?? false)
                 );
             })
             ->setBreakFieldPoint('categories[]');

@@ -16,6 +16,7 @@ use Botble\Ecommerce\Models\Customer;
 use Botble\Ecommerce\Models\GlobalOption;
 use Botble\Ecommerce\Models\GroupedProduct;
 use Botble\Ecommerce\Models\Product;
+use Botble\Marketplace\Models\Store;
 use Botble\Ecommerce\Models\ProductAttribute;
 use Botble\Ecommerce\Models\ProductAttributeSet;
 use Botble\Ecommerce\Models\ProductVariation;
@@ -102,6 +103,8 @@ class ProductController extends BaseController
                 ->setError()
                 ->setMessage(trans('plugins/marketplace::subscription-plan.product_limit_reached'));
         }
+
+        $this->sanitizeCommissionedFlag($request, $store);
 
         $request->merge(['video_media' => $this->uploadVideoMedia($request)]);
 
@@ -205,6 +208,8 @@ class ProductController extends BaseController
         $product = Product::query()->findOrFail($id);
 
         abort_if($product->is_variation || $product->store?->id != auth('customer')->user()->store?->id, 404);
+
+        $this->sanitizeCommissionedFlag($request, $product->store, $product);
 
         $request->merge(['video_media' => $this->uploadVideoMedia($request)]);
 
@@ -509,6 +514,29 @@ class ProductController extends BaseController
         return $this
             ->httpResponse()
             ->withUpdatedSuccessMessage();
+    }
+
+    /**
+     * Strip is_commissioned from the request unless the vendor was actually granted
+     * access and still has room under their admin-set limit - never trust a raw POST
+     * for a flag gated behind admin-controlled commission terms.
+     */
+    protected function sanitizeCommissionedFlag(Request $request, ?Store $store, ?Product $product = null): void
+    {
+        if (! $request->has('is_commissioned')) {
+            return;
+        }
+
+        $wasCommissioned = (bool) $product?->is_commissioned;
+        $wantsCommissioned = (bool) $request->input('is_commissioned');
+
+        $allowed = $store
+            && $store->hasCommissionAccess()
+            && (! $wantsCommissioned || $store->canAddCommissionedProduct($wasCommissioned, 1));
+
+        if (! $allowed) {
+            $request->request->remove('is_commissioned');
+        }
     }
 
     protected function uploadVideoMedia(ProductRequest $request)
