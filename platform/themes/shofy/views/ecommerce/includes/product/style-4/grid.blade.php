@@ -32,6 +32,10 @@
 
             @include(EcommerceHelper::viewPath('includes.product-views-count'))
 
+            @if ($withCountdown ?? false)
+                @include(Theme::getThemeNamespace('views.ecommerce.includes.product.countdown'), compact('endDate'))
+            @endif
+
             @if (EcommerceHelper::isCartEnabled())
                 <div class="tp-product-price-add-to-cart">
                     <button

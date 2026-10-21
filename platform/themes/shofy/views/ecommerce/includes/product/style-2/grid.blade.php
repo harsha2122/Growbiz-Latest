@@ -29,6 +29,10 @@
 
         @include(EcommerceHelper::viewPath('includes.product-views-count'))
 
+        @if ($withCountdown ?? false)
+            @include(Theme::getThemeNamespace('views.ecommerce.includes.product.countdown'), compact('endDate'))
+        @endif
+
         {!! apply_filters('ecommerce_after_product_item_content_renderer', null, $product) !!}
     </div>
 </div>
