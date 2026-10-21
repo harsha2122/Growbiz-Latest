@@ -153,7 +153,8 @@
         label="Interest Rate (%)"
         name="finance_interest_rate"
         type="number"
-        :attributes="['step' => '0.01', 'min' => 0]"
+        step="0.01"
+        min="0"
         :value="old('finance_interest_rate', $product->finance_interest_rate ?? '')"
     />
     <x-core::form.text-input
@@ -165,7 +166,9 @@
         label="Down Payment (%)"
         name="finance_down_payment_percent"
         type="number"
-        :attributes="['step' => '0.01', 'min' => 0, 'max' => 100]"
+        step="0.01"
+        min="0"
+        max="100"
         :value="old('finance_down_payment_percent', $product->finance_down_payment_percent ?? '')"
     />
     <x-core::form.textarea
