@@ -455,6 +455,22 @@ class MarketplaceServiceProvider extends ServiceProvider
                             'icon' => 'ti ti-qrcode',
                             'url' => fn () => route('marketplace.vendor.payments.index'),
                         ]);
+
+                        $dashboardMenu->registerItem([
+                            'id' => 'marketplace.vendor.brands',
+                            'priority' => 8,
+                            'name' => __('Brands'),
+                            'icon' => 'ti ti-tag',
+                            'url' => fn () => route('marketplace.vendor.brands.index'),
+                        ]);
+
+                        $dashboardMenu->registerItem([
+                            'id' => 'marketplace.vendor.gallery',
+                            'priority' => 8,
+                            'name' => __('Gallery'),
+                            'icon' => 'ti ti-photo',
+                            'url' => fn () => route('marketplace.vendor.gallery.index'),
+                        ]);
                     }
                 )
                 ->when(

@@ -82,6 +82,17 @@ class StoreTable extends TableAbstract
                 $url = route('marketplace.store.update-commission-setting', $item->id);
 
                 return '<input type="number" min="0" max="100" step="0.01" class="form-control form-control-sm commission-percent" data-url="' . $url . '" value="' . e($item->commissionSetting?->commission_percent) . '" style="width:90px">';
+            })
+            ->editColumn('is_minimal_profile', function ($item) {
+                $checked = $item->is_minimal_profile ? 'checked' : '';
+                $url = route('marketplace.store.toggle-minimal-profile', $item->id);
+
+                return '<div class="form-check form-switch"><input type="checkbox" class="form-check-input toggle-minimal-profile" data-url="' . $url . '" ' . $checked . '></div>';
+            })
+            ->editColumn('gallery_image_limit', function ($item) {
+                $url = route('marketplace.store.update-gallery-limit', $item->id);
+
+                return '<input type="number" min="0" class="form-control form-control-sm gallery-image-limit" data-url="' . $url . '" value="' . e($item->gallery_image_limit) . '" style="width:90px">';
             });
 
         return $this->toJson($data);
@@ -101,6 +112,8 @@ class StoreTable extends TableAbstract
                 'customer_id',
                 'is_verified',
                 'is_key_account',
+                'is_minimal_profile',
+                'gallery_image_limit',
             ])
             ->with(['customer', 'customer.vendorInfo', 'commissionSetting'])
             ->withCount(['products']);
@@ -148,6 +161,16 @@ class StoreTable extends TableAbstract
                 ->searchable(false),
             Column::make('commission_percent')
                 ->title(trans('Commission %'))
+                ->width(100)
+                ->orderable(false)
+                ->searchable(false),
+            Column::make('is_minimal_profile')
+                ->title(trans('Minimal Profile'))
+                ->width(100)
+                ->orderable(false)
+                ->searchable(false),
+            Column::make('gallery_image_limit')
+                ->title(trans('Gallery Limit'))
                 ->width(100)
                 ->orderable(false)
                 ->searchable(false),
@@ -219,6 +242,38 @@ class StoreTable extends TableAbstract
                     },
                     error: function () {
                         Botble.showError('Failed to update commission setting.');
+                    }
+                });
+            });
+
+            $('.toggle-minimal-profile').off('change').on('change', function () {
+                var toggle = $(this);
+                $.ajax({
+                    url: toggle.data('url'),
+                    type: 'POST',
+                    headers: {'X-CSRF-TOKEN': $('meta[name=\"csrf-token\"]').attr('content')},
+                    success: function (response) {
+                        Botble.showSuccess(response.message);
+                    },
+                    error: function () {
+                        toggle.prop('checked', !toggle.prop('checked'));
+                        Botble.showError('Failed to toggle minimal profile mode.');
+                    }
+                });
+            });
+
+            $('.gallery-image-limit').off('change').on('change', function () {
+                var input = $(this);
+                $.ajax({
+                    url: input.data('url'),
+                    type: 'POST',
+                    data: {gallery_image_limit: input.val()},
+                    headers: {'X-CSRF-TOKEN': $('meta[name=\"csrf-token\"]').attr('content')},
+                    success: function (response) {
+                        Botble.showSuccess(response.message);
+                    },
+                    error: function () {
+                        Botble.showError('Failed to update gallery limit.');
                     }
                 });
             });

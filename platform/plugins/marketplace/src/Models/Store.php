@@ -64,6 +64,9 @@ class Store extends BaseModel
         'tax_id',
         'is_verified',
         'is_key_account',
+        'is_minimal_profile',
+        'service_tags',
+        'gallery_image_limit',
         'verified_at',
         'verified_by',
         'verification_note',
@@ -85,6 +88,9 @@ class Store extends BaseModel
         'company' => SafeContent::class,
         'is_verified' => 'boolean',
         'is_key_account' => 'boolean',
+        'is_minimal_profile' => 'boolean',
+        'service_tags' => 'array',
+        'gallery_image_limit' => 'integer',
         'verified_at' => 'datetime',
         'verification_note' => SafeContent::class,
         'sponsored_video_expires_at' => 'datetime',
@@ -406,6 +412,31 @@ class Store extends BaseModel
     public function commissionPercent(): float
     {
         return (float) ($this->commissionSetting?->commission_percent ?? 0);
+    }
+
+    public function brands(): HasMany
+    {
+        return $this->hasMany(StoreBrand::class, 'store_id');
+    }
+
+    public function galleryImages(): HasMany
+    {
+        return $this->hasMany(StoreGalleryImage::class, 'store_id')->latest('id');
+    }
+
+    public function serviceTagsList(): array
+    {
+        return array_values(array_filter((array) ($this->service_tags ?? [])));
+    }
+
+    public function galleryLimit(): int
+    {
+        return (int) ($this->gallery_image_limit ?: 7);
+    }
+
+    public function canAddGalleryImage(): bool
+    {
+        return $this->galleryImages()->count() < $this->galleryLimit();
     }
 
     public function canCreateProduct(): bool

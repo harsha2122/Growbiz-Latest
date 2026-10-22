@@ -17,6 +17,7 @@ use Botble\Marketplace\Http\Requests\TaxInformationSettingRequest;
 use Botble\Marketplace\Models\Store;
 use Botble\Media\Facades\RvMedia;
 use Botble\Slug\Facades\SlugHelper;
+use Illuminate\Support\Arr;
 
 class SettingController extends BaseController
 {
@@ -83,7 +84,17 @@ class SettingController extends BaseController
                 }
             }
 
-            $store->fill($request->input());
+            $serviceTags = collect(explode(',', (string) $request->input('service_tags_input')))
+                ->map(fn ($tag) => trim($tag))
+                ->filter()
+                ->values()
+                ->all();
+
+            // Admin-only controls must never be settable through the vendor's own
+            // settings form, even though fill() would otherwise accept them since
+            // they're fillable on the model for the admin-side Store form.
+            $store->fill(Arr::except($request->input(), ['is_minimal_profile', 'gallery_image_limit']));
+            $store->service_tags = $serviceTags;
             $store->save();
 
             $request->merge(['is_slug_editable' => 1]);

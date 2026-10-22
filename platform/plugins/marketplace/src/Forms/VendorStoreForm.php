@@ -9,6 +9,7 @@ use Botble\Base\Forms\FieldOptions\NameFieldOption;
 use Botble\Base\Forms\Fields\DatePickerField;
 use Botble\Base\Forms\Fields\EmailField;
 use Botble\Base\Forms\Fields\TextField;
+use Botble\Base\Forms\FieldOptions\TextFieldOption;
 use Botble\Marketplace\Forms\Fields\CustomEditorField;
 use Botble\Marketplace\Http\Requests\Fronts\VendorStoreRequest;
 
@@ -44,6 +45,15 @@ class VendorStoreForm extends StoreForm
                     ->defaultValue($this->getModel()->establishment_date ? BaseHelper::formatDate($this->getModel()->establishment_date) : '')
                     ->colspan(3)
                     ->disabled()
+            )
+            ->add(
+                'service_tags_input',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(__('Service Tags'))
+                    ->helperText(__('Comma-separated list shown as chips on your store page, e.g. "Interior Design, Furniture Repair, Home Staging".'))
+                    ->value(implode(', ', $this->getModel()->serviceTagsList()))
+                    ->colspan(6)
             );
     }
 }

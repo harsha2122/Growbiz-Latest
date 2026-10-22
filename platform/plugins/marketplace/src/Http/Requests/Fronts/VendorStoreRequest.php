@@ -15,6 +15,7 @@ class VendorStoreRequest extends StoreRequest
 
         $rules['logo_input'] = ['nullable', new MediaImageRule()];
         $rules['cover_image_input'] = ['nullable', new MediaImageRule()];
+        $rules['service_tags_input'] = ['nullable', 'string', 'max:1000'];
 
         return $rules;
     }

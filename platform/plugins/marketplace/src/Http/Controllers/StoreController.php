@@ -323,6 +323,36 @@ class StoreController extends BaseController
             ->setMessage($message);
     }
 
+    public function toggleMinimalProfile(int|string $id)
+    {
+        $store = Store::query()->findOrFail($id);
+
+        $store->is_minimal_profile = ! $store->is_minimal_profile;
+        $store->save();
+
+        $message = $store->is_minimal_profile
+            ? __('Store ":name" switched to minimal profile mode.', ['name' => $store->name])
+            : __('Store ":name" switched back to full catalog mode.', ['name' => $store->name]);
+
+        return $this
+            ->httpResponse()
+            ->setMessage($message);
+    }
+
+    public function updateGalleryLimit(int|string $id, Request $request)
+    {
+        $store = Store::query()->findOrFail($id);
+
+        $limit = $request->input('gallery_image_limit');
+
+        $store->gallery_image_limit = $limit === '' || $limit === null ? 7 : max(0, (int) $limit);
+        $store->save();
+
+        return $this
+            ->httpResponse()
+            ->setMessage(__('Gallery image limit for store ":name" has been updated.', ['name' => $store->name]));
+    }
+
     public function updateCommissionSetting(int|string $id, Request $request)
     {
         $store = Store::query()->findOrFail($id);

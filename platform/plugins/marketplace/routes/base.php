@@ -50,6 +50,18 @@ AdminHelper::registerRoutes(function (): void {
                     'permission' => 'marketplace.store.edit',
                 ])->wherePrimaryKey();
 
+                Route::post('toggle-minimal-profile/{id}', [
+                    'as' => 'toggle-minimal-profile',
+                    'uses' => 'StoreController@toggleMinimalProfile',
+                    'permission' => 'marketplace.store.edit',
+                ])->wherePrimaryKey();
+
+                Route::post('update-gallery-limit/{id}', [
+                    'as' => 'update-gallery-limit',
+                    'uses' => 'StoreController@updateGalleryLimit',
+                    'permission' => 'marketplace.store.edit',
+                ])->wherePrimaryKey();
+
                 Route::post('assign-plan/{store}', [
                     'as' => 'assign-plan',
                     'uses' => 'StoreController@assignPlan',

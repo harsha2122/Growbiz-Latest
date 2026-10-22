@@ -17,6 +17,10 @@
     @include(MarketplaceHelper::viewPath('includes.store-detail-banner'))
 
     <div class="container">
+        @include(MarketplaceHelper::viewPath('includes.store-brands-slider'))
+
+        @include(MarketplaceHelper::viewPath('includes.store-gallery'))
+
         @include(MarketplaceHelper::viewPath('includes.sponsored-video'))
 
         <ul class="bb-shop-nav-tabs nav nav-tabs" id="storeTab" role="tablist">
@@ -48,33 +52,37 @@
         </ul>
         <div class="bb-shop-tab-content tab-content" id="storeTabContent">
             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-                <div class="tp-shop-main-wrapper row position-relative">
-                    @if ($showCategoriesFilter)
-                        <div class="col-xl-3 col-lg-4">
-                            @include(MarketplaceHelper::viewPath('includes.store-filters'))
-                        </div>
-                        <div class="col-xl-9 col-lg-8">
-                            @include(EcommerceHelper::viewPath('includes.product-filters-top'))
+                @if ($store->is_minimal_profile)
+                    @include(MarketplaceHelper::viewPath('includes.store-service-chips'))
+                @else
+                    <div class="tp-shop-main-wrapper row position-relative">
+                        @if ($showCategoriesFilter)
+                            <div class="col-xl-3 col-lg-4">
+                                @include(MarketplaceHelper::viewPath('includes.store-filters'))
+                            </div>
+                            <div class="col-xl-9 col-lg-8">
+                                @include(EcommerceHelper::viewPath('includes.product-filters-top'))
 
-                            <div class="bb-product-items-wrapper">
-                                @include(MarketplaceHelper::viewPath('stores.items'), $showCategoriesFilter ? [] : ['itemsPerRow' => 4])
+                                <div class="bb-product-items-wrapper">
+                                    @include(MarketplaceHelper::viewPath('stores.items'), $showCategoriesFilter ? [] : ['itemsPerRow' => 4])
+                                </div>
                             </div>
-                        </div>
-                    @else
-                        <div class="col-xl-3 col-lg-4">
-                            @include(MarketplaceHelper::viewPath('includes.store-filters'))
-                        </div>
-                        <div class="col-xl-9 col-lg-8">
-                            @include(EcommerceHelper::viewPath('includes.product-filters-top'))
-                        </div>
-                        
-                        <div class="col-12">
-                            <div class="bb-product-items-wrapper">
-                                @include(MarketplaceHelper::viewPath('stores.items'), ['itemsPerRow' => 4])
+                        @else
+                            <div class="col-xl-3 col-lg-4">
+                                @include(MarketplaceHelper::viewPath('includes.store-filters'))
                             </div>
-                        </div>
-                    @endif
-                </div>
+                            <div class="col-xl-9 col-lg-8">
+                                @include(EcommerceHelper::viewPath('includes.product-filters-top'))
+                            </div>
+
+                            <div class="col-12">
+                                <div class="bb-product-items-wrapper">
+                                    @include(MarketplaceHelper::viewPath('stores.items'), ['itemsPerRow' => 4])
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </div>
 
             @if ($store->content)

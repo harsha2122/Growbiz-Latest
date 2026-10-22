@@ -338,6 +338,18 @@ Route::group([
         Route::post('', [\Botble\Marketplace\Http\Controllers\Fronts\VendorPaymentController::class, 'store'])->name('store');
     });
 
+    Route::group(['prefix' => 'brands', 'as' => 'brands.'], function (): void {
+        Route::get('', [\Botble\Marketplace\Http\Controllers\Fronts\StoreBrandController::class, 'index'])->name('index');
+        Route::post('', [\Botble\Marketplace\Http\Controllers\Fronts\StoreBrandController::class, 'store'])->name('store');
+        Route::delete('{id}', [\Botble\Marketplace\Http\Controllers\Fronts\StoreBrandController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+    });
+
+    Route::group(['prefix' => 'gallery', 'as' => 'gallery.'], function (): void {
+        Route::get('', [\Botble\Marketplace\Http\Controllers\Fronts\StoreGalleryController::class, 'index'])->name('index');
+        Route::post('', [\Botble\Marketplace\Http\Controllers\Fronts\StoreGalleryController::class, 'store'])->name('store');
+        Route::delete('{id}', [\Botble\Marketplace\Http\Controllers\Fronts\StoreGalleryController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+    });
+
     // Meta Ads
     Route::group(['prefix' => 'meta-ads', 'as' => 'meta-ads.'], function (): void {
         Route::get('dashboard', [MetaAdsDashboardController::class, 'index'])->name('dashboard');
