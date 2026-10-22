@@ -277,6 +277,12 @@ AdminHelper::registerRoutes(function (): void {
                 'permission' => 'marketplace.settings',
             ]);
 
+            Route::match(['GET', 'POST'], 'commissioned-products-revenue', [
+                'as' => 'commissioned-products-revenue',
+                'uses' => 'CommissionedProductRevenueController@index',
+                'permission' => 'marketplace.store.index',
+            ]);
+
             Route::group(['prefix' => 'vendor-payments', 'as' => 'vendor-payments.'], function (): void {
                 Route::match(['GET', 'POST'], '', [
                     'as' => 'index',

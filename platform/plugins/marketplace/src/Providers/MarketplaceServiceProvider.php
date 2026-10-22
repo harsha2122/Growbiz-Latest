@@ -253,6 +253,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'permissions' => ['marketplace.store.index'],
                 ])
                 ->registerItem([
+                    'id' => 'cms-plugins-marketplace-commissioned-products-revenue',
+                    'priority' => 11,
+                    'parent_id' => 'cms-plugins-marketplace',
+                    'name' => __('Commissioned Products Revenue'),
+                    'icon' => 'ti ti-report-money',
+                    'url' => fn () => route('marketplace.commissioned-products-revenue'),
+                    'permissions' => ['marketplace.store.index'],
+                ])
+                ->registerItem([
                     'id' => 'cms-plugins-marketplace-meta-ads-settings',
                     'priority' => 12,
                     'parent_id' => 'cms-plugins-marketplace',
