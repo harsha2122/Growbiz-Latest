@@ -138,22 +138,16 @@
         }
         .bb-sponsored-video-link {
             display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 15px;
+            flex-direction: column;
             text-decoration: none;
             color: inherit;
             transition: all 0.3s ease;
         }
-        .bb-sponsored-video-link:hover {
-            background: rgba(0, 0, 0, 0.02);
-        }
         .bb-sponsored-video-thumbnail {
             position: relative;
-            width: 180px;
-            min-width: 180px;
-            height: 100px;
-            border-radius: 8px;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            height: auto;
             overflow: hidden;
             background: #e9ecef;
         }
@@ -161,6 +155,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
         .bb-sponsored-thumb-placeholder {
             width: 100%;
@@ -172,33 +167,25 @@
             color: #fff;
             font-size: 32px;
         }
+        /* No dimming layer - the thumbnail stays fully clear/bright. The play
+           button floats on top, bottom-right, so it never obscures the image. */
         .bb-sponsored-play-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-        .bb-sponsored-video-link:hover .bb-sponsored-play-overlay {
-            background: rgba(0, 0, 0, 0.5);
+            right: 14px;
+            bottom: 14px;
         }
         .bb-sponsored-play-btn {
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.95);
             display: flex;
             align-items: center;
             justify-content: center;
             color: #ee5a5a;
-            font-size: 20px;
+            font-size: 22px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
         }
         .bb-sponsored-video-link:hover .bb-sponsored-play-btn {
             transform: scale(1.1);
@@ -207,7 +194,8 @@
         .bb-sponsored-video-info {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
+            padding: 12px 15px 15px;
         }
         .bb-sponsored-video-text {
             font-size: 16px;
@@ -282,15 +270,6 @@
         }
 
         @media (max-width: 576px) {
-            .bb-sponsored-video-link {
-                flex-direction: column;
-                text-align: center;
-            }
-            .bb-sponsored-video-thumbnail {
-                width: 100%;
-                min-width: 100%;
-                height: 150px;
-            }
             .bb-sponsored-badge {
                 top: 8px;
                 right: 8px;
