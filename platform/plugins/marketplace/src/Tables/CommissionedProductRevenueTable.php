@@ -53,15 +53,15 @@ class CommissionedProductRevenueTable extends TableAbstract
                 'mp_stores.name',
                 'mp_stores.logo',
             ])
-            ->selectRaw('COALESCE(SUM(ec_order_products.qty), 0) as commissioned_qty')
-            ->selectRaw('COALESCE(SUM(ec_order_products.qty * ec_order_products.price), 0) as commissioned_sales')
+            ->selectRaw('COALESCE(SUM(ec_order_product.qty), 0) as commissioned_qty')
+            ->selectRaw('COALESCE(SUM(ec_order_product.qty * ec_order_product.price), 0) as commissioned_sales')
             ->join('ec_products', function ($join): void {
                 $join->on('ec_products.store_id', '=', 'mp_stores.id')
                     ->where('ec_products.is_commissioned', true);
             })
-            ->join('ec_order_products', 'ec_order_products.product_id', '=', 'ec_products.id')
+            ->join('ec_order_product', 'ec_order_product.product_id', '=', 'ec_products.id')
             ->join('ec_orders', function ($join): void {
-                $join->on('ec_orders.id', '=', 'ec_order_products.order_id')
+                $join->on('ec_orders.id', '=', 'ec_order_product.order_id')
                     ->where('ec_orders.status', OrderStatusEnum::COMPLETED);
             })
             ->groupBy('mp_stores.id', 'mp_stores.name', 'mp_stores.logo');
