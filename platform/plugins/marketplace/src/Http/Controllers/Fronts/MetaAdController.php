@@ -67,13 +67,13 @@ class MetaAdController extends BaseController
 
         $validated = $request->validate([
             'name'            => ['required', 'string', 'max:255'],
-            'format'          => ['required', 'in:SINGLE_IMAGE,CAROUSEL,VIDEO'],
+            'format'          => ['required', 'in:SINGLE_IMAGE'],
             'primary_text'    => ['required', 'string', 'max:500'],
             'headline'        => ['required', 'string', 'max:100'],
             'description'     => ['nullable', 'string', 'max:500'],
             'cta_button'      => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
             'destination_url' => ['required', 'url', 'max:500'],
-            'creative_file'   => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi', 'max:102400'],
+            'creative_file'   => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:102400'],
             'product_id'      => ['nullable', 'integer'],
         ]);
 
@@ -159,13 +159,13 @@ class MetaAdController extends BaseController
 
         $validated = $request->validate([
             'name'            => ['required', 'string', 'max:255'],
-            'format'          => ['required', 'in:SINGLE_IMAGE,CAROUSEL,VIDEO'],
+            'format'          => ['required', 'in:SINGLE_IMAGE'],
             'primary_text'    => ['required', 'string', 'max:500'],
             'headline'        => ['required', 'string', 'max:100'],
             'description'     => ['nullable', 'string', 'max:500'],
             'cta_button'      => ['required', 'in:LEARN_MORE,SHOP_NOW,SIGN_UP,BOOK_NOW,CONTACT_US,DOWNLOAD,GET_OFFER'],
             'destination_url' => ['required', 'url', 'max:500'],
-            'creative_file'   => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi', 'max:102400'],
+            'creative_file'   => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:102400'],
             'product_id'      => ['nullable', 'integer'],
         ]);
 

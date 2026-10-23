@@ -96,16 +96,17 @@ class MetaCampaignController extends BaseController
             'end_date'        => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
+        $adAccount = $this->getConnectedAccount();
+
         $validated['store_id'] = $this->storeId;
         $validated['status']        = 'PAUSED';
-        $validated['ad_account_id'] = 0;
+        $validated['ad_account_id'] = $adAccount?->id;
 
         $campaign = MetaCampaign::query()->create($validated);
 
         $response = $this->httpResponse()
             ->setNextUrl(route('marketplace.vendor.meta-ads.campaigns.show', $campaign->id));
 
-        $adAccount = $this->getConnectedAccount();
         if (! $adAccount) {
             return $response->setMessage('Campaign saved as a draft. Connect your Facebook account, then use "Push to Meta" to publish it.');
         }
@@ -325,7 +326,7 @@ class MetaCampaignController extends BaseController
             Log::info('Meta createCampaign response', ['response' => $result, 'campaign_id' => $campaign->id]);
 
             if (! empty($result['id'])) {
-                $campaign->update(['meta_campaign_id' => $result['id']]);
+                $campaign->update(['meta_campaign_id' => $result['id'], 'ad_account_id' => $adAccount->id]);
                 return ['success' => true, 'meta_campaign_id' => $result['id'], 'error' => null];
             }
 

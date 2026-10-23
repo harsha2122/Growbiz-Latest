@@ -49,29 +49,21 @@
                     <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Format <span class="text-danger">*</span></label>
-                    <select name="format" class="form-select" required id="formatSelect">
-                        <option value="SINGLE_IMAGE" {{ old('format', 'SINGLE_IMAGE') === 'SINGLE_IMAGE' ? 'selected' : '' }}>Single Image</option>
-                        <option value="CAROUSEL" {{ old('format') === 'CAROUSEL' ? 'selected' : '' }}>Carousel</option>
-                        <option value="VIDEO" {{ old('format') === 'VIDEO' ? 'selected' : '' }}>Video</option>
-                    </select>
-                </div>
+                <input type="hidden" name="format" value="SINGLE_IMAGE">
 
                 {{-- Creative Upload --}}
                 <div class="mb-3">
                     <label class="form-label">
                         Upload Creative <span class="text-danger">*</span>
-                        <span class="text-muted small ms-1" id="uploadHint">(JPG, PNG, GIF, WebP — max 100MB)</span>
+                        <span class="text-muted small ms-1">(JPG, PNG, GIF, WebP — max 100MB)</span>
                     </label>
                     <input type="file" name="creative_file" id="creativeFile" class="form-control"
-                           accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/avi">
+                           accept="image/jpeg,image/png,image/gif,image/webp">
                     <div class="mt-2 d-none" id="previewBox">
-                        <img id="imagePreview" src="" alt="Preview" class="img-thumbnail" style="max-height:200px; display:none;">
-                        <video id="videoPreview" controls class="img-thumbnail" style="max-height:200px; display:none;"></video>
+                        <img id="imagePreview" src="" alt="Preview" class="img-thumbnail" style="max-height:200px;">
                         <div class="text-muted small mt-1" id="fileName"></div>
                     </div>
-                    <div class="form-text">Images: JPG, PNG, GIF, WebP &nbsp;|&nbsp; Videos: MP4, MOV, AVI</div>
+                    <div class="form-text">Images only: JPG, PNG, GIF, WebP. Carousel and Video ads aren't supported yet.</div>
                 </div>
 
                 <div class="mb-3">
@@ -117,24 +109,10 @@
     </div>
 
 <script>
-    const formatSelect  = document.getElementById('formatSelect');
     const creativeFile  = document.getElementById('creativeFile');
-    const uploadHint    = document.getElementById('uploadHint');
     const previewBox    = document.getElementById('previewBox');
     const imagePreview  = document.getElementById('imagePreview');
-    const videoPreview  = document.getElementById('videoPreview');
     const fileNameEl    = document.getElementById('fileName');
-
-    formatSelect.addEventListener('change', function () {
-        if (this.value === 'VIDEO') {
-            creativeFile.accept = 'video/mp4,video/quicktime,video/avi';
-            uploadHint.textContent = '(MP4, MOV, AVI — max 100MB)';
-        } else {
-            creativeFile.accept = 'image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/avi';
-            uploadHint.textContent = '(JPG, PNG, GIF, WebP — max 100MB)';
-        }
-        clearPreview();
-    });
 
     creativeFile.addEventListener('change', function () {
         const file = this.files[0];
@@ -142,23 +120,12 @@
 
         previewBox.classList.remove('d-none');
         fileNameEl.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
-
-        const url = URL.createObjectURL(file);
-        if (file.type.startsWith('video/')) {
-            imagePreview.style.display = 'none';
-            videoPreview.src = url;
-            videoPreview.style.display = 'block';
-        } else {
-            videoPreview.style.display = 'none';
-            imagePreview.src = url;
-            imagePreview.style.display = 'block';
-        }
+        imagePreview.src = URL.createObjectURL(file);
     });
 
     function clearPreview() {
         previewBox.classList.add('d-none');
         imagePreview.src = '';
-        videoPreview.src = '';
         fileNameEl.textContent = '';
     }
 </script>

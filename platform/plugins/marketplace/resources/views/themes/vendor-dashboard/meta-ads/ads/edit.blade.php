@@ -20,13 +20,11 @@
                     <label class="form-label">Ad Name <span class="text-danger">*</span></label>
                     <input type="text" name="name" class="form-control" value="{{ old('name', $ad->name) }}" required>
                 </div>
+                <input type="hidden" name="format" value="SINGLE_IMAGE">
                 <div class="mb-3">
-                    <label class="form-label">Format <span class="text-danger">*</span></label>
-                    <select name="format" class="form-select" required>
-                        @foreach(['SINGLE_IMAGE' => 'Single Image', 'CAROUSEL' => 'Carousel', 'VIDEO' => 'Video'] as $val => $label)
-                            <option value="{{ $val }}" {{ old('format', $ad->format) === $val ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
+                    <label class="form-label">Format</label>
+                    <input type="text" class="form-control" value="Single Image" disabled>
+                    <div class="form-text">Carousel and Video ads aren't supported yet.</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Primary Text <span class="text-danger">*</span></label>

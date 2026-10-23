@@ -113,7 +113,7 @@ class MetaAdsDashboardController extends BaseController
             }
         }
 
-        $currencySymbol = $adAccount && $adAccount->currency === 'USD' ? '$' : '₹';
+        $currencySymbol = $this->resolveCurrencySymbol($adAccount?->currency);
 
         return MarketplaceHelper::view('vendor-dashboard.meta-ads.dashboard', compact(
             'adAccount', 'totalCampaigns', 'activeCampaigns',
@@ -122,5 +122,25 @@ class MetaAdsDashboardController extends BaseController
             'hasPaymentMethod', 'accountStatus', 'adAccountDetails', 'currencySymbol',
             'startDate', 'endDate', 'predefinedRange', 'chartData'
         ));
+    }
+
+    /**
+     * Symbol for the ad account's own Meta-reported currency (e.g. "USD", "EUR"),
+     * not the site's configured currency - a store's Meta ad account can run in a
+     * different currency than the storefront. Falls back to the raw code (e.g.
+     * "AED 12.00") rather than guessing wrong, for currencies not in this map.
+     */
+    protected function resolveCurrencySymbol(?string $currencyCode): string
+    {
+        $symbols = [
+            'USD' => '$', 'INR' => '₹', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥',
+            'AUD' => 'A$', 'CAD' => 'C$', 'SGD' => 'S$', 'AED' => 'د.إ', 'CNY' => '¥',
+        ];
+
+        if (! $currencyCode) {
+            return '₹';
+        }
+
+        return $symbols[$currencyCode] ?? ($currencyCode . ' ');
     }
 }
