@@ -71,6 +71,7 @@ class StoreController extends BaseController
         }
 
         $this->saveSponsoredVideos($store, $request);
+        $this->applyCommissionSetting($store, $request);
 
         return $this
             ->httpResponse()
@@ -123,6 +124,7 @@ class StoreController extends BaseController
         }
 
         $this->saveSponsoredVideos($store, $request);
+        $this->applyCommissionSetting($store, $request);
 
         return $this
             ->httpResponse()
@@ -357,6 +359,19 @@ class StoreController extends BaseController
     {
         $store = Store::query()->findOrFail($id);
 
+        $this->applyCommissionSetting($store, $request);
+
+        return $this
+            ->httpResponse()
+            ->setMessage(__('Commission setting for store ":name" has been updated.', ['name' => $store->name]));
+    }
+
+    protected function applyCommissionSetting(Store $store, Request $request): void
+    {
+        if (! $request->hasAny(['is_enabled', 'max_products', 'commission_percent'])) {
+            return;
+        }
+
         $setting = $store->commissionSetting ?: $store->commissionSetting()->make(['store_id' => $store->id]);
 
         if ($request->has('is_enabled')) {
@@ -373,10 +388,6 @@ class StoreController extends BaseController
         }
 
         $setting->save();
-
-        return $this
-            ->httpResponse()
-            ->setMessage(__('Commission setting for store ":name" has been updated.', ['name' => $store->name]));
     }
 
     public function verify(int|string $id, Request $request)

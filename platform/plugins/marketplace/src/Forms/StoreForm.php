@@ -12,12 +12,16 @@ use Botble\Base\Forms\FieldOptions\EmailFieldOption;
 use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
 use Botble\Base\Forms\FieldOptions\MediaImageFieldOption;
 use Botble\Base\Forms\FieldOptions\NameFieldOption;
+use Botble\Base\Forms\FieldOptions\NumberFieldOption;
+use Botble\Base\Forms\FieldOptions\OnOffFieldOption;
 use Botble\Base\Forms\FieldOptions\TextFieldOption;
 use Botble\Base\Forms\Fields\DatePickerField;
 use Botble\Base\Forms\Fields\EditorField;
 use Botble\Base\Forms\Fields\EmailField;
 use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\MediaImageField;
+use Botble\Base\Forms\Fields\NumberField;
+use Botble\Base\Forms\Fields\OnOffCheckboxField;
 use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Forms\Fields\TextareaField;
 use Botble\Base\Forms\Fields\TextField;
@@ -155,6 +159,55 @@ class StoreForm extends FormAbstract
                     ->all(),
                 'colspan' => 3,
             ])
+            ->add(
+                'is_minimal_profile',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(__('Minimal Profile Mode'))
+                    ->helperText(__('Hides this vendor\'s product catalog on their store page and shows their self-managed service tags as chips instead - no pricing, no listings.'))
+                    ->value((bool) $this->getModel()->is_minimal_profile)
+                    ->colspan(3)
+            )
+            ->add(
+                'gallery_image_limit',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(__('Gallery Image Limit'))
+                    ->helperText(__('How many gallery images this vendor may upload from their dashboard.'))
+                    ->value($this->getModel()->gallery_image_limit ?: 7)
+                    ->min(0)
+                    ->colspan(3)
+            )
+            ->add(
+                'is_enabled',
+                OnOffCheckboxField::class,
+                OnOffFieldOption::make()
+                    ->label(__('Commissioned Products Access'))
+                    ->helperText(__('Allow this vendor to flag their own products as commissioned, using the limit and % below.'))
+                    ->value((bool) $this->getModel()->commissionSetting?->is_enabled)
+                    ->colspan(3)
+            )
+            ->add(
+                'max_products',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(__('Commission Product Limit'))
+                    ->helperText(__('Leave empty for no limit.'))
+                    ->value($this->getModel()->commissionSetting?->max_products)
+                    ->min(0)
+                    ->colspan(3)
+            )
+            ->add(
+                'commission_percent',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(__('Commission %'))
+                    ->value($this->getModel()->commissionSetting?->commission_percent)
+                    ->min(0)
+                    ->max(100)
+                    ->step(0.01)
+                    ->colspan(3)
+            )
             ->when(! MarketplaceHelper::hideStoreSocialLinks(), function (): void {
                 $this
                     ->add('extended_info_content', HtmlField::class, [
