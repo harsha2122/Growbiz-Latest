@@ -29,6 +29,7 @@
                             <th>{{ __('Email') }}</th>
                             <th>{{ __('Address') }}</th>
                             <th>{{ __('Product') }}</th>
+                            <th>{{ __('Source') }}</th>
                             <th>{{ __('Date') }}</th>
                         </tr>
                     </thead>
@@ -37,13 +38,22 @@
                             <tr>
                                 <td>{{ $enquiry->name }}</td>
                                 <td>{{ $enquiry->contact_number }}</td>
-                                <td>{{ $enquiry->email }}</td>
-                                <td>{{ $enquiry->address }}</td>
+                                <td>{{ $enquiry->email ?: '—' }}</td>
+                                <td>{{ $enquiry->address ?: '—' }}</td>
                                 <td>{{ $enquiry->product?->name ?? '—' }}</td>
+                                <td>
+                                    @if ($enquiry->source === 'whatsapp')
+                                        {{ __('WhatsApp') }}
+                                    @elseif ($enquiry->source === 'product_page')
+                                        {{ __('Product Page') }}
+                                    @else
+                                        {{ __('Vendor Page') }}
+                                    @endif
+                                </td>
                                 <td>{{ $enquiry->created_at->format('d M Y') }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-center text-muted py-4">{{ __('No enquiries yet.') }}</td></tr>
+                            <tr><td colspan="7" class="text-center text-muted py-4">{{ __('No enquiries yet.') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>

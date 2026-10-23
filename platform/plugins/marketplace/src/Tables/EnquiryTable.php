@@ -36,9 +36,19 @@ class EnquiryTable extends TableAbstract
                 return $item->product?->name ?? '&mdash;';
             })
             ->editColumn('source', function (Enquiry $item) {
-                return $item->source === 'product_page' ? __('Product Page') : __('Vendor Page');
+                return match ($item->source) {
+                    'product_page' => __('Product Page'),
+                    'whatsapp' => __('WhatsApp'),
+                    default => __('Vendor Page'),
+                };
             })
-            ->rawColumns(['product_id']);
+            ->editColumn('email', function (Enquiry $item) {
+                return $item->email ?: '&mdash;';
+            })
+            ->editColumn('address', function (Enquiry $item) {
+                return $item->address ?: '&mdash;';
+            })
+            ->rawColumns(['product_id', 'email', 'address']);
 
         return $this->toJson($data);
     }

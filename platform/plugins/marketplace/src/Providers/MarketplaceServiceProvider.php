@@ -244,6 +244,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'permissions' => ['marketplace.store.index'],
                 ])
                 ->registerItem([
+                    'id' => 'cms-plugins-marketplace-all-enquiries',
+                    'priority' => 11,
+                    'parent_id' => 'cms-plugins-marketplace',
+                    'name' => __('All Enquiries'),
+                    'icon' => 'ti ti-list-details',
+                    'url' => fn () => route('marketplace.enquiries.all'),
+                    'permissions' => ['marketplace.store.index'],
+                ])
+                ->registerItem([
                     'id' => 'cms-plugins-marketplace-vendor-payments',
                     'priority' => 11,
                     'parent_id' => 'cms-plugins-marketplace',

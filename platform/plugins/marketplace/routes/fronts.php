@@ -8,6 +8,7 @@ use Botble\Marketplace\Http\Controllers\Fronts\PublicB2bCatalogController;
 use Botble\Marketplace\Http\Controllers\Fronts\PublicStoreController;
 use Botble\Marketplace\Http\Controllers\Fronts\ServiceBookingController;
 use Botble\Marketplace\Http\Controllers\Fronts\SponsoredVideoClickController;
+use Botble\Marketplace\Http\Controllers\Fronts\WhatsAppEnquiryController;
 use Botble\Marketplace\Models\Store;
 use Botble\Slug\Facades\SlugHelper;
 use Botble\Theme\Facades\Theme;
@@ -39,6 +40,13 @@ Route::group([
             ->middleware(RequiresJsonRequestMiddleware::class)
             ->group(function (): void {
                 Route::post('', [EnquiryController::class, 'store'])->name('store');
+            });
+
+        Route::prefix('ajax/whatsapp-enquiries')
+            ->name('public.ajax.whatsapp-enquiries.')
+            ->middleware(RequiresJsonRequestMiddleware::class)
+            ->group(function (): void {
+                Route::post('', [WhatsAppEnquiryController::class, 'store'])->name('store');
             });
 
         Route::prefix('ajax/sponsored-videos')

@@ -302,6 +302,11 @@ AdminHelper::registerRoutes(function (): void {
                     'uses' => 'EnquiryController@index',
                     'permission' => 'marketplace.store.index',
                 ]);
+                Route::get('all', [
+                    'as' => 'all',
+                    'uses' => 'EnquiryController@all',
+                    'permission' => 'marketplace.store.index',
+                ]);
                 Route::get('{storeId}', [
                     'as' => 'vendor',
                     'uses' => 'EnquiryController@vendor',
