@@ -20,6 +20,8 @@
             window.themeOptions.ecommerce_auto_open_mini_cart = '{{ theme_option('ecommerce_auto_open_mini_cart', 'yes') }}';
         </script>
 
+        @stack('footer')
+
         {!! Theme::footer() !!}
     </body>
 </html>
