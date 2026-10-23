@@ -21,13 +21,13 @@ return new class () extends Migration {
             return;
         }
 
-        Schema::table('meta_campaigns', function (Blueprint $table): void {
-            $table->dropForeign(['ad_account_id']);
-        });
+        $this->dropForeignKeyIfExists('meta_campaigns', 'ad_account_id');
 
         Schema::table('meta_campaigns', function (Blueprint $table): void {
             $table->unsignedBigInteger('ad_account_id')->nullable()->change();
         });
+
+        $this->dropForeignKeyIfExists('meta_campaigns', 'ad_account_id');
 
         Schema::table('meta_campaigns', function (Blueprint $table): void {
             $table->foreign('ad_account_id')->references('id')->on('meta_ad_accounts')->nullOnDelete();
@@ -45,9 +45,7 @@ return new class () extends Migration {
             return;
         }
 
-        Schema::table('meta_campaigns', function (Blueprint $table): void {
-            $table->dropForeign(['ad_account_id']);
-        });
+        $this->dropForeignKeyIfExists('meta_campaigns', 'ad_account_id');
 
         Schema::table('meta_campaigns', function (Blueprint $table): void {
             $table->unsignedBigInteger('ad_account_id')->nullable(false)->change();
@@ -56,5 +54,29 @@ return new class () extends Migration {
         Schema::table('meta_campaigns', function (Blueprint $table): void {
             $table->foreign('ad_account_id')->references('id')->on('meta_ad_accounts')->cascadeOnDelete();
         });
+    }
+
+    /**
+     * dropForeign() assumes the constraint exists and fatals (1091) if it
+     * doesn't - which turned out to be the case on at least one real
+     * deployment of this table, despite the original create-table migration
+     * declaring one. Look it up in information_schema first instead of
+     * guessing the constraint exists.
+     */
+    protected function dropForeignKeyIfExists(string $table, string $column): void
+    {
+        $connection = Schema::getConnection()->getDatabaseName();
+
+        $constraints = DB::select(
+            'SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL',
+            [$connection, $table, $column]
+        );
+
+        foreach ($constraints as $constraint) {
+            Schema::table($table, function (Blueprint $blueprintTable) use ($constraint): void {
+                $blueprintTable->dropForeign($constraint->CONSTRAINT_NAME);
+            });
+        }
     }
 };
