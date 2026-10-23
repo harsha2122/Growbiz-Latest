@@ -239,45 +239,10 @@ class MarketplaceHelper
                 'icon' => 'messenger',
                 'url' => 'https://messenger.com/',
             ],
-            'flickr' => [
-                'title' => 'Flickr',
-                'icon' => 'flickr',
-                'url' => 'https://flickr.com/',
-            ],
-            'tiktok' => [
-                'title' => 'Tiktok',
-                'icon' => 'tiktok',
-                'url' => 'https://tiktok.com/',
-            ],
-            'skype' => [
-                'title' => 'Skype',
-                'icon' => 'skype',
-                'placeholder' => 'Ex: https://skype.com/{username}',
-            ],
-            'snapchat' => [
-                'title' => 'Snapchat',
-                'icon' => 'snapchat',
-                'placeholder' => 'Ex: https://snapchat.com/{username}',
-            ],
-            'tumblr' => [
-                'title' => 'Tumblr',
-                'icon' => 'tumblr',
-                'placeholder' => 'Ex: https://tumblr.com/{username}',
-            ],
             'whatsapp' => [
                 'title' => 'Whatsapp',
                 'icon' => 'whatsapp',
                 'placeholder' => 'Ex: https://whatsapp.com/{username}',
-            ],
-            'wechat' => [
-                'title' => 'Wechat',
-                'icon' => 'wechat',
-                'placeholder' => 'Ex: https://wechat.com/{username}',
-            ],
-            'vimeo' => [
-                'title' => 'Vimeo',
-                'icon' => 'vimeo',
-                'placeholder' => 'Ex: https://vimeo.com/{username}',
             ],
         ];
     }
