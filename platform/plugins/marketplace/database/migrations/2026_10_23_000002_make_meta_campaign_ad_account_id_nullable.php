@@ -29,14 +29,21 @@ return new class () extends Migration {
 
         $this->dropForeignKeyIfExists('meta_campaigns', 'ad_account_id');
 
+        // Must happen BEFORE adding the FK below - any existing row whose
+        // ad_account_id doesn't match a real meta_ad_accounts row (the
+        // impossible sentinel value 0 included) would otherwise block the
+        // constraint from being added at all. NULL correctly represents
+        // "not yet linked to an account".
+        DB::statement(
+            'UPDATE meta_campaigns
+             LEFT JOIN meta_ad_accounts ON meta_ad_accounts.id = meta_campaigns.ad_account_id
+             SET meta_campaigns.ad_account_id = NULL
+             WHERE meta_campaigns.ad_account_id IS NOT NULL AND meta_ad_accounts.id IS NULL'
+        );
+
         Schema::table('meta_campaigns', function (Blueprint $table): void {
             $table->foreign('ad_account_id')->references('id')->on('meta_ad_accounts')->nullOnDelete();
         });
-
-        // Any existing rows with the impossible sentinel value 0 need clearing
-        // to NULL, otherwise they'd now just be silently orphaned instead of
-        // blocked - NULL correctly represents "not yet linked to an account".
-        DB::table('meta_campaigns')->where('ad_account_id', 0)->update(['ad_account_id' => null]);
     }
 
     public function down(): void
