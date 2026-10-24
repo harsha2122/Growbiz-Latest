@@ -297,17 +297,17 @@ AdminHelper::registerRoutes(function (): void {
             });
 
             Route::group(['prefix' => 'enquiries', 'as' => 'enquiries.'], function (): void {
-                Route::get('', [
+                Route::match(['GET', 'POST'], '', [
                     'as' => 'index',
                     'uses' => 'EnquiryController@index',
                     'permission' => 'marketplace.store.index',
                 ]);
-                Route::get('all', [
+                Route::match(['GET', 'POST'], 'all', [
                     'as' => 'all',
                     'uses' => 'EnquiryController@all',
                     'permission' => 'marketplace.store.index',
                 ]);
-                Route::get('{storeId}', [
+                Route::match(['GET', 'POST'], '{storeId}', [
                     'as' => 'vendor',
                     'uses' => 'EnquiryController@vendor',
                     'permission' => 'marketplace.store.index',
