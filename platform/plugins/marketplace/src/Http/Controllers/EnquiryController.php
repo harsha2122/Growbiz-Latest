@@ -32,19 +32,29 @@ class EnquiryController extends BaseController
 
         $this->pageTitle('Enquiries: ' . $store->name);
 
-        return $table->forStore($storeId)->renderTable(['store' => $store]);
+        return $table
+            ->forStore($storeId)
+            ->setView('plugins/marketplace::enquiries.vendor')
+            ->renderTable(['store' => $store]);
     }
 
     public function toggleVisibility(Request $request)
     {
+        $request->validate([
+            'store_id' => ['required', 'integer', 'exists:mp_stores,id'],
+            'visible' => ['required', 'boolean'],
+        ]);
+
         $storeId = (int) $request->input('store_id');
-        $visible = (bool) $request->input('visible');
+        $visible = $request->boolean('visible');
 
         StoreEnquiryVisibility::query()->updateOrCreate(
             ['store_id' => $storeId],
             ['details_visible' => $visible]
         );
 
-        return $this->httpResponse()->setMessage('Updated.');
+        return $this->httpResponse()
+            ->setData(['visible' => $visible])
+            ->setMessage(__('Enquiry visibility updated.'));
     }
 }
