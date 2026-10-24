@@ -14,6 +14,8 @@ use Illuminate\Http\JsonResponse;
 
 class EnquiryVendorTable extends TableAbstract
 {
+    protected $hasOperations = false;
+
     public function setup(): void
     {
         $this->model(Store::class);
@@ -63,8 +65,8 @@ class EnquiryVendorTable extends TableAbstract
             IdColumn::make(),
             Column::make('name')->title(__('Vendor'))->alignStart(),
             Column::make('enquiries_count')->title(__('Enquiries')),
-            Column::make('details_visible')->title(__('Reveal Details to Vendor')),
-            Column::make('operations')->title(__('Action')),
+            Column::make('details_visible')->title(__('Reveal Details to Vendor'))->orderable(false)->searchable(false),
+            Column::make('operations')->title(__('Action'))->orderable(false)->searchable(false),
         ];
     }
 }

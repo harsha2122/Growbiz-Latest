@@ -14,6 +14,8 @@ use Illuminate\Http\JsonResponse;
 
 class EnquiryTable extends TableAbstract
 {
+    protected $hasOperations = false;
+
     protected int $storeId = 0;
 
     public function setup(): void
