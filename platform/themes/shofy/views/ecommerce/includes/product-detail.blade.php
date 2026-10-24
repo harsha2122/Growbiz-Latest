@@ -213,7 +213,6 @@
                     {{ __('Book Now') }}
                 </button>
 
-                @includeIf('plugins/marketplace::themes.includes.whatsapp-booking-gate', ['product' => $product])
             @elseif (EcommerceHelper::isQuickBuyButtonEnabled())
                 <button
                     type="submit"
@@ -224,7 +223,7 @@
                 >{{ __('Buy Now') }}</button>
             @endif
 
-                @includeIf('plugins/marketplace::themes.includes.enquiry-button', ['type' => 'product', 'product' => $product, 'store' => $product->store ?? null, 'inline' => true])
+                @includeIf('plugins/marketplace::themes.includes.enquiry-button', ['type' => 'product', 'product' => $product, 'store' => $product->store ?? null, 'inline' => true, 'renderModal' => false])
             </div>
         </div>
     @endif
@@ -282,6 +281,15 @@
         @endif
     </div>
 </x-core::form>
+
+{{-- Modal forms must stay outside the add-to-cart form: nested forms are discarded by browsers. --}}
+@if (EcommerceHelper::isCartEnabled())
+    @if ((string) $product->product_type === 'service')
+        @includeIf('plugins/marketplace::themes.includes.whatsapp-booking-gate', ['product' => $product])
+    @endif
+
+    @includeIf('plugins/marketplace::themes.includes.enquiry-button', ['type' => 'product', 'product' => $product, 'store' => $product->store ?? null, 'renderButton' => false])
+@endif
 
 <div class="tp-product-details-query">
     <div class="tp-product-details-query-item " @style(['display: none' => ! $product->sku])>

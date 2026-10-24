@@ -3,6 +3,8 @@
     $productId = $product->id ?? null;
     $modalId = 'enquiry-modal-' . ($type ?? 'vendor') . '-' . ($productId ?? $storeId);
     $inline = $inline ?? false;
+    $renderButton = $renderButton ?? true;
+    $renderModal = $renderModal ?? true;
 @endphp
 
 @if ($storeId)
@@ -25,6 +27,7 @@
         </style>
     @endonce
 
+    @if ($renderButton)
     <button
         type="button"
         @class([
@@ -38,7 +41,9 @@
         <x-core::icon name="ti ti-message-question" />
         {{ __('Enquire Now') }}
     </button>
+    @endif
 
+    @if ($renderModal)
     <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -160,4 +165,5 @@
             });
         </script>
     @endonce
+    @endif
 @endif
