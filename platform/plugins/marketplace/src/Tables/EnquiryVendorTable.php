@@ -32,13 +32,7 @@ class EnquiryVendorTable extends TableAbstract
                 return '<span class="badge bg-info">' . $item->enquiries_count . '</span>';
             })
             ->editColumn('details_visible', function (Store $item) {
-                $checked = $item->enquiryVisibility?->details_visible ? 'checked' : '';
-                $url = route('marketplace.enquiries.toggle-visibility');
-                $token = csrf_token();
-
-                return '<input type="checkbox" ' . $checked . ' onchange="'
-                    . "fetch('" . $url . "',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':'" . $token . "'},body:JSON.stringify({store_id:" . $item->id . ",visible:this.checked?1:0})})"
-                    . '">';
+                return view('plugins/marketplace::enquiries.partials.visibility-switch', ['store' => $item])->render();
             })
             ->editColumn('operations', function (Store $item) {
                 return '<a href="' . route('marketplace.enquiries.vendor', $item->id) . '" class="btn btn-sm btn-primary">' . __('Request Enquiries') . '</a>';

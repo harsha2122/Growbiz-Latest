@@ -16,7 +16,7 @@ class EnquiryController extends BaseController
     {
         $this->pageTitle('Enquiries');
 
-        return $table->renderTable();
+        return $table->setView('plugins/marketplace::enquiries.index')->renderTable();
     }
 
     public function all(AllEnquiriesTable $table)
