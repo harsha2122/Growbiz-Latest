@@ -2,6 +2,7 @@
     $storeServiceTags = $store->serviceTagsList();
 @endphp
 
+@if (! empty($storeServiceTags))
 @once
     <style>
         .bb-store-chips-wrap {
@@ -25,6 +26,8 @@
             display: inline-flex;
             align-items: center;
             gap: 7px;
+            max-width: 100%;
+            overflow-wrap: anywhere;
             padding: 10px 20px;
             border-radius: 999px;
             font-size: 14px;
@@ -57,7 +60,6 @@
 <div class="bb-store-chips-wrap">
     <div class="bb-store-chips-title">{{ __('Services') }}</div>
 
-    @if (! empty($storeServiceTags))
         <div class="bb-store-chips">
             @foreach ($storeServiceTags as $tag)
                 <span class="bb-store-chip">
@@ -69,7 +71,6 @@
                 </span>
             @endforeach
         </div>
-    @else
-        <p class="text-muted mb-0">{{ __('This seller has not listed any services yet.') }}</p>
-    @endif
 </div>
+
+@endif

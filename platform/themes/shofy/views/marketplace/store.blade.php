@@ -17,6 +17,8 @@
     @include(MarketplaceHelper::viewPath('includes.store-detail-banner'))
 
     <div class="container">
+        @include(MarketplaceHelper::viewPath('includes.store-service-chips'))
+
         @include(MarketplaceHelper::viewPath('includes.store-brands-slider'))
 
         @include(MarketplaceHelper::viewPath('includes.store-gallery'))
@@ -52,9 +54,7 @@
         </ul>
         <div class="bb-shop-tab-content tab-content" id="storeTabContent">
             <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-                @if ($store->is_minimal_profile)
-                    @include(MarketplaceHelper::viewPath('includes.store-service-chips'))
-                @else
+                @if (! $store->is_minimal_profile)
                     <div class="tp-shop-main-wrapper row position-relative">
                         @if ($showCategoriesFilter)
                             <div class="col-xl-3 col-lg-4">
