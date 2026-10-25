@@ -165,4 +165,68 @@ class StoreHighlightsTest extends TestCase
         $rules = array_intersect_key($request->rules(), $values);
         $this->assertTrue(Validator::make($values, $rules)->passes());
     }
+
+    public function test_enquiry_access_expires_at_the_exact_deadline_and_can_be_revoked(): void
+    {
+        $this->travelTo(now()->startOfSecond());
+        $visibility = new \Botble\Marketplace\Models\StoreEnquiryVisibility([
+            'details_visible' => true, 'expires_at' => now()->addHour(),
+        ]);
+        $store = new Store;
+        $store->setRelation('enquiryVisibility', $visibility);
+        $this->assertTrue($store->enquiryDetailsVisible());
+        $visibility->details_visible = false;
+        $this->assertFalse($store->enquiryDetailsVisible());
+        $visibility->details_visible = true;
+        $this->travel(1)->hours();
+        $this->assertFalse($store->enquiryDetailsVisible());
+        $visibility->expires_at = now()->addDays(7);
+        $this->assertTrue($store->enquiryDetailsVisible());
+        $visibility->expires_at = null;
+        $this->assertFalse($store->enquiryDetailsVisible());
+        $this->travelBack();
+    }
+
+    public function test_enquiry_visibility_expiry_migration_persists_and_rolls_back(): void
+    {
+        Schema::create('mp_store_enquiry_visibility', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('store_id');
+            $table->boolean('details_visible');
+            $table->timestamps();
+        });
+        $migration = require base_path('platform/plugins/marketplace/database/migrations/2026_10_26_000001_add_expiry_to_enquiry_visibility.php');
+        $migration->up();
+        $visibility = \Botble\Marketplace\Models\StoreEnquiryVisibility::create([
+            'store_id' => 1, 'details_visible' => true, 'expires_at' => now()->addDays(7),
+        ])->fresh();
+        $this->assertTrue($visibility->isActive());
+        $this->assertInstanceOf(\Illuminate\Support\Carbon::class, $visibility->expires_at);
+        Schema::create('mp_stores', function (Blueprint $table): void {
+            $table->id();
+        });
+        \Illuminate\Support\Facades\DB::table('mp_stores')->insert(['id' => 1]);
+        $controller = new \Botble\Marketplace\Http\Controllers\EnquiryController;
+        foreach ([null, 0, -1, 8761, 'invalid'] as $duration) {
+            try {
+                $controller->toggleVisibility(\Illuminate\Http\Request::create('/', 'POST', [
+                    'store_id' => 1, 'visible' => true, 'duration_hours' => $duration,
+                ]));
+                $this->fail('Invalid duration was accepted.');
+            } catch (\Illuminate\Validation\ValidationException $exception) {
+                $this->assertArrayHasKey('duration_hours', $exception->errors());
+            }
+        }
+        $controller->toggleVisibility(\Illuminate\Http\Request::create('/', 'POST', [
+            'store_id' => 1, 'visible' => true, 'duration_hours' => 24,
+        ]));
+        $this->assertTrue($visibility->fresh()->isActive());
+        $controller->toggleVisibility(\Illuminate\Http\Request::create('/', 'POST', [
+            'store_id' => 1, 'visible' => false,
+        ]));
+        $this->assertFalse($visibility->fresh()->isActive());
+        $this->assertNull($visibility->fresh()->expires_at);
+        $migration->down();
+        $this->assertFalse(Schema::hasColumn('mp_store_enquiry_visibility', 'expires_at'));
+    }
 }

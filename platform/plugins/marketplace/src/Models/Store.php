@@ -307,7 +307,7 @@ class Store extends BaseModel
 
     public function enquiryDetailsVisible(): bool
     {
-        return (bool) $this->enquiryVisibility?->details_visible;
+        return $this->enquiryVisibility?->isActive() ?? false;
     }
 
     public function activeSponsoredVideos(): Collection

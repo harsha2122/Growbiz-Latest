@@ -30,7 +30,7 @@ class EnquiryController extends BaseController
     {
         $store = Store::query()->findOrFail($storeId);
 
-        $this->pageTitle('Enquiries: ' . $store->name);
+        $this->pageTitle('Enquiries: '.$store->name);
 
         return $table
             ->forStore($storeId)
@@ -43,18 +43,21 @@ class EnquiryController extends BaseController
         $request->validate([
             'store_id' => ['required', 'integer', 'exists:mp_stores,id'],
             'visible' => ['required', 'boolean'],
+            'duration_hours' => ['required_if:visible,1,true', 'nullable', 'integer', 'min:1', 'max:8760'],
         ]);
 
         $storeId = (int) $request->input('store_id');
         $visible = $request->boolean('visible');
 
+        $expiresAt = $visible ? now()->addHours((int) $request->input('duration_hours')) : null;
+
         StoreEnquiryVisibility::query()->updateOrCreate(
             ['store_id' => $storeId],
-            ['details_visible' => $visible]
+            ['details_visible' => $visible, 'expires_at' => $expiresAt]
         );
 
         return $this->httpResponse()
-            ->setData(['visible' => $visible])
+            ->setData(['visible' => $visible, 'expires_at' => $expiresAt?->toIso8601String()])
             ->setMessage(__('Enquiry visibility updated.'));
     }
 }

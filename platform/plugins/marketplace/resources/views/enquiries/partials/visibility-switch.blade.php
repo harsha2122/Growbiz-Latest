@@ -10,6 +10,7 @@
             role="switch"
             data-enquiry-visibility-switch
             data-store-id="{{ $store->id }}"
+            data-expires-at="{{ $visible ? $store->enquiryVisibility->expires_at->toIso8601String() : '' }}"
             aria-label="{{ __('Reveal enquiries to :store', ['store' => $store->name]) }}"
             @checked($visible)
         >
@@ -17,5 +18,6 @@
             {{ $visible ? __('On') : __('Off') }}
         </span>
     </label>
+    <small data-visibility-expiry class="text-muted d-block mt-1"></small>
     <small data-visibility-error class="d-none text-danger d-block mt-1" role="alert"></small>
 </div>

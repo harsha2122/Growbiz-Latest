@@ -9,9 +9,14 @@ class StoreEnquiryVisibility extends BaseModel
 {
     protected $table = 'mp_store_enquiry_visibility';
 
-    protected $fillable = ['store_id', 'details_visible'];
+    protected $fillable = ['store_id', 'details_visible', 'expires_at'];
 
-    protected $casts = ['details_visible' => 'boolean'];
+    protected $casts = ['details_visible' => 'boolean', 'expires_at' => 'datetime'];
+
+    public function isActive(): bool
+    {
+        return $this->details_visible && $this->expires_at !== null && $this->expires_at->isFuture();
+    }
 
     public function store(): BelongsTo
     {

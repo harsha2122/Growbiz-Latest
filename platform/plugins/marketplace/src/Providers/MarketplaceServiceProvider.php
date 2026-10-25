@@ -121,6 +121,15 @@ class MarketplaceServiceProvider extends ServiceProvider
         }
 
         $this->callAfterResolving(\Illuminate\Console\Scheduling\Schedule::class, function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+            $schedule->call(function (): void {
+                \Botble\Marketplace\Models\StoreEnquiryVisibility::query()
+                    ->where('details_visible', true)
+                    ->where(function ($query): void {
+                        $query->whereNull('expires_at')->orWhere('expires_at', '<=', now());
+                    })
+                    ->update(['details_visible' => false]);
+            })->name('marketplace:expire-enquiry-visibility')->everyMinute()->withoutOverlapping();
+
             // Hourly (was daily) so the vendor analytics dashboard stays close to real-time.
             $schedule->command('meta-ads:sync-insights')->hourly()->withoutOverlapping();
             // Daily, not monthly: the command only touches tokens within 15 days of expiry,
