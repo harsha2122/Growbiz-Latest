@@ -18,7 +18,7 @@
     }
 @endphp
 
-@if ($store->is_minimal_profile && $highlights)
+@if ($highlights)
     @once
         <style>
             .bb-store-highlights {

@@ -26,7 +26,6 @@ use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Forms\Fields\TextareaField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Forms\FormAbstract;
-use Carbon\Carbon;
 use Botble\Ecommerce\Enums\CustomerStatusEnum;
 use Botble\Ecommerce\Forms\Concerns\HasLocationFields;
 use Botble\Ecommerce\Models\Customer;
@@ -79,53 +78,50 @@ class StoreForm extends FormAbstract
             ])
             ->add('description', TextareaField::class, DescriptionFieldOption::make()->colspan(6))
             ->add('content', EditorField::class, ContentFieldOption::make()->colspan(6))
-            ->when((bool) $this->getModel()->is_minimal_profile, function (): void {
-                $this
-                    ->add(
-                        'completed_projects',
-                        NumberField::class,
-                        NumberFieldOption::make()
-                            ->label(__('Completed projects'))
-                            ->helperText(__('Total projects completed. Leave empty to hide.'))
-                            ->min(0)
-                            ->max(2147483647)
-                            ->step(1)
-                            ->colspan(2)
-                    )
-                    ->add(
-                        'happy_customers',
-                        NumberField::class,
-                        NumberFieldOption::make()
-                            ->label(__('Happy customers'))
-                            ->helperText(__('Total customers served. Leave empty to hide.'))
-                            ->min(0)
-                            ->max(2147483647)
-                            ->step(1)
-                            ->colspan(2)
-                    )
-                    ->add(
-                        'years_of_experience',
-                        NumberField::class,
-                        NumberFieldOption::make()
-                            ->label(__('Years of experience'))
-                            ->helperText(__('Shown on your store page. Leave empty to hide.'))
-                            ->min(0)
-                            ->max(150)
-                            ->step(1)
-                            ->colspan(2)
-                    )
-                    ->add(
-                        'public_location',
-                        TextField::class,
-                        TextFieldOption::make()
-                            ->label(__('Location'))
-                            ->placeholder(__('e.g. Bengaluru, Karnataka'))
-                            ->helperText(__('A short public location, separate from your full address.'))
-                            ->maxLength(120)
-                            ->addAttribute('maxlength', 120)
-                            ->colspan(6)
-                    );
-            })
+            ->add(
+                'completed_projects',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(__('Completed projects'))
+                    ->helperText(__('Total projects completed. Leave empty to hide.'))
+                    ->min(0)
+                    ->max(2147483647)
+                    ->step(1)
+                    ->colspan(2)
+            )
+            ->add(
+                'happy_customers',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(__('Happy customers'))
+                    ->helperText(__('Total customers served. Leave empty to hide.'))
+                    ->min(0)
+                    ->max(2147483647)
+                    ->step(1)
+                    ->colspan(2)
+            )
+            ->add(
+                'years_of_experience',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label(__('Years of experience'))
+                    ->helperText(__('Shown on your store page. Leave empty to hide.'))
+                    ->min(0)
+                    ->max(150)
+                    ->step(1)
+                    ->colspan(2)
+            )
+            ->add(
+                'public_location',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(__('Location'))
+                    ->placeholder(__('e.g. Bengaluru, Karnataka'))
+                    ->helperText(__('A short public location, separate from your full address.'))
+                    ->maxLength(120)
+                    ->addAttribute('maxlength', 120)
+                    ->colspan(6)
+            )
             ->addLocationFields()
             ->add(
                 'company',
@@ -211,7 +207,7 @@ class StoreForm extends FormAbstract
                 OnOffCheckboxField::class,
                 OnOffFieldOption::make()
                     ->label(__('Minimal Profile Mode'))
-                    ->helperText(__('Shows profile highlights and service chips instead of this vendor\'s product catalog. Save after enabling to edit the profile fields.'))
+                    ->helperText(__('Hides this vendor\'s product and service cards. Profile highlights and service chips remain available for all sellers.'))
                     ->value((bool) $this->getModel()->is_minimal_profile)
                     ->colspan(3)
             )

@@ -139,18 +139,18 @@ class StoreHighlightsTest extends TestCase
         $this->assertStringContainsString('Years of experience', $html);
     }
 
-    public function test_normal_stores_hide_profile_statistics_and_service_chips(): void
+    public function test_all_stores_show_profile_statistics_and_service_chips(): void
     {
         MarketplaceHelper::shouldReceive('hideStoreAddress')->andReturn(false);
         $store = new Store(['is_minimal_profile' => false, 'completed_projects' => 250, 'years_of_experience' => 12, 'happy_customers' => 12500, 'service_tags' => ['Interior design']]);
-        $this->assertStringNotContainsString('role="list"', view('plugins/marketplace::themes.includes.store-highlights', compact('store'))->render());
-        $this->assertStringNotContainsString('bb-store-chip', view('plugins/marketplace::themes.includes.store-service-chips', compact('store'))->render());
+        $this->assertStringContainsString('role="list"', view('plugins/marketplace::themes.includes.store-highlights', compact('store'))->render());
+        $this->assertStringContainsString('bb-store-chip', view('plugins/marketplace::themes.includes.store-service-chips', compact('store'))->render());
         $store->is_minimal_profile = true;
         $this->assertStringContainsString('Completed projects', view('plugins/marketplace::themes.includes.store-highlights', compact('store'))->render());
         $this->assertStringContainsString('Interior design', view('plugins/marketplace::themes.includes.store-service-chips', compact('store'))->render());
     }
 
-    public function test_only_profile_vendors_can_submit_profile_fields(): void
+    public function test_all_vendors_can_submit_profile_fields(): void
     {
         $store = new Store(['is_minimal_profile' => false]);
         $customer = new Customer;
@@ -159,7 +159,7 @@ class StoreHighlightsTest extends TestCase
         $request->setUserResolver(fn () => $customer);
         $values = ['completed_projects' => 250, 'happy_customers' => 12500, 'years_of_experience' => 12, 'service_tags_input' => 'Interior design'];
         $rules = array_intersect_key($request->rules(), $values);
-        $this->assertTrue(Validator::make($values, $rules)->fails());
+        $this->assertTrue(Validator::make($values, $rules)->passes());
         $this->assertTrue(Validator::make([], $rules)->passes());
         $store->is_minimal_profile = true;
         $rules = array_intersect_key($request->rules(), $values);

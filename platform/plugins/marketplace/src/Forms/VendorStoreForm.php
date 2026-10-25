@@ -6,10 +6,10 @@ use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
 use Botble\Base\Forms\FieldOptions\EmailFieldOption;
 use Botble\Base\Forms\FieldOptions\NameFieldOption;
+use Botble\Base\Forms\FieldOptions\TextFieldOption;
 use Botble\Base\Forms\Fields\DatePickerField;
 use Botble\Base\Forms\Fields\EmailField;
 use Botble\Base\Forms\Fields\TextField;
-use Botble\Base\Forms\FieldOptions\TextFieldOption;
 use Botble\Marketplace\Forms\Fields\CustomEditorField;
 use Botble\Marketplace\Http\Requests\Fronts\VendorStoreRequest;
 
@@ -56,17 +56,14 @@ class VendorStoreForm extends StoreForm
                     ->colspan(3)
                     ->disabled()
             )
-            ->when((bool) $this->getModel()->is_minimal_profile, function (): void {
-                $this
-                    ->add(
-                        'service_tags_input',
-                        TextField::class,
-                        TextFieldOption::make()
-                            ->label(__('Service Tags'))
-                            ->helperText(__('Comma-separated list shown as chips on your store page, e.g. "Interior Design, Furniture Repair, Home Staging".'))
-                            ->value(implode(', ', $this->getModel()->serviceTagsList()))
-                            ->colspan(6)
-                    );
-            });
+            ->add(
+                'service_tags_input',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(__('Service Tags'))
+                    ->helperText(__('Comma-separated list shown as chips on your store page, e.g. "Interior Design, Furniture Repair, Home Staging".'))
+                    ->value(implode(', ', $this->getModel()->serviceTagsList()))
+                    ->colspan(6)
+            );
     }
 }

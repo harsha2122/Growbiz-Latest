@@ -1,13 +1,7 @@
 @if ($product->finance_available)
     @php
         $formatFinancePercent = fn ($value) => rtrim(rtrim(number_format((float) $value, 2), '0'), '.');
-        $hasFinanceRate = $product->finance_interest_rate !== null && $product->finance_interest_rate !== '';
         $hasFinanceDeposit = $product->finance_down_payment_percent !== null && $product->finance_down_payment_percent !== '';
-        $financeTenures = collect(preg_split('/[,;\r\n]+/', (string) $product->finance_tenure_options))
-            ->map(fn ($tenure) => trim($tenure))
-            ->filter(fn ($tenure) => $tenure !== '')
-            ->unique()
-            ->values();
     @endphp
 
     @once
@@ -25,10 +19,6 @@
             .tp-product-finance-metric dt { margin: 0; color: #707680; font-size: 12px; font-weight: 400; line-height: 1.5; }
             .tp-product-finance-metric dd { margin: 0; color: #182026; font-size: 15px; font-weight: 600; line-height: 1.5; }
             .tp-product-finance-metric dd span { font-size: inherit; }
-            .tp-product-finance-tenures { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; margin-top: 10px; }
-            .tp-product-finance-label { margin: 0; color: #707680; font-size: 12px; font-weight: 400; line-height: 1.5; }
-            .tp-product-finance-plans { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; padding: 0; list-style: none; }
-            .tp-product-finance-plans li { max-width: 100%; padding: 3px 8px; border-radius: 5px; background: #f4f5f7; color: #4b5563; font-size: 11px; font-weight: 500; line-height: 1.5; }
             .tp-product-finance-notes { margin-top: 10px; color: #707680; font-size: 11px; line-height: 1.6; }
             .tp-product-finance-notes p { margin: 0; color: inherit; font-size: inherit; line-height: inherit; white-space: pre-line; }
             @media (max-width: 575px) {
@@ -49,14 +39,8 @@
             </div>
         </div>
 
-        @if ($hasFinanceRate || $hasFinanceDeposit)
+        @if ($hasFinanceDeposit)
             <dl class="tp-product-finance-metrics">
-                @if ($hasFinanceRate)
-                    <div class="tp-product-finance-metric">
-                        <dt>{{ __('Interest') }}</dt>
-                        <dd>{{ $formatFinancePercent($product->finance_interest_rate) }}<span>%</span></dd>
-                    </div>
-                @endif
                 @if ($hasFinanceDeposit)
                     <div class="tp-product-finance-metric">
                         <dt>{{ __('Down payment') }}</dt>
@@ -64,17 +48,6 @@
                     </div>
                 @endif
             </dl>
-        @endif
-
-        @if ($financeTenures->isNotEmpty())
-            <div class="tp-product-finance-tenures">
-                <p class="tp-product-finance-label">{{ __('Tenure') }}</p>
-                <ul class="tp-product-finance-plans" aria-label="{{ __('Available finance tenures') }}">
-                    @foreach ($financeTenures as $tenure)
-                        <li>{{ ctype_digit($tenure) ? trans_choice(':count month|:count months', (int) $tenure, ['count' => $tenure]) : $tenure }}</li>
-                    @endforeach
-                </ul>
-            </div>
         @endif
 
         @if (filled($product->finance_eligibility_notes))
