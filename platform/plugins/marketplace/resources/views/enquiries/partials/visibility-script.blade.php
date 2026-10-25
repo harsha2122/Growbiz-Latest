@@ -7,6 +7,7 @@
             <option value="24">{{ __('1 day') }}</option>
             <option value="168">{{ __('7 days') }}</option>
             <option value="720">{{ __('30 days') }}</option>
+            <option value="8760">{{ __('1 year') }}</option>
             <option value="custom">{{ __('Custom hours') }}</option>
         </select>
         <div id="enquiry-custom-duration" hidden>
