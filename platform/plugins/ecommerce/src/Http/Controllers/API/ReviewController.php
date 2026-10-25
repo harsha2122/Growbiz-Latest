@@ -53,7 +53,7 @@ class ReviewController extends BaseApiController
      *
      * @bodyParam product_id integer required The ID of the product to review. Example: 1
      * @bodyParam star integer required The rating from 1 to 5 stars. Example: 5
-     * @bodyParam comment string required The review comment. Example: This is a great product! I highly recommend it.
+     * @bodyParam comment string Optional written review; omit for a rating only. Example: This is a great product! I highly recommend it.
      * @bodyParam images array Array of images for the review (optional). No-example
      *
      * @authenticated
@@ -62,8 +62,10 @@ class ReviewController extends BaseApiController
     {
         abort_unless(EcommerceHelper::isReviewEnabled(), 404);
 
+        abort_unless($request->user() !== null, 401);
+
         $productId = $request->input('product_id');
-        $check = $this->checkReviewCondition($productId, $request);
+        $check = $this->checkReviewCondition($productId, $request, $request->filled('comment') || $request->hasFile('images'));
 
         if (Arr::get($check, 'error')) {
             $message = Arr::get($check, 'message', __('Oops! Something Went Wrong.'));
@@ -95,6 +97,7 @@ class ReviewController extends BaseApiController
 
         $review = Review::query()->create([
             ...$request->validated(),
+            'comment' => $request->input('comment') ?? '',
             'customer_id' => $request->user()->id,
             'images' => $results ? collect($results)->pluck('data.url')->values()->all() : null,
             'status' => get_ecommerce_setting(

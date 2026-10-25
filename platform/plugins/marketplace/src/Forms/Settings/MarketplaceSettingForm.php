@@ -14,6 +14,7 @@ use Botble\Base\Forms\Fields\MultiCheckListField;
 use Botble\Base\Forms\Fields\NumberField;
 use Botble\Base\Forms\Fields\OnOffCheckboxField;
 use Botble\Base\Forms\Fields\TextField;
+use Botble\Ecommerce\Facades\EcommerceHelper;
 use Botble\Marketplace\Enums\WithdrawalFeeTypeEnum;
 use Botble\Marketplace\Facades\MarketplaceHelper;
 use Botble\Marketplace\Http\Requests\MarketPlaceSettingFormRequest;
@@ -48,6 +49,14 @@ class MarketplaceSettingForm extends SettingForm
             ->setSectionDescription(trans('plugins/marketplace::marketplace.settings.description'))
             ->setValidatorClass(MarketPlaceSettingFormRequest::class)
             ->contentOnly()
+            ->add('review_purchase_required', OnOffCheckboxField::class, OnOffFieldOption::make()
+                ->label(__('Purchase required for written reviews'))
+                ->value(EcommerceHelper::onlyAllowCustomersPurchasedToReview())
+                ->helperText(__('Require a completed purchase to post a written review with a star rating. Login is always required.')))
+            ->add('rating_purchase_required', OnOffCheckboxField::class, OnOffFieldOption::make()
+                ->label(__('Purchase required for ratings only'))
+                ->value(EcommerceHelper::onlyAllowCustomersPurchasedToRate())
+                ->helperText(__('Require a completed purchase to submit stars without a written review. Login is always required.')))
             ->add('fee_per_order', 'number', [
                 'label' => trans('plugins/marketplace::marketplace.settings.default_commission_fee'),
                 'value' => MarketplaceHelper::getSetting('fee_per_order', 0),

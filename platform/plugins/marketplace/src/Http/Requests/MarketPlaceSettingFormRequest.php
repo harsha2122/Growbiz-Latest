@@ -23,6 +23,8 @@ class MarketPlaceSettingFormRequest extends BaseProductRequest
     public function rules(): array
     {
         $rules = [
+            'review_purchase_required' => [new OnOffRule()],
+            'rating_purchase_required' => [new OnOffRule()],
             'payout_methods' => 'required|array:' . implode(',', PayoutPaymentMethodsEnum::values()),
             'payout_methods.*' => 'sometimes|in:0,1',
             'enable_commission_fee_for_each_category' => 'sometimes|in:0,1',

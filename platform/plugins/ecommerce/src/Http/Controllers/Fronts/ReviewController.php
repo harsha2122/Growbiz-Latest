@@ -24,8 +24,10 @@ class ReviewController extends BaseController
     {
         abort_unless(EcommerceHelper::isReviewEnabled(), 404);
 
+        abort_unless(auth('customer')->check(), 401);
+
         $productId = $request->input('product_id');
-        $check = $this->checkReviewCondition($productId);
+        $check = $this->checkReviewCondition($productId, $request->filled('comment') || $request->hasFile('images'));
 
         if (Arr::get($check, 'error')) {
             return $this
@@ -52,6 +54,7 @@ class ReviewController extends BaseController
 
         Review::query()->create([
             ...$request->validated(),
+            'comment' => $request->input('comment') ?? '',
             'customer_id' => auth('customer')->id(),
             'images' => $results ? collect($results)->pluck('data.url')->values()->all() : null,
             'status' => get_ecommerce_setting('review_need_to_be_approved', false) ? BaseStatusEnum::PENDING : BaseStatusEnum::PUBLISHED,

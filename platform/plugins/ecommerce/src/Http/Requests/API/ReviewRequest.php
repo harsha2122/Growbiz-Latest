@@ -12,7 +12,7 @@ class ReviewRequest extends Request
         return [
             'product_id' => ['required', 'exists:ec_products,id'],
             'star' => ['required', 'numeric', 'min:1', 'max:5'],
-            'comment' => ['required', 'string', 'max:5000'],
+            'comment' => ['nullable', 'string', 'max:5000'],
             'images' => 'array|max:' . EcommerceHelper::reviewMaxFileNumber(),
             'images.*' => 'image|mimes:jpg,jpeg,png|max:' . EcommerceHelper::reviewMaxFileSize(true),
         ];
@@ -30,7 +30,7 @@ class ReviewRequest extends Request
                 'example' => 5,
             ],
             'comment' => [
-                'description' => 'The review comment',
+                'description' => 'Optional written review; omit to submit a rating only',
                 'example' => 'This is a great product! I highly recommend it.',
             ],
             'images' => [

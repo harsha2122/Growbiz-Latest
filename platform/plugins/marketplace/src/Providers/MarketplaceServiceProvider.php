@@ -271,6 +271,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'permissions' => ['marketplace.store.index'],
                 ])
                 ->registerItem([
+                    'id' => 'cms-plugins-marketplace-review-rating-settings',
+                    'priority' => 12,
+                    'parent_id' => 'cms-plugins-marketplace',
+                    'name' => __('Review & Rating Settings'),
+                    'icon' => 'ti ti-star',
+                    'url' => fn () => route('marketplace.settings'),
+                    'permissions' => ['marketplace.settings'],
+                ])
+                ->registerItem([
                     'id' => 'cms-plugins-marketplace-meta-ads-settings',
                     'priority' => 12,
                     'parent_id' => 'cms-plugins-marketplace',

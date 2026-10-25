@@ -1,5 +1,10 @@
+@php
+    $canWriteReview = $checkReview['can_review'] ?? true;
+    $canRateOnly = $checkReview['can_rate'] ?? true;
+@endphp
+
 <div @class(['col-12', 'col-md-8' => $showAvgRating])>
-    <h4>{{ __('Add your review') }}</h4>
+    <h4>{{ __('Add your review or rating') }}</h4>
 
     @if (isset($checkReview) && ! $checkReview['error'])
         <p>
@@ -11,12 +16,13 @@
     @guest('customer')
         <p class="text-danger">
             {!! BaseHelper::clean(
-                __('Please <a href=":link">login</a> to write review!', ['link' => route('customer.login')]),
+                __('Please <a href=":link">login</a> to submit a review or rating!', ['link' => route('customer.login')]),
             ) !!}
         </p>
     @endguest
 
     @if (isset($checkReview) && $checkReview['error'])
+        @if (($checkReview['type'] ?? null) !== 'login_required')
         <div class="review-warning-alert">
             <div class="warning-icon">
                 @if ($checkReview['type'] === 'already_reviewed')
@@ -57,7 +63,8 @@
                 @endif
             </div>
         </div>
-    @else
+        @endif
+    @elseif (auth('customer')->check())
         <x-core::form :url="route('public.reviews.create')" method="post" :files="true">
             <input type="hidden" name="product_id" value="{{ $product->id }}">
 
@@ -81,19 +88,29 @@
             </div>
 
             <div class="mb-3">
-                <label for="comment" class="form-label required">
+                <label for="comment" @class(['form-label', 'required' => ! $canRateOnly])>
                     {{ __('Review') }}:
                 </label>
                 <textarea
                     class="form-control"
                     name="comment"
-                    required
-                    rows="8"
+                    @required(! $canRateOnly)
+                    rows="5"
                     placeholder="{{ __('Write your review') }}"
-                    @disabled(! auth('customer')->check())
+                    @disabled(! $canWriteReview)
                 ></textarea>
+                <small class="text-muted">
+                    @if (! $canWriteReview)
+                        {{ __('You may submit a star rating. Purchase this product to add a written review or photos.') }}
+                    @elseif (! $canRateOnly)
+                        {{ __('Please include a written review. Purchase this product to submit a rating without a review.') }}
+                    @else
+                        {{ __('A written review is optional. Leave it empty to submit your star rating only.') }}
+                    @endif
+                </small>
             </div>
 
+            @if ($canWriteReview)
             <script type="text/x-custom-template" id="review-image-template">
                 <span class="image-viewer__item" data-id="__id__">
                     <img src="{{ RvMedia::getDefaultImage() }}" alt="Preview" class="img-responsive d-block">
@@ -136,6 +153,8 @@
                     ]) }}
                 </div>
             </div>
+
+            @endif
 
             <button
                 type="submit"

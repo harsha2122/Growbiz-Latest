@@ -77,6 +77,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static array getOriginAddress()
  * @method static array getShippingData(\Illuminate\Support\Collection|array $products, array $session, array $origin, float $orderTotal, string|null $paymentMethod = null)
  * @method static bool onlyAllowCustomersPurchasedToReview()
+ * @method static bool onlyAllowCustomersPurchasedToRate()
  * @method static bool hideRatingWhenNoReviews()
  * @method static bool isValidToProcessCheckout()
  * @method static array getMandatoryFieldsAtCheckout()
