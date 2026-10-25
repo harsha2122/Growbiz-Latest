@@ -2,7 +2,7 @@
     $storeServiceTags = $store->serviceTagsList();
 @endphp
 
-@if (! empty($storeServiceTags))
+@if ($store->is_minimal_profile && ! empty($storeServiceTags))
 @once
     <style>
         .bb-store-chips-wrap {

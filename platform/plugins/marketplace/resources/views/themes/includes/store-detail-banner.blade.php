@@ -226,6 +226,8 @@
             </div>
         </div>
 
+        @include(MarketplaceHelper::viewPath('includes.store-highlights'))
+
         @php
             $socials = !MarketplaceHelper::hideStoreSocialLinks() ? $store->getMetaData('social_links', true) : null;
         @endphp

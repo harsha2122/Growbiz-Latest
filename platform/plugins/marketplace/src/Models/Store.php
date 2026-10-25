@@ -76,6 +76,10 @@ class Store extends BaseModel
         'referral_code',
         'vendor_type',
         'establishment_date',
+        'years_of_experience',
+        'completed_projects',
+        'happy_customers',
+        'public_location',
         'first_dashboard_visited_at',
     ];
 
@@ -91,6 +95,9 @@ class Store extends BaseModel
         'is_minimal_profile' => 'boolean',
         'service_tags' => 'array',
         'gallery_image_limit' => 'integer',
+        'years_of_experience' => 'integer',
+        'completed_projects' => 'integer',
+        'happy_customers' => 'integer',
         'verified_at' => 'datetime',
         'verification_note' => SafeContent::class,
         'sponsored_video_expires_at' => 'datetime',

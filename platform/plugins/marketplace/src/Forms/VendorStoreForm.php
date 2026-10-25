@@ -56,14 +56,17 @@ class VendorStoreForm extends StoreForm
                     ->colspan(3)
                     ->disabled()
             )
-            ->add(
-                'service_tags_input',
-                TextField::class,
-                TextFieldOption::make()
-                    ->label(__('Service Tags'))
-                    ->helperText(__('Comma-separated list shown as chips on your store page, e.g. "Interior Design, Furniture Repair, Home Staging".'))
-                    ->value(implode(', ', $this->getModel()->serviceTagsList()))
-                    ->colspan(6)
-            );
+            ->when((bool) $this->getModel()->is_minimal_profile, function (): void {
+                $this
+                    ->add(
+                        'service_tags_input',
+                        TextField::class,
+                        TextFieldOption::make()
+                            ->label(__('Service Tags'))
+                            ->helperText(__('Comma-separated list shown as chips on your store page, e.g. "Interior Design, Furniture Repair, Home Staging".'))
+                            ->value(implode(', ', $this->getModel()->serviceTagsList()))
+                            ->colspan(6)
+                    );
+            });
     }
 }

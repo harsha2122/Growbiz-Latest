@@ -94,7 +94,9 @@ class SettingController extends BaseController
             // settings form, even though fill() would otherwise accept them since
             // they're fillable on the model for the admin-side Store form.
             $store->fill(Arr::except($request->input(), ['is_minimal_profile', 'gallery_image_limit']));
-            $store->service_tags = $serviceTags;
+            if ($store->is_minimal_profile) {
+                $store->service_tags = $serviceTags;
+            }
             $store->save();
 
             $request->merge(['is_slug_editable' => 1]);
