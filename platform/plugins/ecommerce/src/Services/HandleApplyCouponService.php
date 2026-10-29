@@ -207,6 +207,24 @@ class HandleApplyCouponService
 
     public function checkConditionDiscount(Discount|Model $discount, array $sessionData = [], ?int $customerId = 0): array
     {
+        if (is_plugin_active('marketplace')) {
+            $referral = \Botble\Marketplace\Models\CustomerReferral::query()->where('coupon_id', $discount->id)->first();
+            if ($referral) {
+                $storeProducts = Cart::instance('cart')->products()->filter(fn ($product) => $product->original_product->store_id == $referral->store_id);
+                $storeItems = Cart::instance('cart')->content()->filter(fn ($item) => $storeProducts->contains('id', $item->id));
+                $storeTotal = Cart::instance('cart')->rawTotalByItems($storeItems);
+                $storeSubtotal = Cart::instance('cart')->rawSubTotalByItems($storeItems);
+                $offerDiscount = $referral->terms['offer_type'] === 'percentage'
+                    ? $storeTotal * (float) $discount->value / 100
+                    : min($storeTotal, (float) $discount->value);
+                if (! $customerId || $referral->customer_id != $customerId || auth('customer')->id() != $customerId
+                    || $referral->expires_at->lte(now()) || $storeItems->isEmpty()
+                    || round($storeSubtotal - $offerDiscount, 2) < (float) $referral->terms['minimum_order']
+                    || app(\Botble\Marketplace\Services\StoreReferralService::class)->hasPurchased($referral->store_id, $customerId)) {
+                    return ['error' => true, 'error_code' => 'REFERRAL_OFFER_INELIGIBLE', 'message' => __('This personal referral coupon requires its owner, a qualifying first order from this store, and the minimum order amount.')];
+                }
+            }
+        }
         if (! $discount->can_use_with_flash_sale) {
             /** @var Collection<Product> $products */
             $products = Cart::instance('cart')->products();

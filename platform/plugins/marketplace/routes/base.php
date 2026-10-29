@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Route;
 AdminHelper::registerRoutes(function (): void {
     Route::group(['namespace' => 'Botble\Marketplace\Http\Controllers'], function (): void {
         Route::group(['prefix' => 'marketplaces', 'as' => 'marketplace.'], function (): void {
+            Route::post('refer-earn/rewards/{referral}/reject', ['uses' => 'ReferralProgramController@reject', 'as' => 'refer-earn.reject', 'permission' => 'marketplace.refer-earn.edit']);
+            Route::get('refer-earn', ['uses' => 'ReferralProgramController@index', 'as' => 'refer-earn.index', 'permission' => 'marketplace.refer-earn.index']);
+            Route::post('refer-earn/{program}/pause', ['uses' => 'ReferralProgramController@pause', 'as' => 'refer-earn.pause', 'permission' => 'marketplace.refer-earn.edit']);
+
             Route::group(['prefix' => 'stores', 'as' => 'store.'], function (): void {
                 Route::resource('', 'StoreController')->parameters(['' => 'store']);
                 Route::post('update-tax-info/{store}', [

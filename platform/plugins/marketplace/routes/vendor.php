@@ -389,6 +389,10 @@ Route::group([
     Route::get('settings/languages', [LanguageSettingController::class, 'index'])->name('language-settings.index');
     Route::put('settings/languages', [LanguageSettingController::class, 'update'])->name('language-settings.update');
 
+    Route::get('refer-earn', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'seller'])->name('refer-earn');
+    Route::post('refer-earn', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'save'])->name('refer-earn.save');
+    Route::post('refer-earn/{referral}/paid', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'payout'])->name('refer-earn.payout');
+
     Route::get('referrals', [ReferralController::class, 'index'])->name('referrals');
 
     Route::prefix('contact-admin')->group(function (): void {

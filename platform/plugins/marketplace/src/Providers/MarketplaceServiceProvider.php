@@ -630,6 +630,7 @@ class MarketplaceServiceProvider extends ServiceProvider
         SiteMapManager::registerKey('stores');
 
         $this->app->register(EventServiceProvider::class);
+        $this->app->register(ReferralServiceProvider::class);
         $this->app->register(HookServiceProvider::class);
         $this->app->register(OrderSupportServiceProvider::class);
 

@@ -2,6 +2,12 @@
 
 return [
     [
+        'name' => 'Refer & Earn', 'flag' => 'marketplace.refer-earn.index', 'parent_flag' => 'marketplace.index',
+    ],
+    [
+        'name' => 'Manage referral programs', 'flag' => 'marketplace.refer-earn.edit', 'parent_flag' => 'marketplace.refer-earn.index',
+    ],
+    [
         'name' => 'Marketplace',
         'flag' => 'marketplace.index',
     ],

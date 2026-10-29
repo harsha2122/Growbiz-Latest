@@ -282,6 +282,10 @@
     </div>
 </x-core::form>
 
+@if (is_plugin_active('marketplace') && $product->store)
+    @include('plugins/marketplace::themes.includes.store-referral-program', ['store' => $product->store])
+@endif
+
 {{-- Modal forms must stay outside the add-to-cart form: nested forms are discarded by browsers. --}}
 @if (EcommerceHelper::isCartEnabled())
     @if ((string) $product->product_type === 'service')

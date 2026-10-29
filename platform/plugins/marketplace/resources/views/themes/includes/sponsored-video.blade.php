@@ -86,7 +86,7 @@
                                 </div>
                             </div>
                             <div class="bb-sponsored-video-info">
-                                <span class="bb-sponsored-video-text">{{ __('Watch Promotional Video') }}</span>
+                                <span class="bb-sponsored-video-text">{{ __('Watch Offer Video') }}</span>
                                 @if ($sponsoredVideo->expires_at)
                                     <span class="bb-sponsored-video-expiry">
                                         {{ __('Available until :date', ['date' => $sponsoredVideo->expires_at->format('M d, Y')]) }}

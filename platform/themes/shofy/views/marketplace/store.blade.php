@@ -17,6 +17,8 @@
     @include(MarketplaceHelper::viewPath('includes.store-detail-banner'))
 
     <div class="container">
+        @include(MarketplaceHelper::viewPath('includes.store-referral-program'))
+
         @include(MarketplaceHelper::viewPath('includes.store-service-chips'))
 
         @include(MarketplaceHelper::viewPath('includes.store-brands-slider'))
