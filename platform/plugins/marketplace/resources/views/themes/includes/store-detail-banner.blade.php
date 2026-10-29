@@ -1,3 +1,6 @@
+@php
+    $storeRating = $store->publicRatingSummary();
+@endphp
 @once
     <style>
         .bb-store-header {
@@ -199,10 +202,10 @@
                     </h2>
 
                     <div class="bb-store-header-meta">
-                        @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $store->reviews->count() > 0))
+                        @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $storeRating['count'] > 0))
                             <div class="bb-store-header-rating">
-                                @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $store->reviews()->avg('star'), 'size' => 80])
-                                <small>{{ __('(:count reviews)', ['count' => number_format($store->reviews->count())]) }}</small>
+                                @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $storeRating['average'], 'size' => 80])
+                                <small>{{ __('(:count ratings)', ['count' => number_format($storeRating['count'])]) }}</small>
                             </div>
                         @endif
 

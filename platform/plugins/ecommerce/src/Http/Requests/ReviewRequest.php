@@ -24,7 +24,7 @@ class ReviewRequest extends Request
             'customer_name' => ['nullable', 'string', 'max:100'],
             'customer_email' => ['nullable', new EmailRule(), 'max:50'],
             'star' => ['required', 'integer', 'min:1', 'max:5'],
-            'comment' => ['required', 'string', 'max:5000'],
+            'comment' => ['nullable', 'string', 'max:5000'],
             'images' => ['nullable', 'array'],
             'images.*' => ['nullable', new MediaImageRule()],
         ];

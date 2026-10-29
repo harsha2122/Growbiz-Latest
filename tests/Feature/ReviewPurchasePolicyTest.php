@@ -42,6 +42,21 @@ class ReviewPurchasePolicyTest extends TestCase
             $table->id();
             $table->integer('customer_id');
             $table->integer('product_id');
+            $table->unsignedTinyInteger('star')->default(5);
+            $table->text('comment')->nullable();
+            $table->json('images')->nullable();
+            $table->string('status')->default('published');
+            $table->timestamps();
+        });
+        Schema::create('ec_customers', function (Blueprint $table): void {
+            $table->id();
+        });
+        DB::table('ec_customers')->insert(['id' => 7]);
+        Schema::create('mp_service_completions', function (Blueprint $table): void {
+            $table->id();
+            $table->integer('customer_id');
+            $table->integer('product_id')->nullable();
+            $table->date('completed_at');
         });
         Schema::create('ec_orders', function (Blueprint $table): void {
             $table->id();
@@ -64,24 +79,24 @@ class ReviewPurchasePolicyTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_all_purchase_toggle_combinations_are_independent(): void
+    public function test_ratings_are_free_and_written_reviews_require_experience_regardless_of_legacy_settings(): void
     {
         $policy = new ReviewEligibility;
         foreach ([false, true] as $reviewRequired) {
             foreach ([false, true] as $ratingRequired) {
                 $this->reviewRequired = $reviewRequired;
                 $this->ratingRequired = $ratingRequired;
-                $this->assertSame($reviewRequired, $policy->check(7, 42, true)['error']);
-                $this->assertSame($ratingRequired, $policy->check(7, 42, false)['error']);
+                $this->assertTrue($policy->check(7, 42, true)['error']);
+                $this->assertFalse($policy->check(7, 42, false)['error']);
                 $form = $policy->check(7, 42);
-                $this->assertSame($reviewRequired && $ratingRequired, $form['error']);
-                $this->assertSame(! $reviewRequired, $form['can_review']);
-                $this->assertSame(! $ratingRequired, $form['can_rate']);
+                $this->assertFalse($form['error']);
+                $this->assertFalse($form['can_review']);
+                $this->assertTrue($form['can_rate']);
             }
         }
     }
 
-    public function test_login_is_required_even_when_both_purchase_rules_are_off(): void
+    public function test_login_is_required_for_ratings_and_reviews(): void
     {
         foreach ([null, false, true] as $writtenReview) {
             $result = (new ReviewEligibility)->check(null, 42, $writtenReview);
@@ -105,7 +120,7 @@ class ReviewPurchasePolicyTest extends TestCase
         ]);
         $policy = new ReviewEligibility;
         $this->assertTrue($policy->check(7, 42, true)['error']);
-        $this->assertTrue($policy->check(7, 42, false)['error']);
+        $this->assertFalse($policy->check(7, 42, false)['error']);
         DB::table('ec_order_product')->insert(['order_id' => 3, 'product_id' => 42]);
         $this->assertFalse($policy->check(7, 42, true)['error']);
         $this->assertFalse($policy->check(7, 42, false)['error']);
@@ -121,9 +136,9 @@ class ReviewPurchasePolicyTest extends TestCase
         $this->assertFalse((new ReviewEligibility)->check(7, 42, false)['error']);
     }
 
-    public function test_existing_rating_or_review_cannot_be_submitted_again(): void
+    public function test_existing_written_review_cannot_be_submitted_again(): void
     {
-        DB::table('ec_reviews')->insert(['customer_id' => 7, 'product_id' => 42]);
+        DB::table('ec_reviews')->insert(['customer_id' => 7, 'product_id' => 42, 'comment' => 'Written review']);
         foreach ([true, false] as $writtenReview) {
             $this->assertSame('already_reviewed', (new ReviewEligibility)->check(7, 42, $writtenReview)['type']);
         }
@@ -153,5 +168,33 @@ class ReviewPurchasePolicyTest extends TestCase
                 }
             }
         }
+    }
+
+    public function test_an_existing_star_rating_can_be_upgraded_after_purchase_without_counting_twice(): void
+    {
+        $submission = new \Botble\Ecommerce\Supports\SubmitCustomerReview;
+        $rating = $submission->save(7, 42, ['star' => 4, 'comment' => '', 'status' => 'published']);
+        $this->assertSame('already_reviewed', (new ReviewEligibility)->check(7, 42, false)['type']);
+        $this->assertTrue((new ReviewEligibility)->check(7, 42, true)['error']);
+        DB::table('ec_orders')->insert(['id' => 1, 'user_id' => 7, 'status' => 'completed']);
+        DB::table('ec_order_product')->insert(['order_id' => 1, 'product_id' => 42]);
+        $review = $submission->save(7, 42, ['star' => 5, 'comment' => 'Verified purchase review', 'status' => 'published']);
+        $this->assertSame($rating->id, $review->id);
+        $this->assertSame(1, DB::table('ec_reviews')->count());
+        $this->assertSame('Verified purchase review', $review->comment);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $submission->save(7, 42, ['star' => 5, 'comment' => 'Duplicate', 'status' => 'published']);
+    }
+
+    public function test_only_a_confirmed_completed_service_for_the_same_customer_and_product_qualifies(): void
+    {
+        DB::table('mp_service_completions')->insert([
+            ['customer_id' => 8, 'product_id' => 42, 'completed_at' => today()],
+            ['customer_id' => 7, 'product_id' => 99, 'completed_at' => today()],
+            ['customer_id' => 7, 'product_id' => 42, 'completed_at' => today()->addDay()],
+        ]);
+        $this->assertTrue((new ReviewEligibility)->check(7, 42, true)['error']);
+        DB::table('mp_service_completions')->insert(['customer_id' => 7, 'product_id' => 42, 'completed_at' => today()]);
+        $this->assertFalse((new ReviewEligibility)->check(7, 42, true)['error']);
     }
 }

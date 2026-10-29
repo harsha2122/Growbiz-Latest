@@ -19,6 +19,8 @@
 
         @include(MarketplaceHelper::viewPath('includes.sponsored-video'))
 
+        @include('plugins/marketplace::themes.includes.profile-reviews')
+
         @if (! $store->is_minimal_profile)
             <div class="row">
                 <div class="col-xl-3 col-lg-4">

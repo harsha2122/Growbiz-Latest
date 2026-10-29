@@ -200,6 +200,21 @@ class Store extends BaseModel
             ->join('ec_reviews', 'ec_products.id', '=', 'ec_reviews.product_id');
     }
 
+    public function profileReviews(): HasMany
+    {
+        return $this->hasMany(ProfileReview::class);
+    }
+
+    public function publicRatingSummary(): array
+    {
+        $query = $this->is_minimal_profile
+            ? $this->profileReviews()->where('status', 'published')
+            : $this->reviews()->where('ec_reviews.status', 'published')->where('ec_products.status', 'published');
+        $summary = $query->toBase()->selectRaw('COUNT(*) as total, AVG(star) as average')->first();
+
+        return ['count' => (int) $summary->total, 'average' => (float) ($summary->average ?? 0)];
+    }
+
     protected function uploadFolder(): Attribute
     {
         return Attribute::make(

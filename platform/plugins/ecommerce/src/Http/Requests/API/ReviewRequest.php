@@ -11,7 +11,7 @@ class ReviewRequest extends Request
     {
         return [
             'product_id' => ['required', 'exists:ec_products,id'],
-            'star' => ['required', 'numeric', 'min:1', 'max:5'],
+            'star' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string', 'max:5000'],
             'images' => 'array|max:' . EcommerceHelper::reviewMaxFileNumber(),
             'images.*' => 'image|mimes:jpg,jpeg,png|max:' . EcommerceHelper::reviewMaxFileSize(true),

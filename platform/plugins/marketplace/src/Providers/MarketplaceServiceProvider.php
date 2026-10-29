@@ -244,6 +244,15 @@ class MarketplaceServiceProvider extends ServiceProvider
                     'permissions' => ['marketplace.b2b-catalogs.index'],
                 ])
                 ->registerItem([
+                    'id' => 'cms-plugins-marketplace-profile-reviews',
+                    'priority' => 12,
+                    'parent_id' => 'cms-plugins-marketplace',
+                    'name' => __('Profile Reviews & Services'),
+                    'icon' => 'ti ti-star',
+                    'url' => fn () => route('marketplace.profile-reviews.index'),
+                    'permissions' => ['marketplace.profile-reviews.index'],
+                ])
+                ->registerItem([
                     'id' => 'cms-plugins-marketplace-enquiries',
                     'priority' => 11,
                     'parent_id' => 'cms-plugins-marketplace',

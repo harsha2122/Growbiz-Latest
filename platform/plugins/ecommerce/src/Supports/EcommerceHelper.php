@@ -1207,20 +1207,12 @@ class EcommerceHelper
 
     public function onlyAllowCustomersPurchasedToReview(): bool
     {
-        $default = (bool) get_ecommerce_setting('only_allow_customers_purchased_to_review', 0);
-
-        return is_plugin_active('marketplace')
-            ? (bool) setting(config('plugins.marketplace.general.prefix') . 'review_purchase_required', $default)
-            : $default;
+        return true;
     }
 
     public function onlyAllowCustomersPurchasedToRate(): bool
     {
-        $default = (bool) get_ecommerce_setting('only_allow_customers_purchased_to_review', 0);
-
-        return is_plugin_active('marketplace')
-            ? (bool) setting(config('plugins.marketplace.general.prefix') . 'rating_purchase_required', $default)
-            : $default;
+        return false;
     }
 
     public function hideRatingWhenNoReviews(): bool

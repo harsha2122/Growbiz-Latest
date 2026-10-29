@@ -95,7 +95,7 @@ class ReviewController extends BaseApiController
             }
         }
 
-        $review = Review::query()->create([
+        $review = app(\Botble\Ecommerce\Supports\SubmitCustomerReview::class)->save((int) $request->user()->id, (int) $productId, [
             ...$request->validated(),
             'comment' => $request->input('comment') ?? '',
             'customer_id' => $request->user()->id,

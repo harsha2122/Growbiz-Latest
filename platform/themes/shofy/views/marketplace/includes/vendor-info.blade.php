@@ -1,3 +1,6 @@
+@php
+    $storeRating = $store->publicRatingSummary();
+@endphp
 <div class="d-flex gap-3 mb-3">
     {{ RvMedia::image($store->logo_url, $store->name, 'thumb', attributes: ['class' => 'rounded-pill', 'style' => 'width: 70px; height: 70px']) }}
     <div>
@@ -6,14 +9,14 @@
                 {{ $store->name }} {!! $store->badge !!}
             </a>
         </h6>
-        @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $store->reviews()->count() > 0))
+        @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $storeRating['count'] > 0))
             <div class="d-flex align-items-center gap-2">
-                @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $store->reviews()->avg('star')])
+                @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $storeRating['average']])
                 <span class="small text-muted">
-                    @if (($reviewsCount = $store->reviews()->count()) === 1)
-                        ({{ __('1 Review') }})
+                    @if (($reviewsCount = $storeRating['count']) === 1)
+                        ({{ __('1 Rating') }})
                     @else
-                        ({{ __(':count Reviews', ['count' => number_format($reviewsCount)]) }})
+                        ({{ __(':count Ratings', ['count' => number_format($reviewsCount)]) }})
                     @endif
                 </span>
             </div>

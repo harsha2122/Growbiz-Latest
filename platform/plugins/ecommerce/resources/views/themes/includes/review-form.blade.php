@@ -78,7 +78,7 @@
                             name="star"
                             type="radio"
                             value="{{ $i }}"
-                            @checked($i === 5)
+                            @checked($i === (int) ($checkReview['existing_star'] ?? 5))
                         >
                         <label for="rating-star-{{ $i }}" title="{{ $i }} stars">
                             <x-core::icon name="ti ti-star-filled" />
@@ -101,9 +101,9 @@
                 ></textarea>
                 <small class="text-muted">
                     @if (! $canWriteReview)
-                        {{ __('You may submit a star rating. Purchase this product to add a written review or photos.') }}
+                        {{ __('You may submit a star rating. Complete a purchase or service to add a written review or photos.') }}
                     @elseif (! $canRateOnly)
-                        {{ __('Please include a written review. Purchase this product to submit a rating without a review.') }}
+                        {{ __('You have already rated this product. Add your written review below.') }}
                     @else
                         {{ __('A written review is optional. Leave it empty to submit your star rating only.') }}
                     @endif

@@ -79,7 +79,7 @@ class ReviewController extends BaseController
                 ->setMessage(trans('plugins/ecommerce::review.review_already_exists'));
         }
 
-        $review = Review::query()->forceCreate($request->validated());
+        $review = Review::query()->forceCreate([...$request->validated(), 'comment' => $request->input('comment') ?? '']);
 
         event(new CreatedContentEvent('review', $request, $review));
 

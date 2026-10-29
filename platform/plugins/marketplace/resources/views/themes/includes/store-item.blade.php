@@ -1,4 +1,7 @@
 @php
+    $storeRating = $store->publicRatingSummary();
+@endphp
+@php
     $storeAvatarHue = crc32('store-avatar-' . $store->id) % 360;
     $storeAvatarSaturation = 55;
     $storeAvatarLightness = 45;
@@ -226,10 +229,10 @@
         @endif
 
         <div class="bb-store-item-chips">
-            @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $store->reviews->count() > 0))
+            @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $storeRating['count'] > 0))
                 <span class="bb-store-item-chip bb-store-item-chip-rating">
                     <x-core::icon name="ti ti-star-filled" />
-                    {{ number_format((float) $store->reviews()->avg('star'), 1) }}
+                    {{ number_format((float) $storeRating['average'], 1) }}
                 </span>
             @endif
 

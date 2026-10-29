@@ -51,10 +51,7 @@ class ProductReviewSettingForm extends SettingForm
                     'max' => 100,
                 ],
             ])
-            ->add('only_allow_customers_purchased_to_review', 'onOffCheckbox', [
-                'label' => trans('plugins/ecommerce::setting.product_review.form.only_allow_customers_purchased_to_review'),
-                'value' => EcommerceHelper::onlyAllowCustomersPurchasedToReview(),
-            ])
+            ->add('customer_review_policy', 'html', ['html' => '<div class="alert alert-info">' . e(__('Signed-in customers can rate without purchasing. Written reviews require a completed purchase or confirmed service.')) . '</div>'])
             ->add(
                 'review_need_to_be_approved',
                 OnOffCheckboxField::class,

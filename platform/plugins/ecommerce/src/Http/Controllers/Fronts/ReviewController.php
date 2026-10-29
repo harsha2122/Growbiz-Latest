@@ -52,7 +52,7 @@ class ReviewController extends BaseController
             }
         }
 
-        Review::query()->create([
+        app(\Botble\Ecommerce\Supports\SubmitCustomerReview::class)->save((int) auth('customer')->id(), (int) $productId, [
             ...$request->validated(),
             'comment' => $request->input('comment') ?? '',
             'customer_id' => auth('customer')->id(),

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    ['name' => 'Profile Reviews & Services', 'flag' => 'marketplace.profile-reviews.index', 'parent_flag' => 'marketplace.index'],
+    ['name' => 'Moderate reviews and confirm services', 'flag' => 'marketplace.profile-reviews.edit', 'parent_flag' => 'marketplace.profile-reviews.index'],
     [
         'name' => 'Refer & Earn', 'flag' => 'marketplace.refer-earn.index', 'parent_flag' => 'marketplace.index',
     ],

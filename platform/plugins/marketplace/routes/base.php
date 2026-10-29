@@ -9,6 +9,10 @@ AdminHelper::registerRoutes(function (): void {
     Route::group(['namespace' => 'Botble\Marketplace\Http\Controllers'], function (): void {
         Route::group(['prefix' => 'marketplaces', 'as' => 'marketplace.'], function (): void {
             Route::post('refer-earn/rewards/{referral}/reject', ['uses' => 'ReferralProgramController@reject', 'as' => 'refer-earn.reject', 'permission' => 'marketplace.refer-earn.edit']);
+            Route::get('profile-reviews', ['uses' => 'ProfileReviewController@index', 'as' => 'profile-reviews.index', 'permission' => 'marketplace.profile-reviews.index']);
+            Route::post('profile-reviews/{review}/moderate', ['uses' => 'ProfileReviewController@moderate', 'as' => 'profile-reviews.moderate', 'permission' => 'marketplace.profile-reviews.edit']);
+            Route::post('service-completions', ['uses' => 'ProfileReviewController@confirmService', 'as' => 'profile-reviews.confirm-service', 'permission' => 'marketplace.profile-reviews.edit']);
+            Route::delete('service-completions/{service}', ['uses' => 'ProfileReviewController@revokeService', 'as' => 'profile-reviews.revoke-service', 'permission' => 'marketplace.profile-reviews.edit']);
             Route::get('refer-earn', ['uses' => 'ReferralProgramController@index', 'as' => 'refer-earn.index', 'permission' => 'marketplace.refer-earn.index']);
             Route::post('refer-earn/{program}/pause', ['uses' => 'ReferralProgramController@pause', 'as' => 'refer-earn.pause', 'permission' => 'marketplace.refer-earn.edit']);
 
