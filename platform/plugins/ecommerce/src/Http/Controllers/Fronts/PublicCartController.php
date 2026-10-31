@@ -124,11 +124,7 @@ class PublicCartController extends BaseController
 
         $requestQuantity = $request->integer('qty', 1);
 
-        $existingAddedToCart = Cart::instance('cart')->content()->firstWhere('id', $product->id);
-
-        if ($existingAddedToCart) {
-            $requestQuantity += $existingAddedToCart->qty;
-        }
+        $requestQuantity += Cart::instance('cart')->content()->where('id', $product->id)->sum('qty');
 
         if (! $product->canAddToCart($requestQuantity)) {
             return $response
@@ -138,11 +134,11 @@ class PublicCartController extends BaseController
 
         $outOfQuantity = false;
         $cartContent = Cart::instance('cart')->content();
-        $existingItem = $cartContent->firstWhere('id', $product->id);
+        $existingQuantity = $cartContent->where('id', $product->id)->sum('qty');
 
-        if ($existingItem) {
+        if ($existingQuantity) {
             $originalQuantity = $product->quantity;
-            $product->quantity = (int) $product->quantity - $existingItem->qty;
+            $product->quantity = (int) $product->quantity - $existingQuantity;
 
             if ($product->quantity < 0) {
                 $product->quantity = 0;
@@ -276,35 +272,30 @@ class PublicCartController extends BaseController
         }
 
         $data = $request->input('items', []);
-
-        $outOfQuantity = false;
+        $cart = Cart::instance('cart');
+        $proposed = $cart->content()->map(fn ($item) => ['id' => $item->id, 'qty' => $item->qty]);
+        $updates = [];
         foreach ($data as $item) {
-            $cartItem = Cart::instance('cart')->get($item['rowId']);
-
-            if (! $cartItem) {
+            if (! $proposed->has($item['rowId'])) {
                 continue;
             }
-
-            /**
-             * @var Product $product
-             */
-            $product = Product::query()->find($cartItem->id);
-
-            if ($product) {
-                $originalQuantity = $product->quantity;
-                $product->quantity = (int) $product->quantity - (int) Arr::get($item, 'values.qty', 0) + 1;
-
-                if ($product->quantity < 0) {
-                    $product->quantity = 0;
-                }
-
-                if ($product->isOutOfStock()) {
-                    $outOfQuantity = true;
-                } else {
-                    Cart::instance('cart')->update($item['rowId'], Arr::get($item, 'values'));
-                }
-
-                $product->quantity = $originalQuantity;
+            $entry = $proposed->get($item['rowId']);
+            $entry['qty'] = (int) Arr::get($item, 'values.qty');
+            $proposed->put($item['rowId'], $entry);
+            $updates[$item['rowId']] = $entry['qty'];
+        }
+        $outOfQuantity = false;
+        foreach ($proposed->groupBy('id') as $id => $rows) {
+            $product = Product::query()->find($id);
+            if ($product && ! $product->canAddToCart($rows->sum('qty'))) {
+                $outOfQuantity = true;
+                break;
+            }
+        }
+        if (! $outOfQuantity) {
+            foreach ($updates as $rowId => $quantity) {
+                // Quantity updates must never accept browser-supplied prices or option snapshots.
+                $cart->update($rowId, ['qty' => $quantity]);
             }
         }
 

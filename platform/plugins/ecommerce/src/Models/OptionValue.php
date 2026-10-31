@@ -17,6 +17,7 @@ class OptionValue extends BaseModel
         'affect_price',
         'affect_type',
         'order',
+        'warranty_months',
     ];
 
     public function option(): BelongsTo

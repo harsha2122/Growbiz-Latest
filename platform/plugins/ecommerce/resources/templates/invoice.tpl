@@ -148,9 +148,16 @@
                     {% endif %}
                     {% if item.options.product_options %}
                         <div class="option-item">
-                            <strong>{{ 'plugins/ecommerce::invoice.detail.product_options'|trans }}:</strong> {{ item.options.product_options }}
+                            <strong>{{ 'plugins/ecommerce::invoice.detail.product_options'|trans }}:</strong> {{ item.options.product_options|e }}
                         </div>
                     {% endif %}
+                    {% for warrantyValues in item.options.options.optionCartValue %}
+                        {% for warrantyValue in warrantyValues %}
+                            {% if warrantyValue.warranty.months and warrantyValue.warranty.terms %}
+                                <div class="option-item" style="white-space:pre-line;overflow-wrap:anywhere"><small>{{ warrantyValue.warranty.terms|e }}</small></div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
                     {% if item.options.license_code %}
                         <div class="option-item">
                             <strong>{{ 'plugins/ecommerce::invoice.detail.license_code'|trans }}:</strong> {{ item.options.license_code }}

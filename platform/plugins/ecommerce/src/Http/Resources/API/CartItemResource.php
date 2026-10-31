@@ -28,6 +28,7 @@ class CartItemResource extends JsonResource
             return [
                 'option_type' => Arr::get(Arr::first($item), 'option_type'),
                 'values' => Arr::get(Arr::first($item), 'option_value'),
+                'warranty' => Arr::get(Arr::first($item), 'warranty'),
                 'affect_type' => $affectType,
                 'affect_price' => $affectPrice,
                 'price_label' => $affectType == 1 ? format_price($originalPrice * $affectPrice / 100) : format_price($affectPrice),
@@ -44,6 +45,7 @@ class CartItemResource extends JsonResource
                         'id' => $k,
                         'option_type' => Arr::get($item, 'option_type'),
                         'value' => Arr::get($item, 'option_value'),
+                        'warranty' => Arr::get($item, 'warranty'),
                         'affect_type' => $affectType,
                         'affect_price' => $affectPrice,
                         'price_label' => $affectType == 1 ? format_price($originalPrice * $affectPrice / 100) : format_price($affectPrice),

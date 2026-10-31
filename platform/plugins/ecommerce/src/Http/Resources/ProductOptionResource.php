@@ -17,6 +17,9 @@ class ProductOptionResource extends JsonResource
             'name' => $this->name,
             'order' => $this->order,
             'required' => $this->required,
+            'is_warranty' => (bool) $this->is_warranty,
+            'warranty_terms' => $this->warranty_terms,
+            'included_warranty' => $this->included_warranty,
             'option_type' => (new $this->option_type())->view(),
             'values' => ProductOptionValueResource::collection($this->values),
         ];

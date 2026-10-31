@@ -30,6 +30,12 @@ if (! function_exists('render_product_options')) {
         Theme::asset()->container('footer')->add('change-product-options', $script, ['jquery'], version: $version);
 
         foreach ($product->options as $option) {
+            if ($option->is_warranty) {
+                if ($product->isTypePhysical()) {
+                    $html .= view(EcommerceHelper::viewPath('options.warranty'), compact('option', 'product'))->render();
+                }
+                continue;
+            }
             $typeClass = __NAMESPACE__ . '\\' . $option->option_type;
             if (class_exists($typeClass)) {
                 $instance = new $typeClass();

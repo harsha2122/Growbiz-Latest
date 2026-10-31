@@ -7,7 +7,7 @@
         },
     ]);
     $oldOption = old('options', []) ?? [];
-    $currentProductOption = $product->options;
+    $currentProductOption = $product->options->where('is_warranty', false)->values();
     if (! empty($currentProductOption) && $currentProductOption instanceof ArrayAccess) {
         foreach ($currentProductOption as $key => $option) {
             $currentProductOption[$key]['name'] = $option->name;

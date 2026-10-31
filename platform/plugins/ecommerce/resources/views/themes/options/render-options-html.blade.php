@@ -34,3 +34,14 @@
         @endif
     </div>
 @endforeach
+
+@foreach (($productOptions['optionCartValue'] ?? []) as $warrantyValues)
+    @foreach ($warrantyValues as $warrantyValue)
+        @if (!empty($warrantyValue['warranty']['months']))
+            <small class="d-block text-muted">{{ __('Warranty coverage: :months months from delivery.', ['months' => $warrantyValue['warranty']['months']]) }}</small>
+            @if (!empty($warrantyValue['warranty']['terms']))
+                <details class="small text-muted"><summary>{{ __('Warranty terms') }}</summary><p style="white-space:pre-line;overflow-wrap:anywhere">{{ $warrantyValue['warranty']['terms'] }}</p></details>
+            @endif
+        @endif
+    @endforeach
+@endforeach

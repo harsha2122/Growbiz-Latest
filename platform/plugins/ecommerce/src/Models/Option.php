@@ -18,6 +18,8 @@ class Option extends BaseModel
         'order',
     ];
 
+    protected $casts = ['is_warranty' => 'boolean'];
+
     protected static function booted(): void
     {
         self::deleted(function (Option $option): void {

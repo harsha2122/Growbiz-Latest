@@ -111,23 +111,15 @@ class CartController extends BaseApiController
 
         Cart::instance('cart')->restore($identifier);
 
-        foreach (Cart::instance('cart')->content() as $item) {
-            if ($item->id == $product->id) {
-                $originalQuantity = $product->quantity;
-                $product->quantity = (int) $product->quantity - $item->qty;
-
-                if ($product->quantity < 0) {
-                    $product->quantity = 0;
-                }
-
-                if ($product->isOutOfStock()) {
-                    $outOfQuantity = true;
-
-                    break;
-                }
-
-                $product->quantity = $originalQuantity;
-            }
+        $existingQuantity = Cart::instance('cart')->content()->where('id', $product->id)->sum('qty');
+        if (! $product->canAddToCart($request->integer('qty', 1) + $existingQuantity)) {
+            return $response->setError()->setMessage(__('Maximum quantity is :max!', ['max' => $maxQuantity]))->toApiResponse();
+        }
+        if ($existingQuantity) {
+            $originalQuantity = $product->quantity;
+            $product->quantity = max(0, (int) $product->quantity - $existingQuantity);
+            $outOfQuantity = $product->isOutOfStock();
+            $product->quantity = $originalQuantity;
         }
 
         $product->quantity = (int) $product->quantity - $request->integer('qty', 1);
@@ -295,8 +287,13 @@ class CartController extends BaseApiController
         $product = Product::query()->find($cartItem->id);
 
         if ($product) {
+            $otherQuantity = Cart::instance('cart')->content()->filter(fn ($item) => $item->id == $product->id && $item->rowId !== $rowId)->sum('qty');
+            if (! $product->canAddToCart((int) $newQty + $otherQuantity)) {
+                Cart::instance('cart')->store($identifier);
+                return response()->json(['error' => __('Product is out of stock')], 400);
+            }
             $originalQuantity = $product->quantity;
-            $product->quantity = (int) $product->quantity - (int) $newQty + 1;
+            $product->quantity = (int) $product->quantity - ((int) $newQty + $otherQuantity) + 1;
 
             if ($product->quantity < 0) {
                 $product->quantity = 0;

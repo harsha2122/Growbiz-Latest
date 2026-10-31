@@ -308,6 +308,11 @@ class ProductForm extends BaseProductForm
             );
         }
 
+        if ((string) ($this->getModel()->product_type ?: request('product_type', 'physical')) === 'physical') {
+            $this->addMetaBox(MetaBox::make('product-warranty')->title(__('Warranty'))
+                ->content(view('plugins/ecommerce::products.partials.warranty-form', ['product' => $this->getModel()])->render()));
+        }
+
         if (EcommerceHelper::isEnabledProductOptions()) {
             $this
                 ->addMetaBoxes([

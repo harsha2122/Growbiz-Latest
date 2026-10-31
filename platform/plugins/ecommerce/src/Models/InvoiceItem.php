@@ -97,7 +97,12 @@ class InvoiceItem extends BaseModel
 
                 return [
                     'label' => $item,
-                    'value' => Arr::get($options, "optionCartValue.$key.0.option_value"),
+                    'value' => Arr::get($options, "optionCartValue.$key.0.option_value")
+                        . (Arr::get($options, "optionCartValue.$key.0.warranty.months")
+                            ? ' — ' . __(':months months from delivery', ['months' => Arr::get($options, "optionCartValue.$key.0.warranty.months")])
+                            : '')
+                        . (Arr::get($options, "optionCartValue.$key.0.warranty.included")
+                            ? ' — ' . Arr::get($options, "optionCartValue.$key.0.warranty.included") : ''),
                     'affect_price' => $affectedPrice ? format_price($affectedPrice) : '',
                 ];
             });

@@ -171,6 +171,8 @@ class StoreProductService
             $this->saveProductOptions((array) $request->input('options', []), $product);
         }
 
+        app(StoreWarrantyService::class)->save($product, $request);
+
         $refLang = $request->input('ref_lang');
 
         $isDefaultLanguage = ProductSpecificationAttributeTranslation::isDefaultLanguage($refLang);
@@ -330,7 +332,7 @@ class StoreProductService
                 /**
                  * @var Option $option
                  */
-                $option = $product->options()->find($opt['id']);
+                $option = $product->options()->where('is_warranty', false)->find($opt['id']);
 
                 if (! $option) {
                     $option = new Option();
@@ -359,7 +361,7 @@ class StoreProductService
                 $optionIds[] = $option->getKey();
             }
 
-            $product->options()->whereNotIn('id', $optionIds)->get()->each(function (Option $deletedOption): void {
+            $product->options()->where('is_warranty', false)->whereNotIn('id', $optionIds)->get()->each(function (Option $deletedOption): void {
                 $deletedOption->delete();
             });
         } catch (Exception $exception) {

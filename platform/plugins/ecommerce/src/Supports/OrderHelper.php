@@ -622,10 +622,17 @@ class OrderHelper
 
         $parentProduct = $product->original_product;
 
-        $options = [];
-        if ($requestOption = $request->input('options')) {
-            $options = $this->getProductOptionData($requestOption);
+        $requestOption = $request->input('options', []);
+        if (! is_array($requestOption)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['options' => __('Invalid product options.')]);
         }
+        if (EcommerceHelper::isEnabledProductOptions() && $parentProduct->isTypePhysical()) {
+            $warranty = $parentProduct->options()->where('is_warranty', true)->with('values')->first();
+            if ($warranty && ! isset($requestOption[$warranty->id])) {
+                $requestOption[$warranty->id] = ['option_type' => 'radio', 'values' => $warranty->values->first()?->option_value];
+            }
+        }
+        $options = $this->getProductOptionData($requestOption, $parentProduct->id);
 
         $taxClasses = DB::table('ec_tax_products')
             ->join('ec_taxes', 'ec_taxes.id', '=', 'ec_tax_products.tax_id')
@@ -663,16 +670,20 @@ class OrderHelper
         $productSku = $product->sku;
 
         if ($customVariationJson = $request->input('custom_variation_data')) {
-            $customVariationData = json_decode($customVariationJson, true);
-            if ($customVariationData && isset($customVariationData['price'])) {
-                $price = (float) $customVariationData['price'];
-                if (!empty($customVariationData['name'])) {
-                    $productName = $customVariationData['name'];
-                }
-                if (!empty($customVariationData['sku'])) {
-                    $productSku = $customVariationData['sku'];
-                }
+            if (! is_string($customVariationJson)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['custom_variation_data' => __('Choose an available product variation.')]);
             }
+            $inputVariation = json_decode($customVariationJson, true);
+            $index = is_array($inputVariation) ? ($inputVariation['index'] ?? null) : null;
+            $storedVariations = $parentProduct->custom_variations ?? [];
+            if ((! is_int($index) && ! (is_string($index) && ctype_digit($index))) || ! isset($storedVariations[$index])) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['custom_variation_data' => __('Choose an available product variation.')]);
+            }
+            $stored = $storedVariations[$index];
+            $customVariationData = ['index' => (int) $index, 'name' => $stored['name'], 'price' => (float) $stored['price'], 'sku' => $stored['sku'] ?? ''];
+            $price = $customVariationData['price'];
+            $productName = BaseHelper::clean($parentProduct->name . ' — ' . $customVariationData['name']);
+            $productSku = $customVariationData['sku'] ?: $productSku;
         }
 
         $extras = $request->input('extras', []);
@@ -705,54 +716,58 @@ class OrderHelper
 
     public function getProductOptionData(array $data, int|string|null $productId = null): array
     {
-        $result = [
-            'optionCartValue' => [],
-        ];
-
-        $data = array_filter($data);
-
-        if (empty($data)) {
-            return $result;
+        $result = ['optionCartValue' => [], 'optionInfo' => []];
+        if ($productId) {
+            $productId = Product::query()->find($productId)?->original_product?->id ?? $productId;
         }
+        $storedOptions = Option::query()->whereIn('id', array_keys($data))
+            ->when($productId, fn ($query) => $query->where('product_id', $productId))
+            ->with(['values', 'product'])->get()->keyBy('id');
 
-        foreach ($data as $key => $option) {
-            if (empty($option) || ! is_array($option) || ! isset($option['values'])) {
+        foreach ($data as $key => $input) {
+            $option = $storedOptions->get($key);
+            if (! $option || ! is_array($input) || ! array_key_exists('values', $input)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['options' => __('Choose valid options belonging to this product.')]);
+            }
+            if (! $option->required && ($input['values'] === '' || $input['values'] === null || $input['values'] === [])) {
                 continue;
             }
-
-            $optionValue = OptionValue::query()
-                ->select(['option_value', 'affect_price', 'affect_type'])
-                ->where('option_id', $key);
-
-            if ($option['option_type'] != 'field') {
-                if (is_array($option['values'])) {
-                    $optionValue->whereIn('option_value', $option['values']);
-                } else {
-                    $optionValue->whereIn('option_value', [0 => $option['values']]);
+            $typeClass = $option->option_type;
+            $type = (new $typeClass)->view();
+            if ($type === 'field' && ! is_scalar($input['values'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['options' => __('Enter a valid text option.')]);
+            }
+            $values = is_array($input['values']) ? $input['values'] : [$input['values']];
+            foreach ($values as $selectedValue) {
+                if (! is_scalar($selectedValue)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['options' => __('Choose a valid option value.')]);
                 }
             }
-
-            $result['optionCartValue'][$key] = $optionValue->get()->toArray();
-
-            foreach ($result['optionCartValue'][$key] as &$item) {
-                $item['option_type'] = $option['option_type'];
+            if ($type !== 'checkbox' && count($values) > 1) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['options' => __('Choose one value for this option.')]);
             }
-
-            if (
-                $option['option_type'] == 'field' &&
-                count($result['optionCartValue']) > 0
-            ) {
-                $result['optionCartValue'][$key][0]['option_value'] = $option['values'];
+            if ($option->is_warranty && ! $option->product->isTypePhysical()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['options' => __('Warranty is only available for physical products.')]);
             }
+            $selected = $type === 'field' ? $option->values : $option->values->whereIn('option_value', $values)->values();
+            if ($type !== 'field' && $selected->count() !== count(array_unique($values))) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['options' => __('The selected option is no longer available. Please choose again.')]);
+            }
+            $result['optionInfo'][$key] = $option->name;
+            $result['optionCartValue'][$key] = $selected->map(function ($value) use ($type, $input, $option) {
+                $item = [
+                    'option_value' => $type === 'field' ? (string) $input['values'] : $value->option_value,
+                    'affect_price' => $value->affect_price, 'affect_type' => $value->affect_type, 'option_type' => $type,
+                ];
+                if ($option->is_warranty) {
+                    $item['warranty'] = [
+                        'months' => (int) $value->warranty_months, 'terms' => $option->warranty_terms,
+                        'included' => $option->included_warranty, 'starts' => 'delivery',
+                    ];
+                }
+                return $item;
+            })->all();
         }
-
-        $result['optionInfo'] = Option::query()
-            ->whereIn('id', array_keys($data))
-            ->pluck('name', 'id')
-            ->when($productId, function ($query) use ($productId): void {
-                $query->where('product_id', $productId);
-            })
-            ->all();
 
         return $result;
     }
