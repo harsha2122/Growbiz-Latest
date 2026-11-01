@@ -6,8 +6,9 @@
 @endphp
 @if ($referralProgram?->isActive() || $myReferralOffer)
     @include('plugins/marketplace::referral-program.styles')
-    <section class="refer-panel mt-3" aria-label="{{ __('Refer & Earn') }}">
-        <h2>{{ __('Share this store. Earn rewards.') }}</h2>
+    <section id="store-referral-program" class="refer-panel mt-3" aria-label="{{ __('Refer & Earn') }}">
+        <h2 class="d-flex align-items-center gap-2"><x-core::icon name="ti ti-gift" />{{ __('Refer & Earn') }}</h2>
+        <p class="refer-muted">{{ __('Share this store with a friend and earn rewards.') }}</p>
         @if (session('success_msg'))<p role="status">{{ session('success_msg') }}</p>@endif
         @if ($errors->any())<p class="text-danger" role="alert">{{ $errors->first() }}</p>@endif
         @if ($referralProgram?->isActive())
@@ -29,8 +30,8 @@
             @if ($referralProgram?->isActive() && $store->customer_id != auth('customer')->id())<form method="post" action="{{ route('public.referral.join', $store->id) }}">@csrf<button type="submit" class="refer-btn">{{ __('Get my referral link') }}</button></form>@endif
             <a href="{{ route('public.referral.account') }}" class="refer-muted">{{ __('My referrals & earnings') }}</a>
         @else
-            <a class="refer-btn" href="{{ route('customer.login') }}">{{ __('Sign in to join') }}</a>
-            <span class="refer-muted">{{ __('After signing in, return to this store to unlock the offer.') }}</span>
+            <a class="refer-btn" href="{{ route('customer.login') }}">{{ $hasPendingReferral ? __('Sign in to unlock referral offer') : __('Sign in to get your referral link') }}</a>
+            <span class="refer-muted">{{ __('Sign in to create your personal link and keep track of your earnings. A verified email is required to join.') }}</span>
         @endif
         </div>
     </section>
