@@ -22,7 +22,7 @@
     <section class="referral-offer" id="store-referral-program" aria-label="{{ __('Refer & Earn') }}">
         <div>
             <span class="referral-offer-eyebrow"><x-core::icon name="ti ti-sparkles" />{{ __('Refer & Earn') }}</span>
-            <h2>{{ __('Share the love.') }}<br>{{ __('Earn :reward', ['reward' => $rewardLabel]) }}</h2>
+            <h2>{{ __('Earn :reward', ['reward' => $rewardLabel]) }}</h2>
             <p class="referral-offer-subtitle">{{ $qualifier }}@if ($offerTerms['reward_type'] === 'percentage' && $offerTerms['reward_cap']) {{ __('Up to :amount per referral.', ['amount' => format_price($offerTerms['reward_cap'])]) }}@endif</p>
             @if (in_array($offerTerms['offer_type'], ['fixed', 'percentage']))
                 <p class="referral-offer-friend">{{ __('Your friend gets :offer off.', ['offer' => $offerTerms['offer_type'] === 'percentage' ? rtrim(rtrim(number_format($offerTerms['offer_value'], 2), '0'), '.') . '%' : format_price($offerTerms['offer_value'])]) }}</p>
