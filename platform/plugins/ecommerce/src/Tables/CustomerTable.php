@@ -26,7 +26,6 @@ use Botble\Table\Columns\NameColumn;
 use Botble\Table\Columns\PhoneColumn;
 use Botble\Table\Columns\StatusColumn;
 use Botble\Table\Columns\YesNoColumn;
-use Botble\Table\Columns\Column;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -68,7 +67,7 @@ class CustomerTable extends TableAbstract
                         'status',
                         'confirmed_at',
                     ])
-                    ->with('store:id,vendor_type');
+                    ->when(is_plugin_active('marketplace'), fn (Builder $query) => $query->with('store:id,customer_id,vendor_type'));
             });
     }
 
@@ -92,11 +91,16 @@ class CustomerTable extends TableAbstract
                     );
                 }),
             NameColumn::make()->route('customers.edit'),
-            Column::make('store.vendor_type')
-                ->title(trans('plugins/marketplace::marketplace.vendor_type_service'))
-                ->renderUsing(function (Column $column) {
+        ];
+
+        if (is_plugin_active('marketplace')) {
+            $columns[] = FormattedColumn::make('vendor_type')
+                ->orderable(false)
+                ->searchable(false)
+                ->title(__('Seller type'))
+                ->renderUsing(function (FormattedColumn $column) {
                     $item = $column->getItem();
-                    if (! $item->store) {
+                    if (! $item->store?->exists) {
                         return '';
                     }
 
@@ -112,10 +116,10 @@ class CustomerTable extends TableAbstract
                     return Html::tag(
                         'span',
                         $typeConfig['label'],
-                        ['class' => 'badge ' . $typeConfig['bg']]
+                        ['class' => 'badge '.$typeConfig['bg']]
                     );
-                }),
-        ];
+                });
+        }
 
         if (EcommerceHelper::isLoginUsingPhone()) {
             $columns[] = PhoneColumn::make();
