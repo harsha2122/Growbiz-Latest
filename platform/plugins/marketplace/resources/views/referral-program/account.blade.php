@@ -12,12 +12,16 @@
 <div class="refer-panel"><h2>{{ __('Your referral links') }}</h2><p class="refer-muted">{{ __('Share your link with a friend. Rewards are paid directly by the participating store.') }}</p>
 @forelse ($links as $link)
     <div class="refer-store-card"><div class="refer-store-heading"><strong>{{ $link->program->store?->name }}</strong> <span class="refer-badge {{ $link->program->isActive() ? '' : 'is-paused' }}">{{ $link->program->isActive() ? __('Active') : __('Paused / expired') }}</span></div>
+        @if ($link->program->isActive())
         <label class="visually-hidden" for="refer-link-{{ $link->id }}">{{ __('Your shareable referral link') }}</label>
         <div class="refer-copy-row"><input id="refer-link-{{ $link->id }}" class="refer-link mt-2" readonly value="{{ route('public.referral.landing', $link->token) }}" onclick="this.select()">
         <button type="button" class="refer-btn mt-2" data-copy-referral="refer-link-{{ $link->id }}">{{ __('Copy link') }}</button>
         </div>
         <div class="d-flex flex-wrap gap-3 align-items-center mt-2"><small>{{ __('Your referral code') }}: <strong>{{ $link->short_code }}</strong></small><details class="refer-muted"><summary>{{ __('Share QR code') }}</summary><img src="{{ route('public.referral.qr', $link->token) }}" width="180" height="180" alt="{{ __('Referral link QR code') }}" loading="lazy"></details></div>
         <small class="refer-muted d-block mt-2" data-copy-status role="status" aria-live="polite"></small>
+        @else
+        <p class="refer-muted mt-2 mb-0">{{ __('Sharing is unavailable while this program is paused or expired. Your existing earnings are shown below.') }}</p>
+        @endif
     </div>
 @empty<div class="refer-empty"><x-core::icon name="ti ti-link" /><p>{{ __('Your first referral starts here') }}</p><span>{{ __('Visit a participating store and choose Get my referral link.') }}</span><a href="{{ route('public.stores') }}" class="refer-btn mt-3">{{ __('Explore stores') }}</a></div>@endforelse
 </div>
