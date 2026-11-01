@@ -16,6 +16,11 @@ class CustomerReferral extends BaseModel
 
     protected $casts = ['terms' => 'array', 'expires_at' => 'datetime', 'qualified_at' => 'datetime', 'available_at' => 'datetime', 'paid_at' => 'datetime', 'payout_requested_at' => 'datetime'];
 
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(ReferralEvent::class, 'event_id');
+    }
+
     public function program(): BelongsTo
     {
         return $this->belongsTo(ReferralProgram::class, 'program_id');

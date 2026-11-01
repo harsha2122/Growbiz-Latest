@@ -26,6 +26,6 @@ class ReferralProgram extends BaseModel
 
     public function snapshot(): array
     {
-        return $this->only(['mode', 'reward_type', 'reward_value', 'reward_cap', 'offer_type', 'offer_value', 'offer_text', 'minimum_order', 'hold_days']);
+        return $this->only(['mode', 'reward_type', 'reward_value', 'reward_cap', 'offer_type', 'offer_value', 'offer_text', 'minimum_order', 'hold_days', 'channel', 'enquiry_trigger', 'ends_at', 'extra_terms', 'offer_image']);
     }
 }

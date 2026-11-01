@@ -16,9 +16,9 @@ use Illuminate\Validation\ValidationException;
 
 class StoreReferralService
 {
-    public function claim(ReferralLink $link, Customer $customer, ?int $attributionUntil = null): CustomerReferral
+    public function claim(ReferralLink $link, Customer $customer, ?int $attributionUntil = null, string $channel = 'online'): CustomerReferral
     {
-        return DB::transaction(function () use ($link, $customer, $attributionUntil) {
+        return DB::transaction(function () use ($link, $customer, $attributionUntil, $channel) {
             $program = ReferralProgram::query()->lockForUpdate()->findOrFail($link->program_id);
             $this->require($program->isActive(), __('This referral program is paused or expired.'));
             $this->require($customer->confirmed_at !== null, __('Verify your email address before joining a referral offer.'));
@@ -33,9 +33,11 @@ class StoreReferralService
             $referral = CustomerReferral::create([
                 'program_id' => $program->id, 'link_id' => $link->id, 'customer_id' => $customer->id,
                 'referrer_id' => $link->customer_id, 'store_id' => $program->store_id,
-                'terms' => $program->snapshot(), 'expires_at' => $attributionUntil ? now()->setTimestamp(min($attributionUntil, now()->addDays(30)->timestamp)) : now()->addDays(30),
+                'status' => 'tracked', 'terms' => $program->snapshot(), 'expires_at' => $attributionUntil ? now()->setTimestamp(min($attributionUntil, now()->addDays(30)->timestamp)) : now()->addDays(30),
             ]);
-            if ($program->mode === 'visit') {
+            $referral->pass_code = 'RF-'.$referral->id.'-'.Str::upper(Str::random(8));
+            $referral->save();
+            if ($program->mode === 'visit' && $channel === 'online' && in_array($program->channel ?? 'online', ['online', 'both'])) {
                 $amount = $this->reward($referral->terms, 0);
                 $this->reserve($program, $amount);
                 $referral->forceFill([
@@ -44,6 +46,7 @@ class StoreReferralService
                 ])->save();
             }
             $this->issueCoupon($referral);
+            app(ReferralVerificationService::class)->audit($referral, $channel === 'offline' ? 'offline_attribution_started' : 'offer_unlocked', $channel === 'offline' ? 'system' : 'customer', $channel === 'offline' ? null : $customer->id, ['channel' => $channel, 'customer_id' => $customer->id]);
 
             return $referral;
         }, 3);
@@ -68,7 +71,7 @@ class StoreReferralService
         return round(max(0, $amount), 2);
     }
 
-    private function reserve(ReferralProgram $program, float $amount): void
+    public function reserve(ReferralProgram $program, float $amount): void
     {
         $this->require(round((float) $program->reserved + $amount, 2) <= (float) $program->budget, __('This referral program has reached its reward budget.'));
         $program->reserved = round((float) $program->reserved + $amount, 2);
@@ -78,7 +81,7 @@ class StoreReferralService
     private function issueCoupon(CustomerReferral $referral): void
     {
         $terms = $referral->terms;
-        if (! in_array($terms['offer_type'], ['fixed', 'percentage'])) {
+        if (($terms['channel'] ?? 'online') === 'offline' || ! in_array($terms['offer_type'], ['fixed', 'percentage'])) {
             return;
         }
         $coupon = new Discount([
@@ -102,7 +105,7 @@ class StoreReferralService
         }
         $candidate = CustomerReferral::query()->where('store_id', $order->store_id)->where('customer_id', $order->user_id)
             ->whereNull('order_id')->where('expires_at', '>', now())->first();
-        if (! $candidate || $candidate->terms['mode'] !== 'purchase') {
+        if (! $candidate || $candidate->terms['mode'] !== 'purchase' || ! in_array($candidate->terms['channel'] ?? 'online', ['online', 'both'])) {
             $this->attachCustomOffer($candidate, $order);
 
             return;
@@ -155,6 +158,11 @@ class StoreReferralService
             $program = ReferralProgram::query()->lockForUpdate()->findOrFail($candidate->program_id);
             $referral = CustomerReferral::query()->lockForUpdate()->findOrFail($id);
             if (! in_array($referral->status, ['pending', 'available', 'paid'])) {
+                return;
+            }
+            if ($referral->event_id) {
+                app(ReferralVerificationService::class)->reconcileLocked($program, $referral);
+
                 return;
             }
             if ($referral->terms['mode'] === 'visit') {
@@ -212,7 +220,7 @@ class StoreReferralService
         }, 3);
     }
 
-    private function reject(ReferralProgram $program, CustomerReferral $referral, string $reason): void
+    public function reject(ReferralProgram $program, CustomerReferral $referral, string $reason): void
     {
         if ($referral->paid_at) {
             $referral->forceFill(['status' => 'reversed', 'reason' => $reason.' '.__('Already paid: seller adjustment required.')])->save();
@@ -222,6 +230,13 @@ class StoreReferralService
         $program->reserved = max(0, round((float) $program->reserved - (float) $referral->reserved_amount, 2));
         $program->save();
         $referral->forceFill(['status' => 'rejected', 'amount' => 0, 'reserved_amount' => 0, 'reason' => $reason])->save();
+        if ($referral->event_id) {
+            \Botble\Marketplace\Models\ReferralEvent::query()->whereKey($referral->event_id)->update(['status' => 'rejected', 'reason' => $reason]);
+        }
+        if ($referral->coupon_id) {
+            Discount::query()->whereKey($referral->coupon_id)->update(['end_date' => now()->subSecond()]);
+        }
+        app(ReferralVerificationService::class)->audit($referral, 'reward_rejected', 'system', null, ['reason' => $reason]);
     }
 
     public function recordPayout(int $id, int $storeId, string $reference, int $actor): void
@@ -237,6 +252,7 @@ class StoreReferralService
             $program->reserved = max(0, round((float) $program->reserved - $unused, 2));
             $program->save();
             $referral->forceFill(['status' => 'paid', 'reserved_amount' => $referral->amount, 'payout_reference' => $reference, 'paid_at' => now(), 'paid_by' => $actor])->save();
+            app(ReferralVerificationService::class)->audit($referral, 'payment_recorded', 'seller', $actor, ['reference' => $reference, 'amount' => $referral->amount]);
         }, 3);
     }
 
@@ -246,7 +262,7 @@ class StoreReferralService
             $candidate = CustomerReferral::findOrFail($id);
             $program = ReferralProgram::query()->lockForUpdate()->findOrFail($candidate->program_id);
             $referral = CustomerReferral::query()->lockForUpdate()->findOrFail($id);
-            $this->require(in_array($referral->status, ['tracked', 'pending', 'available']), __('Only unpaid referrals can be rejected.'));
+            $this->require(in_array($referral->status, ['tracked', 'pending', 'available', 'awaiting_customer', 'awaiting_approval']), __('Only unpaid referrals can be rejected.'));
             $this->reject($program, $referral, $reason);
             $referral->expires_at = now()->subSecond();
             $referral->save();

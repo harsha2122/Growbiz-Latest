@@ -11,8 +11,13 @@ class Enquiry extends BaseModel
     protected $table = 'mp_enquiries';
 
     protected $fillable = [
-        'store_id', 'product_id', 'source', 'name', 'contact_number', 'email', 'address',
+        'customer_id', 'store_id', 'product_id', 'source', 'name', 'contact_number', 'email', 'address',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(fn (self $enquiry) => app(\Botble\Marketplace\Services\ReferralVerificationService::class)->trackEnquiry($enquiry));
+    }
 
     public function store(): BelongsTo
     {

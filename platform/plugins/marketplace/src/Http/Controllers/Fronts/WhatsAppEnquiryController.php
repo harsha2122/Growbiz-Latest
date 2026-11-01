@@ -14,6 +14,12 @@ class WhatsAppEnquiryController extends BaseController
     public function store(WhatsAppEnquiryRequest $request)
     {
         $validated = $request->validated();
+        $validated['customer_id'] = auth('customer')->id();
+        $validated['email'] = auth('customer')->user()?->email;
+        if (! empty($validated['product_id'])) {
+            $enquiryProduct = \Botble\Ecommerce\Models\Product::query()->find($validated['product_id']);
+            abort_unless($enquiryProduct?->original_product?->store_id == $validated['store_id'], 422);
+        }
 
         Enquiry::query()->create([
             ...$validated,

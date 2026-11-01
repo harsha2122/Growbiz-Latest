@@ -22,7 +22,7 @@ class StoreReferralController extends BaseController
     public function seller()
     {
         $store = auth('customer')->user()->store;
-        abort_unless($store, 404);
+        abort_unless($store?->exists, 404);
         $program = ReferralProgram::firstOrNew(['store_id' => $store->id]);
         $referrals = CustomerReferral::query()->where('store_id', $store->id)->with(['referrer', 'order'])->latest()->paginate(20);
         $this->pageTitle(__('Refer & Earn'));
@@ -34,9 +34,14 @@ class StoreReferralController extends BaseController
     public function save(Request $request)
     {
         $store = auth('customer')->user()->store;
-        abort_unless($store, 404);
+        abort_unless($store?->exists, 404);
         $data = $request->validate([
-            'enabled' => ['required', 'boolean'], 'mode' => ['required', Rule::in(['visit', 'purchase'])],
+            'enabled' => ['required', 'boolean'], 'mode' => ['required', Rule::in(['enquiry', 'visit', 'purchase'])],
+            'channel' => ['nullable', Rule::in(['online', 'offline', 'both'])],
+            'enquiry_trigger' => ['nullable', Rule::in(['approved', 'service_completed'])],
+            'extra_terms' => ['nullable', 'string', 'max:5000'],
+            'offer_image_file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_offer_image' => ['nullable', 'boolean'],
             'reward_type' => ['required', Rule::in(['fixed', 'percentage'])],
             'reward_value' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:1000000'],
             'reward_cap' => ['nullable', 'numeric', 'decimal:0,2', 'min:0.01', 'max:1000000'],
@@ -48,14 +53,30 @@ class StoreReferralController extends BaseController
             'hold_days' => ['required', 'integer', 'min:0', 'max:365'],
             'ends_at' => ['nullable', 'date', 'after:now'],
         ]);
-        if ($data['mode'] === 'visit' && $data['reward_type'] !== 'fixed') {
-            throw ValidationException::withMessages(['reward_type' => __('Visit rewards must be a fixed amount.')]);
+        if ($data['mode'] !== 'purchase' && $data['reward_type'] !== 'fixed') {
+            throw ValidationException::withMessages(['reward_type' => __('Visit and enquiry rewards must be a fixed amount.')]);
         }
         if ($data['reward_type'] === 'percentage' && $data['reward_value'] > 100) {
             throw ValidationException::withMessages(['reward_value' => __('Percentage cannot exceed 100.')]);
         }
         if (in_array($data['offer_type'], ['fixed', 'percentage']) && (($data['offer_value'] ?? 0) <= 0 || ($data['offer_type'] === 'percentage' && $data['offer_value'] > 100))) {
             throw ValidationException::withMessages(['offer_value' => __('Enter a valid discount amount or percentage (up to 100%).')]);
+        }
+        if ($data['mode'] !== 'purchase') {
+            $data['reward_cap'] = null;
+        }
+        $data['channel'] = $data['mode'] === 'enquiry' ? 'online' : ($data['channel'] ?? 'online');
+        $data['enquiry_trigger'] = $data['enquiry_trigger'] ?? 'approved';
+        unset($data['offer_image_file'], $data['remove_offer_image']);
+        if ($request->boolean('remove_offer_image')) {
+            $data['offer_image'] = null;
+        }
+        if ($request->hasFile('offer_image_file')) {
+            $upload = \Botble\Media\Facades\RvMedia::handleUpload($request->file('offer_image_file'), 0, 'referral-offers/'.$store->id);
+            if ($upload['error']) {
+                throw ValidationException::withMessages(['offer_image_file' => $upload['message']]);
+            }
+            $data['offer_image'] = $upload['data']->url;
         }
         $data['offer_value'] = $data['offer_value'] ?? 0;
         $data['hold_days'] = max($data['hold_days'], EcommerceHelper::getReturnableDays());
@@ -103,7 +124,7 @@ class StoreReferralController extends BaseController
         if (! $customer->confirmed_at) {
             throw ValidationException::withMessages(['referral' => __('Verify your email address to create a referral link.')]);
         }
-        ReferralLink::firstOrCreate(['program_id' => $program->id, 'customer_id' => $customer->id], ['token' => Str::random(40)]);
+        ReferralLink::firstOrCreate(['program_id' => $program->id, 'customer_id' => $customer->id], ['token' => Str::random(40), 'short_code' => 'G-'.Str::upper(Str::random(12))]);
 
         return redirect()->route('public.referral.account');
     }
@@ -119,13 +140,14 @@ class StoreReferralController extends BaseController
                 $service->reconcile($row->id);
             }
         });
+        $activities = \Botble\Marketplace\Models\ReferralEvent::query()->whereHas('referral', fn ($q) => $q->where('customer_id', $customerId))->with(['store', 'referral.referrer'])->latest()->get();
         $links = ReferralLink::query()->where('customer_id', $customerId)->with('program.store')->latest()->get();
-        $referrals = CustomerReferral::query()->where('referrer_id', $customerId)->with('store')->latest()->paginate(20);
-        $offers = CustomerReferral::query()->where('customer_id', $customerId)->where('expires_at', '>', now())->with(['store', 'coupon'])->get();
+        $referrals = CustomerReferral::query()->where('referrer_id', $customerId)->with(['store', 'event'])->latest()->paginate(20);
+        $offers = CustomerReferral::query()->where('customer_id', $customerId)->where('expires_at', '>', now())->whereNotIn('status', ['rejected', 'reversed'])->with(['store', 'coupon'])->get();
         $totals = CustomerReferral::query()->where('referrer_id', $customerId)->selectRaw('status, SUM(amount) as total')->groupBy('status')->pluck('total', 'status');
         Theme::breadcrumb()->add(__('Refer & Earn'));
 
-        return Theme::scope('marketplace.referral-account', compact('links', 'referrals', 'offers', 'totals'), 'plugins/marketplace::referral-program.account')->render();
+        return Theme::scope('marketplace.referral-account', compact('links', 'referrals', 'offers', 'totals', 'activities'), 'plugins/marketplace::referral-program.account')->render();
     }
 
     public function requestPayment(int $referral, StoreReferralService $service)
@@ -145,7 +167,7 @@ class StoreReferralController extends BaseController
     {
         $data = $request->validate(['reference' => ['required', 'string', 'max:191']]);
         $store = auth('customer')->user()->store;
-        abort_unless($store, 404);
+        abort_unless($store?->exists, 404);
         $service->recordPayout($referral, $store->id, $data['reference'], auth('customer')->id());
 
         return back()->with('success_msg', __('Payment recorded. No bank transfer was initiated.'));

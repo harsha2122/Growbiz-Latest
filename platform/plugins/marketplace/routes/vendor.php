@@ -389,6 +389,9 @@ Route::group([
     Route::get('settings/languages', [LanguageSettingController::class, 'index'])->name('language-settings.index');
     Route::put('settings/languages', [LanguageSettingController::class, 'update'])->name('language-settings.update');
 
+    Route::get('referral-activity', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'seller'])->name('referral-activity');
+    Route::post('referral-activity', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'submit'])->middleware('throttle:20,1')->name('referral-activity.submit');
+    Route::get('referral-activity/{event}/receipt', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'evidence'])->whereNumber('event')->name('referral-activity.evidence');
     Route::get('refer-earn', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'seller'])->name('refer-earn');
     Route::post('refer-earn', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'save'])->name('refer-earn.save');
     Route::post('refer-earn/{referral}/paid', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'payout'])->name('refer-earn.payout');

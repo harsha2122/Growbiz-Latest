@@ -42,6 +42,8 @@
         {{ $programs->links() }}
     </div>
 
+    @include('plugins/marketplace::referral-program.admin-activities')
+
     <div class="refer-panel">
         <h2>{{ __('Referral ledger') }}</h2>
         <div style="overflow-x:auto">

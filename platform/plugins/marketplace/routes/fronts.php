@@ -23,8 +23,13 @@ Route::group([
     });
 
     Theme::registerRoutes(function (): void {
+        Route::get('referral-offers/{program}/terms', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'terms'])->whereNumber('program')->name('public.referral.terms');
+        Route::get('refer/{token}/qr', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'qr'])->middleware('throttle:60,1')->name('public.referral.qr');
         Route::get('refer/{token}', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'landing'])->middleware('throttle:60,1')->name('public.referral.landing');
         Route::middleware(['customer', 'throttle:30,1'])->group(function (): void {
+            Route::get('customer/referral-pass/{code}', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'pass'])->name('public.referral.pass');
+            Route::post('customer/referral-activities/{event}/confirm', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'confirm'])->whereNumber('event')->name('public.referral.confirm');
+            Route::get('customer/referral-activities/{event}/receipt', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'evidence'])->whereNumber('event')->name('public.referral.evidence');
             Route::post('stores/{store}/profile-review', [\Botble\Marketplace\Http\Controllers\Fronts\ProfileReviewController::class, 'store'])->whereNumber('store')->name('public.store.profile-review');
             Route::post('customer/refer-earn/{referral}/request-payment', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'requestPayment'])->name('public.referral.request-payment');
             Route::get('customer/refer-earn', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'account'])->name('public.referral.account');

@@ -106,6 +106,18 @@ class StoreReferralTest extends TestCase
             $t->timestamps();
         });
         (require base_path('platform/plugins/marketplace/database/migrations/2026_10_29_000001_create_store_referral_programs.php'))->up();
+        Schema::create('mp_enquiries', function (Blueprint $t): void {
+            $t->id();
+            $t->integer('store_id');
+            $t->integer('product_id')->nullable();
+            $t->string('source')->nullable();
+            $t->string('name')->nullable();
+            $t->string('contact_number')->nullable();
+            $t->string('email');
+            $t->text('address')->nullable();
+            $t->timestamps();
+        });
+        (require base_path('platform/plugins/marketplace/database/migrations/2026_11_01_000001_extend_referral_channels_and_verification.php'))->up();
         foreach ([1, 2, 3, 4] as $id) {
             DB::table('ec_customers')->insert(['id' => $id, 'name' => 'Customer '.$id, 'email' => $id.'@example.com', 'confirmed_at' => now()]);
         }
@@ -373,5 +385,159 @@ class StoreReferralTest extends TestCase
         $this->assertNull($referral->fresh()->available_at);
         $this->expectException(ValidationException::class);
         $this->service->recordPayout($referral->id, 1, 'UNPAID', 1);
+    }
+
+    public function test_offline_purchase_requires_customer_and_admin_then_waits_for_returns(): void
+    {
+        $this->program->update(['channel' => 'offline', 'reward_type' => 'percentage', 'reward_value' => 10]);
+        $ref = $this->service->claim($this->link, $this->customer);
+        $verification = new \Botble\Marketplace\Services\ReferralVerificationService;
+        $event = $verification->offline(1, 1, ['code' => $ref->pass_code, 'reference' => 'BILL-101', 'occurred_on' => today()->toDateString(), 'subtotal' => 1000, 'discount' => 100, 'tax' => 180, 'shipping' => 50, 'evidence_path' => 'private/test.pdf', 'receipt_hash' => hash('sha256', 'receipt')]);
+        $this->assertSame('awaiting_customer', $ref->fresh()->status);
+        $this->assertEquals(90, $ref->fresh()->reserved_amount);
+        try {
+            $verification->review($event->id, 1, true, 'Verified');
+            $this->fail('Unconfirmed activity approved');
+        } catch (ValidationException) {
+            $this->assertSame('awaiting_customer', $event->fresh()->status);
+        }
+        $verification->confirm($event->id, 3, true);
+        $this->assertSame('awaiting_approval', $ref->fresh()->status);
+        $verification->review($event->id, 1, true, 'Receipt verified');
+        $this->service->reconcile($ref->id);
+        $this->assertSame('pending', $ref->fresh()->status);
+        $this->travel(31)->days();
+        $this->service->reconcile($ref->id);
+        $this->assertSame('available', $ref->fresh()->status);
+        $verification->refund($event->id, 1, 300, 'Partial refund');
+        $this->assertEquals(60, $ref->fresh()->amount);
+        $this->service->recordPayout($ref->id, 1, 'OFFLINE-PAID', 1);
+        $verification->refund($event->id, 1, 900, 'Full refund');
+        $this->assertSame('reversed', $ref->fresh()->status);
+        $this->assertNotNull($ref->fresh()->paid_at);
+        $this->assertGreaterThanOrEqual(5, DB::table('mp_referral_audits')->where('referral_id', $ref->id)->count());
+    }
+
+    public function test_offline_visits_do_not_earn_on_online_unlock_and_decline_releases_budget(): void
+    {
+        $this->program->update(['mode' => 'visit', 'channel' => 'offline']);
+        $ref = $this->service->claim($this->link, $this->customer);
+        $this->assertSame('tracked', $ref->status);
+        $verification = new \Botble\Marketplace\Services\ReferralVerificationService;
+        $event = $verification->offline(1, 1, ['code' => $ref->pass_code, 'reference' => 'VISIT-1', 'occurred_on' => today()->toDateString()]);
+        $verification->confirm($event->id, 3, false);
+        $this->assertSame('rejected', $ref->fresh()->status);
+        $this->assertEquals(0, $this->program->fresh()->reserved);
+    }
+
+    public function test_enquiry_rewards_require_admin_and_do_not_pay_twice(): void
+    {
+        $this->program->update(['mode' => 'enquiry']);
+        $ref = $this->service->claim($this->link, $this->customer);
+        $enquiry = \Botble\Marketplace\Models\Enquiry::create(['customer_id' => 3, 'store_id' => 1, 'email' => '3@example.com', 'name' => 'Customer 3']);
+        $this->assertSame('awaiting_approval', $ref->fresh()->status);
+        $this->assertEquals(100, $ref->fresh()->reserved_amount);
+        \Botble\Marketplace\Models\Enquiry::create(['customer_id' => 3, 'store_id' => 1, 'email' => '3@example.com']);
+        $this->assertSame(1, \Botble\Marketplace\Models\ReferralEvent::count());
+        $verification = new \Botble\Marketplace\Services\ReferralVerificationService;
+        $verification->review($ref->fresh()->event_id, 1, true, 'Genuine enquiry');
+        $this->travel(25)->hours();
+        $this->service->reconcile($ref->id);
+        $this->assertSame('available', $ref->fresh()->status);
+        $this->service->trackOrder($this->order());
+        $this->assertNull($ref->fresh()->order_id);
+        $this->assertEquals(100, $this->program->fresh()->reserved);
+    }
+
+    public function test_online_and_offline_cannot_stack(): void
+    {
+        $this->program->update(['mode' => 'visit', 'channel' => 'both']);
+        $ref = $this->service->claim($this->link, $this->customer);
+        $this->expectException(ValidationException::class);
+        (new \Botble\Marketplace\Services\ReferralVerificationService)->offline(1, 1, ['code' => $ref->pass_code, 'reference' => 'REPEAT', 'occurred_on' => today()->toDateString()]);
+    }
+
+    public function test_service_completed_enquiry_cannot_approve_without_service_proof(): void
+    {
+        Schema::create('mp_service_completions', function (Blueprint $t): void {
+            $t->id();
+            $t->integer('store_id');
+            $t->integer('customer_id');
+            $t->date('completed_at');
+        });
+        $this->program->update(['mode' => 'enquiry', 'enquiry_trigger' => 'service_completed']);
+        $ref = $this->service->claim($this->link, $this->customer);
+        \Botble\Marketplace\Models\Enquiry::create(['customer_id' => 3, 'store_id' => 1, 'email' => '3@example.com']);
+        $verification = new \Botble\Marketplace\Services\ReferralVerificationService;
+        try {
+            $verification->review($ref->fresh()->event_id, 1, true, 'Done');
+            $this->fail('Missing service proof accepted');
+        } catch (ValidationException) {
+            $this->assertSame('awaiting_approval', $ref->fresh()->status);
+        }
+        DB::table('mp_service_completions')->insert(['store_id' => 1, 'customer_id' => 3, 'completed_at' => today()]);
+        $verification->review($ref->fresh()->event_id, 1, true, 'Service confirmed');
+        $this->assertSame('pending', $ref->fresh()->status);
+    }
+
+    public function test_duplicate_invoice_is_rejected_for_another_customer_and_no_budget_leaks(): void
+    {
+        $this->program->update(['channel' => 'offline']);
+        $verification = new \Botble\Marketplace\Services\ReferralVerificationService;
+        $first = $this->service->claim($this->link, $this->customer);
+        $second = $this->service->claim($this->link, Customer::find(4));
+        $data = ['code' => $first->pass_code, 'reference' => 'INV-123', 'occurred_on' => today()->toDateString(), 'subtotal' => 1000, 'evidence_path' => 'private/1.pdf'];
+        $verification->offline(1, 1, $data);
+        try {
+            $verification->offline(1, 1, array_replace($data, ['code' => $second->pass_code, 'reference' => 'inv 123']));
+            $this->fail('Duplicate invoice accepted');
+        } catch (\Illuminate\Database\QueryException) {
+            $this->assertEquals(100, $this->program->fresh()->reserved);
+        }
+        $this->assertSame('tracked', $second->fresh()->status);
+    }
+
+    public function test_another_customer_cannot_confirm_an_offline_visit(): void
+    {
+        $this->program->update(['mode' => 'visit', 'channel' => 'offline']);
+        $ref = $this->service->claim($this->link, $this->customer);
+        $verification = new \Botble\Marketplace\Services\ReferralVerificationService;
+        $event = $verification->offline(1, 1, ['code' => $ref->pass_code, 'reference' => 'PRIVATE-VISIT', 'occurred_on' => today()->toDateString()]);
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $verification->confirm($event->id, 4, true);
+    }
+
+    public function test_guest_or_mismatched_enquiry_email_cannot_claim_reward(): void
+    {
+        $this->program->update(['mode' => 'enquiry']);
+        $ref = $this->service->claim($this->link, $this->customer);
+        \Botble\Marketplace\Models\Enquiry::create(['store_id' => 1, 'email' => '3@example.com']);
+        \Botble\Marketplace\Models\Enquiry::create(['customer_id' => 3, 'store_id' => 1, 'email' => '4@example.com']);
+        $this->assertSame('tracked', $ref->fresh()->status);
+        $this->assertSame(0, \Botble\Marketplace\Models\ReferralEvent::count());
+    }
+
+    public function test_referrer_code_can_start_an_offline_visit_without_an_online_visit_reward(): void
+    {
+        $this->program->update(['mode' => 'visit', 'channel' => 'both']);
+        $this->link->update(['short_code' => 'G-INSTORE-CODE']);
+        $verification = new \Botble\Marketplace\Services\ReferralVerificationService;
+        $event = $verification->offline(1, 1, ['code' => 'G-INSTORE-CODE', 'customer_email' => '4@example.com', 'reference' => 'WALK-IN', 'occurred_on' => today()->toDateString()]);
+        $this->assertSame('awaiting_customer', $event->referral->status);
+        $this->assertEquals(4, $event->referral->customer_id);
+        $this->assertEquals(2, $event->referral->referrer_id);
+        $this->assertEquals(100, $this->program->fresh()->reserved);
+    }
+
+    public function test_unconfirmed_offline_activity_expires_and_releases_budget(): void
+    {
+        $this->program->update(['mode' => 'visit', 'channel' => 'offline']);
+        $ref = $this->service->claim($this->link, $this->customer);
+        $verification = new \Botble\Marketplace\Services\ReferralVerificationService;
+        $event = $verification->offline(1, 1, ['code' => $ref->pass_code, 'reference' => 'UNCONFIRMED', 'occurred_on' => today()->toDateString()]);
+        $this->travel(8)->days();
+        $verification->expireUnconfirmed($event->id);
+        $this->assertSame('rejected', $ref->fresh()->status);
+        $this->assertEquals(0, $this->program->fresh()->reserved);
     }
 }

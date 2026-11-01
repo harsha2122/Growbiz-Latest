@@ -19,6 +19,11 @@ class ReferralServiceProvider extends ServiceProvider
         });
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
             $schedule->call(function (): void {
+                \Botble\Marketplace\Models\ReferralEvent::query()->where('status', 'awaiting_customer')->where('created_at', '<=', now()->subDays(7))->select('id')->chunkById(100, function ($events): void {
+                    foreach ($events as $event) {
+                        app(\Botble\Marketplace\Services\ReferralVerificationService::class)->expireUnconfirmed($event->id);
+                    }
+                });
                 CustomerReferral::query()->where('status', 'tracked')->where('expires_at', '<=', now())
                     ->update(['status' => 'expired', 'reason' => __('The referral purchase window expired.')]);
                 CustomerReferral::query()->whereIn('status', ['pending', 'available', 'paid'])->select('id')->chunkById(100, function ($rows): void {
