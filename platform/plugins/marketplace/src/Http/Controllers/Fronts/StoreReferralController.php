@@ -110,6 +110,9 @@ class StoreReferralController extends BaseController
 
     public function account(StoreReferralService $service)
     {
+        $version = EcommerceHelper::getAssetVersion();
+        Theme::asset()->add('customer-style', 'vendor/core/plugins/ecommerce/css/customer.css', ['bootstrap-css'], version: $version);
+        Theme::asset()->add('front-ecommerce-css', 'vendor/core/plugins/ecommerce/css/front-ecommerce.css', version: $version);
         $customerId = auth('customer')->id();
         CustomerReferral::query()->where('referrer_id', $customerId)->whereIn('status', ['pending', 'available'])->select('id')->chunkById(100, function ($rows) use ($service): void {
             foreach ($rows as $row) {

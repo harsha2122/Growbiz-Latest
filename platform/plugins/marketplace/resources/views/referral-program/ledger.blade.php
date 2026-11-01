@@ -6,8 +6,8 @@
         <tr>
             <td>#{{ $referral->id }}<div class="refer-muted">{{ $referral->created_at->format('d M Y') }}</div></td>
             <td>@if (isset($seller)){{ $referral->referrer?->name ?? __('Deleted account') }}<div class="refer-muted">{{ $referral->referrer?->email }}</div>@else{{ $referral->store?->name }}@endif</td>
-            <td>{{ format_price($referral->amount) }}</td>
-            <td><span class="refer-badge">{{ __(ucfirst($referral->status)) }}</span>@if ($referral->payout_requested_at)<div class="refer-muted">{{ __('Payment requested') }}</div>@endif</td>
+            <td data-label="{{ __('Reward') }}">{{ format_price($referral->amount) }}</td>
+            <td data-label="{{ __('Status') }}"><span class="refer-badge" data-referral-status="{{ $referral->status }}">{{ __(ucfirst($referral->status)) }}</span>@if ($referral->payout_requested_at)<div class="refer-muted">{{ __('Payment requested') }}</div>@endif</td>
             <td>
                 @if ($referral->order_id)<div>{{ __('Order') }} #{{ $referral->order?->code ?? $referral->order_id }}</div>@endif
                 @if ($referral->available_at && $referral->status === 'pending')<div class="refer-muted">{{ __('Available after') }} {{ $referral->available_at->format('d M Y, H:i') }}</div>@endif
