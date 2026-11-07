@@ -547,6 +547,14 @@ class MarketplaceServiceProvider extends ServiceProvider
                                 'icon' => 'ti ti-speakerphone',
                             ])
                             ->registerItem([
+                                'id' => 'marketplace.vendor.meta-ads.instructions',
+                                'parent_id' => 'marketplace.vendor.meta-ads',
+                                'priority' => 4,
+                                'name' => __('Ad Instructions'),
+                                'url' => fn () => route('marketplace.vendor.meta-ads.instructions'),
+                                'icon' => 'ti ti-book',
+                            ])
+                            ->registerItem([
                                 'id' => 'marketplace.vendor.meta-ads.connection',
                                 'parent_id' => 'marketplace.vendor.meta-ads',
                                 'priority' => 5,

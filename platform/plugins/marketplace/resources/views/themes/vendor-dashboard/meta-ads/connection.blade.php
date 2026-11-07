@@ -1,7 +1,7 @@
 @extends(MarketplaceHelper::viewPath('vendor-dashboard.layouts.master'))
 
 @section('content')
-    @include('plugins/marketplace::themes.vendor-dashboard.meta-ads.partials.phone-guide')
+    <div class="mb-3"><a href="{{ route('marketplace.vendor.meta-ads.instructions') }}" class="btn btn-outline-primary btn-sm"><i class="ti ti-book" aria-hidden="true"></i> {{ __('Ad Instructions') }} · English / हिन्दी / मराठी</a></div>
     <h4 class="mb-4">Facebook Connection</h4>
 
     @if(session('error'))

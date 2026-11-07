@@ -116,7 +116,7 @@
 .meta-guide-links{display:flex;gap:8px;flex-wrap:wrap}.meta-guide-links a{display:inline-flex;align-items:center;min-height:44px;padding:8px 12px;border:1px solid #d9e3f1;border-radius:8px;color:#2254a0;text-decoration:underline;font-size:13px;max-width:100%;overflow-wrap:anywhere}
 .meta-phone-guide [hidden]{display:none!important}@media(max-width:575px){.meta-phone-guide-body{padding:14px}.meta-phone-guide>summary{padding:14px}.meta-guide-links a{width:100%}}
 </style>
-<details class="meta-phone-guide" id="meta-phone-guide">
+<details class="meta-phone-guide" id="meta-phone-guide" @if ($guideOpen ?? false) open @endif>
     <summary>📱 <span data-meta-guide-title>{{ $phoneGuides[$guideLanguage]['title'] }}</span> · English / हिन्दी / मराठी</summary>
     <div class="meta-phone-guide-body">
         <label for="meta-guide-language">Language / भाषा</label>

@@ -18,6 +18,8 @@ Route::group([
     // ── Dashboard ──────────────────────────────────────────────────────────────
     Route::get('/', [MetaAdsDashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('instructions', [MetaAdsDashboardController::class, 'instructions'])->name('instructions');
+
     // ── Facebook Connection / OAuth ────────────────────────────────────────────
     Route::get('connection', [MetaAdsConnectionController::class, 'index'])->name('connection');
     Route::get('callback', [MetaAdsConnectionController::class, 'callback'])->name('callback');

@@ -47,6 +47,13 @@ class MetaAdsDashboardController extends BaseController
             ->addScripts(['moment']);
     }
 
+    public function instructions()
+    {
+        $this->pageTitle(__('Ad Instructions'));
+
+        return MarketplaceHelper::view('vendor-dashboard.meta-ads.instructions');
+    }
+
     public function index(Request $request)
     {
         $this->pageTitle('Meta Ads — Dashboard');
