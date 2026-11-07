@@ -1,6 +1,7 @@
 @extends(MarketplaceHelper::viewPath('vendor-dashboard.layouts.master'))
 
 @section('content')
+    @include('plugins/marketplace::themes.vendor-dashboard.meta-ads.partials.phone-guide')
     <h4 class="mb-4">Facebook Connection</h4>
 
     @if(session('error'))

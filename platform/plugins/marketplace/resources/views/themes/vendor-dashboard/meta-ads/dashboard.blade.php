@@ -1,6 +1,7 @@
 @extends(MarketplaceHelper::viewPath('vendor-dashboard.layouts.master'))
 
 @section('content')
+    @include('plugins/marketplace::themes.vendor-dashboard.meta-ads.partials.phone-guide')
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h4 class="mb-0">Meta Ads — Dashboard</h4>
         <div class="d-flex align-items-center gap-2">
