@@ -648,6 +648,7 @@ class MarketplaceServiceProvider extends ServiceProvider
 
         $this->app->register(EventServiceProvider::class);
         $this->app->register(ReferralServiceProvider::class);
+        $this->app->register(ActivityNotificationServiceProvider::class);
         $this->app->register(HookServiceProvider::class);
         $this->app->register(OrderSupportServiceProvider::class);
 

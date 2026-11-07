@@ -152,3 +152,7 @@
         </div>
     </div>
 </div>
+
+@if (is_plugin_active('marketplace') && auth('customer')->check())
+    @include('plugins/marketplace::partials.activity-notifications', ['notificationAudience' => 'customer'])
+@endif

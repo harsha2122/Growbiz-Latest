@@ -123,6 +123,7 @@
 
 @stack('scripts')
 @stack('footer')
+@include('plugins/marketplace::partials.activity-notifications', ['notificationAudience' => 'seller'])
 </body>
 
 </html>

@@ -23,6 +23,12 @@ Route::group([
     });
 
     Theme::registerRoutes(function (): void {
+        Route::middleware(['customer', 'throttle:60,1'])->group(function (): void {
+            Route::get('customer/activity-notifications', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'index'])->name('public.activity-notifications.index');
+            Route::post('customer/activity-notifications/read', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'read'])->name('public.activity-notifications.read');
+            Route::post('customer/activity-notifications/subscribe', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'subscribe'])->name('public.activity-notifications.subscribe');
+            Route::post('customer/activity-notifications/unsubscribe', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'unsubscribe'])->name('public.activity-notifications.unsubscribe');
+        });
         Route::get('referral-offers/{program}/terms', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'terms'])->whereNumber('program')->name('public.referral.terms');
         Route::get('refer/{token}/qr', [\Botble\Marketplace\Http\Controllers\Fronts\ReferralActivityController::class, 'qr'])->middleware('throttle:60,1')->name('public.referral.qr');
         Route::get('refer/{token}', [\Botble\Marketplace\Http\Controllers\Fronts\StoreReferralController::class, 'landing'])->middleware('throttle:60,1')->name('public.referral.landing');

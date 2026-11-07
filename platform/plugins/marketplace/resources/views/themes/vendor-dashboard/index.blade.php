@@ -1,6 +1,7 @@
 @extends(MarketplaceHelper::viewPath('vendor-dashboard.layouts.master'))
 
 @section('content')
+    <div class="growbiz-enquiry-summary" data-enquiry-summary><strong data-enquiry-new>{{ __('Checking new enquiries…') }}</strong><span data-enquiry-total></span><a href="{{ route('marketplace.vendor.enquiries.index') }}">{{ __('View enquiries') }}</a></div>
     @if ($totalProducts)
         <div class="text-start text-sm-end mb-5">
             <x-core::button

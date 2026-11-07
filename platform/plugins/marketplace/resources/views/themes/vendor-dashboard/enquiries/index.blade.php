@@ -6,7 +6,8 @@
     </div>
 
     <div class="alert alert-info">
-        {{ __('You have :count enquiries so far.', ['count' => $count]) }}
+        <strong>{{ __(':count total enquiries', ['count' => $count]) }}</strong> · {{ __(':count new enquiries', ['count' => $newCount]) }}
+        @if ($viewedNow)<div class="small mt-1">{{ __(':count new enquiries marked as viewed.', ['count' => $viewedNow]) }}</div>@endif
     </div>
 
     @if (! $visible)
@@ -24,6 +25,7 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>{{ __('Status') }}</th>
                             <th>{{ __('Name') }}</th>
                             <th>{{ __('Contact') }}</th>
                             <th>{{ __('Email') }}</th>
@@ -36,6 +38,7 @@
                     <tbody>
                         @forelse ($enquiries as $enquiry)
                             <tr>
+                                <td><span class="badge bg-light text-dark">{{ $enquiry->seller_viewed_at ? __('Viewed') : __('New') }}</span></td>
                                 <td>{{ $enquiry->name }}</td>
                                 <td>{{ $enquiry->contact_number }}</td>
                                 <td>{{ $enquiry->email ?: '—' }}</td>
@@ -53,7 +56,7 @@
                                 <td>{{ $enquiry->created_at->format('d M Y') }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="text-center text-muted py-4">{{ __('No enquiries yet.') }}</td></tr>
+                            <tr><td colspan="8" class="text-center text-muted py-4">{{ __('No enquiries yet.') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>

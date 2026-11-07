@@ -331,6 +331,11 @@ Route::group([
         ])->name('stream-pdf');
     });
 
+    Route::get('activity-notifications', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'index'])->middleware('throttle:60,1')->name('activity-notifications.index');
+    Route::post('activity-notifications/read', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'read'])->middleware('throttle:60,1')->name('activity-notifications.read');
+    Route::post('activity-notifications/subscribe', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'subscribe'])->middleware('throttle:60,1')->name('activity-notifications.subscribe');
+    Route::post('activity-notifications/unsubscribe', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'unsubscribe'])->middleware('throttle:60,1')->name('activity-notifications.unsubscribe');
+
     Route::get('enquiries', [\Botble\Marketplace\Http\Controllers\Fronts\VendorEnquiryController::class, 'index'])->name('enquiries.index');
 
     Route::group(['prefix' => 'payments', 'as' => 'payments.'], function (): void {
