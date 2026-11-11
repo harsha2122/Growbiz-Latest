@@ -8,7 +8,7 @@
     @endphp
     @once
         <style>
-            .bb-profile-reviews {margin:24px 0;padding:24px;border:1px solid #e8eaee;border-radius:12px;background:#fff;}
+            .bb-profile-reviews {scroll-margin-top:110px;margin:24px 0;padding:24px;border:1px solid #e8eaee;border-radius:12px;background:#fff;}
             .bb-profile-reviews h2 {font-size:20px;margin:0 0 6px;}
             .bb-profile-review-layout {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:28px;}
             .bb-profile-review-muted {font-size:13px;color:#6b7280;line-height:1.6;}

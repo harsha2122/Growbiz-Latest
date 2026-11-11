@@ -209,6 +209,13 @@
                             </div>
                         @endif
 
+                        @if ($store->is_minimal_profile && EcommerceHelper::isReviewEnabled())
+                            <a href="#profile-reviews" class="bb-store-review-link" style="display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border:1px solid #dce3eb;border-radius:8px;color:inherit;text-decoration:underline;">
+                                <x-core::icon name="ti ti-star" />
+                                {{ __('Ratings & Reviews') }}
+                            </a>
+                        @endif
+
                         <div class="bb-store-header-visits">
                             <x-core::icon name="ti ti-eye" />
                             {{ __(':count store visits', ['count' => number_format($store->visitsCount())]) }}

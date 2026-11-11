@@ -9,6 +9,8 @@
     <div class="container">
         @include(MarketplaceHelper::viewPath('includes.store-detail-banner'))
 
+        @include('plugins/marketplace::themes.includes.profile-reviews')
+
         @include(MarketplaceHelper::viewPath('includes.store-referral-program'))
 
         @include(MarketplaceHelper::viewPath('includes.store-service-chips'))
@@ -18,8 +20,6 @@
         @include(MarketplaceHelper::viewPath('includes.store-gallery'))
 
         @include(MarketplaceHelper::viewPath('includes.sponsored-video'))
-
-        @include('plugins/marketplace::themes.includes.profile-reviews')
 
         @if (! $store->is_minimal_profile)
             <div class="row">
