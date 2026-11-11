@@ -23,6 +23,7 @@ Route::group([
     });
 
     Theme::registerRoutes(function (): void {
+        Route::post('stores/{store}/profile-rating-intent', [\Botble\Marketplace\Http\Controllers\Fronts\ProfileReviewController::class, 'start'])->whereNumber('store')->middleware('throttle:20,1')->name('public.store.profile-rating-intent');
         Route::middleware(['customer', 'throttle:60,1'])->group(function (): void {
             Route::get('customer/activity-notifications', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'index'])->name('public.activity-notifications.index');
             Route::post('customer/activity-notifications/read', [\Botble\Marketplace\Http\Controllers\Fronts\ActivityNotificationController::class, 'read'])->name('public.activity-notifications.read');

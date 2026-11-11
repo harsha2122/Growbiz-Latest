@@ -105,11 +105,8 @@ Route::group([
     Route::get('messages/{message}', [MessageController::class, 'show'])->name('messages.show');
     Route::delete('messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
 
-    if (EcommerceHelper::isReviewEnabled()) {
-        Route::resource('reviews', 'ReviewController')
-            ->parameters(['' => 'review'])
-            ->only(['index']);
-    }
+    Route::resource('reviews', 'ReviewController')->parameters(['' => 'review'])->only(['index']);
+    Route::post('reviews/confirm-service', [\Botble\Marketplace\Http\Controllers\Fronts\ReviewController::class, 'confirmService'])->middleware('throttle:20,1')->name('reviews.confirm-service');
 
     Route::match(['GET', 'POST'], 'services', [VendorServiceListController::class, 'index'])->name('services.index');
 

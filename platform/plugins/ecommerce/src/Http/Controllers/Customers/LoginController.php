@@ -38,7 +38,9 @@ class LoginController extends BaseController
 
         Theme::breadcrumb()->add(__('Login'), route('customer.login'));
 
-        if (! in_array(url()->previous(), [route('customer.login'), route('customer.register')])) {
+        if ($profileRatingReturn = session()->pull('profile_rating_return')) {
+            session(['url.intended' => $profileRatingReturn]);
+        } elseif (! in_array(url()->previous(), [route('customer.login'), route('customer.register')])) {
             session(['url.intended' => url()->previous()]);
         }
 

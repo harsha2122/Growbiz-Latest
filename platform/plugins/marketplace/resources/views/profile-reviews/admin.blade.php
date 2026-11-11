@@ -43,7 +43,7 @@
         <div class="card-header"><h3 class="card-title">{{ __('Confirmed services') }}</h3></div>
         <div class="table-responsive"><table class="table"><thead><tr><th>{{ __('Vendor') }}</th><th>{{ __('Customer') }}</th><th>{{ __('Completed') }}</th><th>{{ __('Reference') }}</th><th>{{ __('Action') }}</th></tr></thead><tbody>
             @forelse ($services as $service)
-                <tr><td>{{ $service->store?->name }}</td><td>{{ $service->customer?->email }}</td><td>{{ $service->completed_at->format('d M Y') }}</td><td>{{ $service->reference }}<small class="d-block text-muted">{{ __('Confirmed by admin #:id', ['id' => $service->verified_by]) }}</small></td><td>
+                <tr><td>{{ $service->store?->name }}</td><td>{{ $service->customer?->email }}</td><td>{{ $service->completed_at->format('d M Y') }}</td><td>{{ $service->reference }}<small class="d-block text-muted">{{ $service->verified_by_seller ? __('Confirmed by seller #:id', ['id' => $service->verified_by_seller]) : __('Confirmed by admin #:id', ['id' => $service->verified_by]) }}</small></td><td>
                     @if (auth()->user()->hasPermission('marketplace.profile-reviews.edit'))
                         <form method="post" action="{{ route('marketplace.profile-reviews.revoke-service', $service->id) }}">@csrf @method('DELETE')<button class="btn btn-outline-danger" type="submit">{{ __('Revoke confirmation') }}</button></form>
                     @endif

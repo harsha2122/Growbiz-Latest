@@ -55,6 +55,7 @@ class ProfileReviewTest extends TestCase
             $t->string('status');
         });
         (require base_path('platform/plugins/marketplace/database/migrations/2026_10_29_000002_create_profile_reviews_and_service_completions.php'))->up();
+        (require base_path('platform/plugins/marketplace/database/migrations/2026_11_11_000001_add_seller_service_verifier.php'))->up();
         DB::table('ec_customers')->insert([['id' => 1, 'name' => 'Seller'], ['id' => 2, 'name' => 'Customer'], ['id' => 3, 'name' => 'Other customer']]);
         DB::table('ec_customers')->where('id', 1)->update(['is_vendor' => true, 'vendor_verified_at' => now()]);
         DB::table('mp_stores')->insert([
@@ -145,5 +146,15 @@ class ProfileReviewTest extends TestCase
         $migration->down();
         $this->assertFalse(Schema::hasTable('mp_profile_reviews'));
         $this->assertFalse(Schema::hasTable('mp_service_completions'));
+    }
+
+    public function test_seller_verified_completion_unlocks_only_the_same_vendor_profile(): void
+    {
+        ServiceCompletion::create(['store_id' => 1, 'customer_id' => 2, 'verified_by' => 0, 'verified_by_seller' => 1, 'completed_at' => today(), 'reference' => 'SELLER-SERVICE-1']);
+        $this->assertTrue($this->service->canWrite(2, 1));
+        $this->assertFalse($this->service->canWrite(2, 2));
+        $review = $this->service->submit($this->store, $this->customer, 4, 'Seller-confirmed service');
+        $this->assertSame('Seller-confirmed service', $review->comment);
+        $this->assertSame(1, (int) ServiceCompletion::first()->verified_by_seller);
     }
 }

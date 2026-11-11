@@ -36,26 +36,24 @@
             <div>
                 @if (session('profile_review_success'))<p class="alert alert-success" role="status">{{ session('profile_review_success') }}</p>@endif
                 @if ($errors->any())<p class="text-danger" role="alert">{{ $errors->first() }}</p>@endif
-                @if (! $profileCustomer)
-                    <a href="{{ route('customer.login') }}" class="bb-profile-review-submit d-inline-block">{{ __('Sign in to rate') }}</a>
-                    <p class="bb-profile-review-muted mt-2">{{ __('Star ratings are free. No purchase is required.') }}</p>
-                @elseif ($profileCustomer->id != $store->customer_id)
+                @if (! $profileCustomer || $profileCustomer->id != $store->customer_id)
                     @if ($myProfileReview && $myProfileReview->status !== 'published')<p class="bb-profile-review-muted">{{ __('Your last submission is not currently published.') }}</p>@endif
-                    <form method="post" action="{{ route('public.store.profile-review', $store->id) }}">
+                    <form method="post" action="{{ route($profileCustomer ? 'public.store.profile-review' : 'public.store.profile-rating-intent', $store->id) }}">
                         @csrf
                         <fieldset class="border-0 p-0 m-0">
                             <legend class="fs-6 mb-2">{{ __('Your rating') }}</legend>
                             <div class="bb-profile-review-stars">
                                 @for ($star = 5; $star >= 1; $star--)
-                                    <input type="radio" id="profile-rating-{{ $store->id }}-{{ $star }}" name="star" value="{{ $star }}" @checked((int) old('star', $myProfileReview?->star ?? 5) === $star) required>
+                                    <input type="radio" id="profile-rating-{{ $store->id }}-{{ $star }}" name="star" value="{{ $star }}" @checked((int) old('star', session('profile_rating_drafts.'.$store->id, $myProfileReview?->star)) === $star) required>
                                     <label for="profile-rating-{{ $store->id }}-{{ $star }}" aria-label="{{ trans_choice(':count star|:count stars', $star, ['count' => $star]) }}">★</label>
                                 @endfor
                             </div>
                         </fieldset>
                         <label for="profile-review-comment" class="form-label">{{ __('Written review (optional)') }}</label>
                         <textarea id="profile-review-comment" name="comment" class="form-control" rows="3" maxlength="5000" @disabled(! $canWriteProfileReview) placeholder="{{ __('Tell others about your experience') }}">{{ old('comment', $myProfileReview?->comment) }}</textarea>
-                        <p class="bb-profile-review-muted mt-2">{{ $canWriteProfileReview ? __('Your completed purchase or service is verified. You can add a written review.') : __('You can rate now. A completed purchase or admin-confirmed service is needed to write a review.') }}</p>
-                        <button type="submit" class="bb-profile-review-submit">{{ __('Save rating & review') }}</button>
+                        <p class="bb-profile-review-muted mt-2">{{ $canWriteProfileReview ? __('Your completed purchase or service is verified. You can add a written review.') : __('You can rate now. A completed purchase or seller/admin-confirmed service is needed to write a review.') }}</p>
+                        @if (! $profileCustomer)<p class="bb-profile-review-muted">{{ __('Choose your stars now. We will ask you to sign in when you submit. Your rating is published only after you confirm it while signed in.') }}</p>@elseif (session('profile_rating_drafts.'.$store->id))<p class="bb-profile-review-muted">{{ __('Your selected stars are ready. Submit below to publish your rating.') }}</p>@endif
+                        <button type="submit" class="bb-profile-review-submit">{{ $profileCustomer ? __('Save rating & review') : __('Submit rating') }}</button>
                     </form>
                 @endif
             </div>

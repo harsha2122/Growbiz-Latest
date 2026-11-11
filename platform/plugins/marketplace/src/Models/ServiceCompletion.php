@@ -10,7 +10,7 @@ class ServiceCompletion extends BaseModel
 {
     protected $table = 'mp_service_completions';
 
-    protected $fillable = ['store_id', 'customer_id', 'product_id', 'verified_by', 'completed_at', 'reference'];
+    protected $fillable = ['store_id', 'customer_id', 'product_id', 'verified_by', 'verified_by_seller', 'completed_at', 'reference'];
 
     protected $casts = ['completed_at' => 'date'];
 

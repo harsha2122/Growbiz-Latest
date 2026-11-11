@@ -433,7 +433,7 @@ class MarketplaceServiceProvider extends ServiceProvider
                         'icon' => 'ti ti-messages',
                     ]);
                 })
-                ->when(EcommerceHelper::isReviewEnabled(), function (DashboardMenuSupport $dashboardMenu) {
+                ->when(EcommerceHelper::isReviewEnabled() || (bool) auth('customer')->user()?->store?->is_minimal_profile, function (DashboardMenuSupport $dashboardMenu) {
                     return $dashboardMenu->registerItem([
                         'id' => 'marketplace.vendor.reviews',
                         'priority' => 5,
