@@ -202,14 +202,14 @@
                     </h2>
 
                     <div class="bb-store-header-meta">
-                        @if (EcommerceHelper::isReviewEnabled() && (!EcommerceHelper::hideRatingWhenNoReviews() || $storeRating['count'] > 0))
+                        @if (($store->is_minimal_profile || EcommerceHelper::isReviewEnabled()) && (!EcommerceHelper::hideRatingWhenNoReviews() || $storeRating['count'] > 0))
                             <div class="bb-store-header-rating">
                                 @include(EcommerceHelper::viewPath('includes.rating-star'), ['avg' => $storeRating['average'], 'size' => 80])
                                 <small>{{ __('(:count ratings)', ['count' => number_format($storeRating['count'])]) }}</small>
                             </div>
                         @endif
 
-                        @if ($store->is_minimal_profile && EcommerceHelper::isReviewEnabled())
+                        @if ($store->is_minimal_profile)
                             <a href="#profile-reviews" class="bb-store-review-link" style="display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border:1px solid #dce3eb;border-radius:8px;color:inherit;text-decoration:underline;">
                                 <x-core::icon name="ti ti-star" />
                                 {{ __('Ratings & Reviews') }}

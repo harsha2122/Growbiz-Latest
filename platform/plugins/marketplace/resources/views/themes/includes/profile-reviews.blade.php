@@ -1,4 +1,4 @@
-@if ($store->is_minimal_profile && EcommerceHelper::isReviewEnabled())
+@if ($store->is_minimal_profile)
     @php
         $profileSummary = $store->publicRatingSummary();
         $profileFeedback = $store->profileReviews()->where('status', 'published')->with('customer:id,name')->latest()->paginate(5, ['*'], 'profile_reviews');

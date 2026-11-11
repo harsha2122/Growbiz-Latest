@@ -3,7 +3,6 @@
 namespace Botble\Marketplace\Http\Controllers\Fronts;
 
 use Botble\Base\Http\Controllers\BaseController;
-use Botble\Ecommerce\Facades\EcommerceHelper;
 use Botble\Marketplace\Models\Store;
 use Botble\Marketplace\Services\ProfileReviewService;
 use Illuminate\Http\Request;
@@ -12,7 +11,6 @@ class ProfileReviewController extends BaseController
 {
     public function store(int $store, Request $request, ProfileReviewService $service)
     {
-        abort_unless(EcommerceHelper::isReviewEnabled(), 404);
         $data = $request->validate([
             'star' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string', 'max:5000'],
