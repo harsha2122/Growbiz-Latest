@@ -17,8 +17,6 @@
     @include(MarketplaceHelper::viewPath('includes.store-detail-banner'))
 
     <div class="container">
-        @include('plugins/marketplace::themes.includes.profile-reviews')
-
         @include(MarketplaceHelper::viewPath('includes.store-referral-program'))
 
         @include(MarketplaceHelper::viewPath('includes.store-service-chips'))
@@ -28,6 +26,8 @@
         @include(MarketplaceHelper::viewPath('includes.store-gallery'))
 
         @include(MarketplaceHelper::viewPath('includes.sponsored-video'))
+
+        @include('plugins/marketplace::themes.includes.profile-reviews')
 
         <ul class="bb-shop-nav-tabs nav nav-tabs" id="storeTab" role="tablist">
             <li class="nav-item" role="presentation">
